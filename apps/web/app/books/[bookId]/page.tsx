@@ -2,6 +2,7 @@ import {redirect,notFound} from 'next/navigation';
 import Link from 'next/link';
 import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import BookOverview from '@/components/BookOverview';
+import AppIcon from '@/components/AppIcon';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -16,9 +17,16 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
   const chapters=book.editions[0]?.manuscript?.chapters??[];
   return <div className="workspace">
     <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
-      <div className="nav-section">{t('book.navigation')}</div><Link className="nav-link" href="/library">← {t('library.myLibrary')}</Link>
-      <div className="nav-section">{t('book.myBook')}</div><span className="nav-link active">▦ {t('editor.bookOverview')}</span>
-      {chapters.map((c,i)=><Link className="nav-link" key={c.id} href={'/books/'+bookId+'/chapters/'+c.id}>✎ {i+1}. {c.title}</Link>)}
+      <div className="nav-section">{t('book.navigation')}</div>
+      <Link className="nav-link" href="/library"><AppIcon name="arrowLeft"/><span>{t('library.myLibrary')}</span></Link>
+      <div className="nav-section">{t('book.myBook')}</div>
+      <span className="nav-link active"><AppIcon name="book"/><span>{t('editor.bookOverview')}</span></span>
+      <a className="nav-link" href="#book-source-files"><AppIcon name="upload"/><span>{t('book.sourcesNav')}</span></a>
+      <a className="nav-link" href="#book-structure"><AppIcon name="chapter"/><span>{t('book.structure')}</span></a>
+      <a className="nav-link" href="#book-versions"><AppIcon name="history"/><span>{t('book.versions')}</span></a>
+      <div className="nav-section">{t('editor.manuscript')}</div>
+      {chapters.map((c,i)=><Link className="nav-link" key={c.id} href={'/books/'+bookId+'/chapters/'+c.id}>
+        <AppIcon name="edit"/><span>{i+1}. {c.title}</span></Link>)}
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
     </aside>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">{t('common.library')}</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>

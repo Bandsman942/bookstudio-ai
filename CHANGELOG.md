@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.10.0] — alpha préparée, NON DÉPLOYÉE
+### UI import de manuscrit visible et iconographie cohérente (issue #86)
+- Action « Importer un manuscrit » immédiatement visible dans la bibliothèque, avec dialogue ciblant un ouvrage autorisé et un fichier original ; accès rapide également dans les cartes.
+- Espace « Fichiers sources » déplacé en tête de la fiche ouvrage, zone d'envoi avec glisser-déposer, bouton visible et messages d'état ; navigation dédiée vers les sources.
+- Tous les transferts utilisent les API sécurisées v0.9 : URL Supabase signée, PUT direct du navigateur, confirmation de taille/MIME côté serveur ; aucune conversion en chapitres n'est promise.
+- Système unique d'icônes SVG locales professionnelles (navigation Bibliothèque/Recherche/Archives/Modèles, livre, fichiers, chapitres, versions, commentaires, outils contextuels), contrastes clair/sombre, accessibilité clavier, mobile et FR/EN.
+- Tests de contrat UI `pnpm manuscript-ui:check` et recette propriétaire dédiée. **Aucune migration, aucune dépendance iconographique externe.**
+- Fonctionnalités NON livrées : import DOCX/PDF converti en chapitres, antivirus/validation binaire, OCR, sauvegarde/restauration des binaires.
+
+
 ## [0.9.0] — 2026-11-03 (production alpha privée)
 ### Confirmation serveur des sources (#84)
 - Après chaque upload direct vers le bucket privé Supabase, vérification côté serveur de la présence de l'objet, de sa taille effectivement stockée et du type MIME déclaré par Storage ; l'interface ne revendique plus une réussite sur la seule base du PUT.

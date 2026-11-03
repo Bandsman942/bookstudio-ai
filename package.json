@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",
@@ -11,7 +11,7 @@
     "dev": "pnpm --filter @bookstudio/web dev",
     "build": "pnpm --filter @bookstudio/web build",
     "typecheck": "pnpm --filter @bookstudio/web typecheck",
-    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check",
+    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check && pnpm manuscript-ui:check",
     "test:worker": "python -m unittest discover -s apps/worker-documents/tests -v",
     "db:generate": "pnpm --filter @bookstudio/database generate",
     "db:migrate": "pnpm --filter @bookstudio/database migrate",
@@ -23,6 +23,7 @@
     "prefs:check": "node tools/check-preferences.mjs",
     "test:export": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/editor-export.test.mjs",
     "editor:check": "node tools/check-editor-ribbon.mjs",
-    "storage:check": "node --experimental-strip-types --test apps/web/lib/supabase-storage.test.mjs"
+    "storage:check": "node --experimental-strip-types --test apps/web/lib/supabase-storage.test.mjs",
+    "manuscript-ui:check": "node tools/check-manuscript-ui.mjs"
   }
 }

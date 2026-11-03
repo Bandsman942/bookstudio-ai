@@ -1,30 +1,45 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useAppPreferences} from './AppPreferences';
+import AppIcon from './AppIcon';
+import {
+  MANUSCRIPT_ACCEPT,uploadSourceToBook,uploadErrorCode,
+  type UploadStage
+} from '@/lib/source-upload-client';
 
 type Item={name:string;size:number;createdAt:string|null};
-type ApiError={error?:string};
-const MAX_BYTES=20*1024*1024;
 const text={
-  fr:{heading:'Fichiers sources',explain:'Vos documents sont enregistrés dans un espace privé Supabase Storage. Aucun fichier n’est stocké sur Vercel.',
-    choose:'Choisir un fichier',uploading:'Envoi direct vers Supabase…',empty:'Aucun fichier source pour cet ouvrage.',
-    refresh:'Actualiser',download:'Télécharger',remove:'Supprimer',busy:'Chargement…',
-    notReady:'La liaison Supabase Storage n’est pas encore configurée sur le serveur.',
-    error:'Connexion au stockage momentanément indisponible. Réessayez.',tooLarge:'Fichier non pris en charge ou supérieur à 20 Mo.',
-    uploaded:'Fichier confirmé par le serveur.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
-    mismatch:'Fichier reçu, mais taille ou type non conforme. Le fichier n’est pas confirmé.',
-    confirm:'Supprimer définitivement ce fichier source ?',restricted:'Formats : DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 Mo maximum.',
-    notImported:'La présence dans Storage ne déclenche pas encore la conversion du document dans les chapitres.',
+  fr:{heading:'Fichiers sources',action:'Importer un manuscrit',
+    explain:'Ajoutez ici le fichier original de votre livre. Il est enregistré directement dans votre espace privé Supabase Storage.',
+    choose:'Choisir un manuscrit',drop:'Glissez votre fichier ici, ou choisissez-le dans votre appareil.',
+    uploading:'Envoi direct vers Supabase…',authorizing:'Vérification des autorisations…',
+    confirming:'Vérification du fichier auprès du serveur…',
+    empty:'Aucun fichier source pour cet ouvrage.',refresh:'Actualiser',download:'Télécharger',
+    remove:'Supprimer',busy:'Chargement…',notReady:'La liaison Supabase Storage n’est pas encore configurée.',
+    error:'Stockage momentanément indisponible. Réessayez.',
+    tooLarge:'Format non autorisé ou fichier supérieur à 20 Mio.',
+    uploaded:'Manuscrit reçu et confirmé par le serveur.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
+    mismatch:'Fichier reçu, mais taille ou type non conforme : aucune confirmation.',
+    forbidden:'Accès au stockage refusé pour cet ouvrage.',
+    confirm:'Supprimer définitivement ce fichier source ?',
+    restricted:'DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 Mio maximum.',
+    notImported:'Important : ce fichier est conservé comme source. Sa conversion en chapitres éditables sera proposée dans une prochaine version.',
     deleted:'Fichier supprimé.'},
-  en:{heading:'Source files',explain:'Your files live in private Supabase Storage. Vercel does not store uploaded binaries.',
-    choose:'Choose a file',uploading:'Uploading directly to Supabase…',empty:'No source files for this book.',
-    refresh:'Refresh',download:'Download',remove:'Delete',busy:'Loading…',
-    notReady:'Supabase Storage is not configured on the server yet.',
-    error:'Storage is temporarily unavailable. Please retry.',tooLarge:'Unsupported file or larger than 20 MB.',
-    uploaded:'File confirmed by the server.',uploadFailed:'Transfer interrupted: upload not confirmed. Retry.',
-    mismatch:'File received, but size or type does not match. The file is not confirmed.',
-    confirm:'Permanently delete this source file?',restricted:'Formats: DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 MB max.',
-    notImported:'Storing a source file does not yet convert its content into editable chapters.',
+  en:{heading:'Source files',action:'Import a manuscript',
+    explain:'Add the original document for your book. It is uploaded directly to your private Supabase Storage.',
+    choose:'Choose manuscript',drop:'Drop your manuscript here or choose a file from your device.',
+    uploading:'Uploading directly to Supabase…',authorizing:'Checking permissions…',
+    confirming:'Verifying the file with the server…',
+    empty:'No source files for this book.',refresh:'Refresh',download:'Download',
+    remove:'Delete',busy:'Loading…',notReady:'Supabase Storage is not configured.',
+    error:'Storage is temporarily unavailable. Please retry.',
+    tooLarge:'Unsupported type or larger than 20 MiB.',
+    uploaded:'Manuscript uploaded and confirmed by the server.',uploadFailed:'Transfer interrupted: file not confirmed. Please retry.',
+    mismatch:'File received, but size or MIME type differs: not confirmed.',
+    forbidden:'Storage access denied for this book.',
+    confirm:'Permanently delete this source file?',
+    restricted:'DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 MiB max.',
+    notImported:'Important: this is the original source file; it is not yet converted into editable chapters.',
     deleted:'File deleted.'}
 };
 function shortName(stored:string){return stored.replace(/^[0-9a-f-]{36}-/i,'');}
@@ -33,7 +48,8 @@ function humanSize(size:number){return size<1024?size+' B':size<1048576?Math.rou
 export default function BookSourceFiles({bookId,editable}:{bookId:string;editable:boolean}){
   const {locale}=useAppPreferences(),t=text[locale];
   const [files,setFiles]=useState<Item[]>([]),[error,setError]=useState(''),[notice,setNotice]=useState(''),
-        [busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
+        [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[dragging,setDragging]=useState(false),
+        [stage,setStage]=useState<UploadStage|null>(null);
   const input=useRef<HTMLInputElement>(null);
   const base='/api/v1/books/'+bookId+'/files';
   const refresh=useCallback(async()=>{
@@ -43,46 +59,31 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       if(!response.ok)throw new Error(data.error);
       setFiles(Array.isArray(data.files)?data.files:[]);
       setError('');
-    }catch(e){setError(e instanceof Error&&e.message==='STORAGE_NOT_CONFIGURED'?text[locale].notReady:text[locale].error);}
-    finally{setLoading(false);}
+    }catch(e){
+      setError(e instanceof Error&&e.message==='STORAGE_NOT_CONFIGURED'?
+        text[locale].notReady:text[locale].error);
+    }finally{setLoading(false);}
   },[base,locale]);
   useEffect(()=>{void refresh();},[refresh]);
   async function send(file:File){
+    if(!editable||busy)return;
     setBusy(true);setError('');setNotice('');
     try{
-      if(!file.size||file.size>MAX_BYTES){setError(t.tooLarge);return;}
-      const ticket=await fetch(base,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name:file.name,size:file.size,type:file.type})
-      });
-      const data=await ticket.json() as {name?:string;url?:string;contentType?:string;error?:string};
-      if(!ticket.ok){
-        setError(data.error==='STORAGE_NOT_CONFIGURED'?t.notReady:
-          data.error==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t.tooLarge:t.error);return;
-      }
-      if(!data.url||!data.name||!data.contentType)throw Error('NO_TICKET');
-      // The binary goes from the browser straight to Supabase, never through a Vercel function.
-      const uploaded=await fetch(data.url,{
-        method:'PUT',headers:{'Content-Type':data.contentType,'x-upsert':'false'},
-        body:file
-      });
-      if(!uploaded.ok)throw Error('TRANSFER_FAILED');
-      // The server checks Storage metadata; a successful PUT alone is NOT a verified source.
-      const confirmation=await fetch(base,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'confirm',name:data.name,size:file.size,type:data.contentType})
-      });
-      if(!confirmation.ok){
-        const failure=await confirmation.json().catch(()=>({})) as ApiError;
-        await refresh();
-        setError(failure.error==='SOURCE_SIZE_MISMATCH'||failure.error==='SOURCE_TYPE_MISMATCH'?
-          t.mismatch:t.uploadFailed);
-        return;
-      }
+      await uploadSourceToBook(bookId,file,setStage);
       await refresh();
       setNotice(t.uploaded);
-    }catch{setError(t.uploadFailed);}
-    finally{setBusy(false);if(input.current)input.current.value='';}
+    }catch(e){
+      const code=uploadErrorCode(e);
+      await refresh();
+      setError(code==='STORAGE_NOT_CONFIGURED'?t.notReady:
+        code==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t.tooLarge:
+        code==='SOURCE_TYPE_MISMATCH'||code==='SOURCE_SIZE_MISMATCH'?t.mismatch:
+        code==='UNAUTHENTICATED'||code==='NOT_FOUND_OR_FORBIDDEN'?t.forbidden:
+        t.uploadFailed);
+    }finally{
+      setBusy(false);setStage(null);
+      if(input.current)input.current.value='';
+    }
   }
   async function act(action:'download'|'delete',name:string){
     if(action==='delete'&&!window.confirm(t.confirm))return;
@@ -102,30 +103,49 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
     }catch{setError(t.error);}
     finally{setBusy(false);}
   }
-  return <section className="source-files" aria-labelledby="source-files-title">
-    <div className="section-header"><h2 id="source-files-title">{t.heading}</h2>
-      <button type="button" className="text-button" disabled={busy||loading} onClick={()=>void refresh()}>{t.refresh}</button>
+  const stageLabel=stage==='authorizing'?t.authorizing:
+    stage==='transferring'?t.uploading:t.confirming;
+  return <section id="book-source-files" className="source-files" aria-labelledby="source-files-title">
+    <div className="section-header">
+      <h2 id="source-files-title"><AppIcon name="files" size={21}/>{t.heading}</h2>
+      <button type="button" className="text-button" disabled={busy||loading} onClick={()=>void refresh()}>
+        <AppIcon name="refresh" size={15}/>{t.refresh}
+      </button>
     </div>
     <p className="source-note">{t.explain}</p>
-    {editable&&<div className="source-controls">
-      <label className="button small" htmlFor={'source-input-'+bookId}>{busy?t.uploading:t.choose}</label>
-      <input id={'source-input-'+bookId} ref={input} type="file" disabled={busy} aria-label={t.choose}
-        accept=".docx,.pdf,.txt,.md,.epub,.odt,.png,.jpg,.jpeg,.webp"
+    {editable&&<div className={'source-dropzone'+(dragging?' is-dragging':'')}
+      onDragOver={event=>{event.preventDefault();if(!busy)setDragging(true);}}
+      onDragLeave={event=>{
+        if(!event.currentTarget.contains(event.relatedTarget as Node))setDragging(false);
+      }}
+      onDrop={event=>{event.preventDefault();setDragging(false);
+        const file=event.dataTransfer.files?.[0];if(file&&!busy)void send(file);
+      }}>
+      <AppIcon name="upload" size={32} className="source-dropzone-icon"/>
+      <strong>{t.action}</strong>
+      <p>{t.drop}</p>
+      <button type="button" className="button small" disabled={busy}
+        onClick={()=>input.current?.click()}><AppIcon name="folder"/>{t.choose}</button>
+      <input id={'source-input-'+bookId} ref={input} type="file"
+        disabled={busy} aria-label={t.choose} accept={MANUSCRIPT_ACCEPT}
         onChange={event=>{const file=event.target.files?.[0];if(file)void send(file);}}/>
       <small>{t.restricted}</small>
     </div>}
+    {busy&&<p role="status" aria-live="polite" className="source-note">{stageLabel}</p>}
     {error&&<p className="form-error" role="alert">{error}</p>}
-    {notice&&<p className="source-success" role="status">{notice}</p>}
+    {notice&&<p className="source-success" role="status"><AppIcon name="check"/>{notice}</p>}
     {loading?<p className="source-note">{t.busy}</p>:
       files.length===0?<p className="source-note">{t.empty}</p>:
       <ul className="source-list">{files.map(f=><li key={f.name}>
-        <span title={shortName(f.name)} className="source-filename">▤ {shortName(f.name)}</span>
+        <span title={shortName(f.name)} className="source-filename"><AppIcon name="manuscript"/>{shortName(f.name)}</span>
         <small>{humanSize(f.size)}</small>
         <div className="source-actions">
-          <button type="button" className="text-button" disabled={busy} onClick={()=>void act('download',f.name)}>{t.download}</button>
-          {editable&&<button type="button" className="text-button" disabled={busy} onClick={()=>void act('delete',f.name)}>{t.remove}</button>}
+          <button type="button" className="text-button" disabled={busy}
+            onClick={()=>void act('download',f.name)}><AppIcon name="download" size={15}/>{t.download}</button>
+          {editable&&<button type="button" className="text-button" disabled={busy}
+            onClick={()=>void act('delete',f.name)}><AppIcon name="trash" size={15}/>{t.remove}</button>}
         </div>
       </li>)}</ul>}
-    <p className="source-note">{t.notImported}</p>
+    <p className="source-note source-disclaimer"><AppIcon name="shield" size={17}/>{t.notImported}</p>
   </section>;
 }

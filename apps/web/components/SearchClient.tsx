@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {useAppPreferences} from './AppPreferences';
+import AppIcon from './AppIcon';
 
 type Hit = {
   bookId:string; bookTitle:string; chapterId:string;
@@ -39,7 +40,7 @@ export default function SearchClient() {
       <input id="search-query" value={query} minLength={2} maxLength={80}
         placeholder={t('search.placeholder')}
         onChange={event=>setQuery(event.target.value)} autoComplete="off" required />
-      <button type="submit" className="button" disabled={busy}>{busy?t('search.searching'):'⌕ '+t('search.button')}</button>
+      <button type="submit" className="button" disabled={busy}>{busy?t('search.searching'):<><AppIcon name="search"/>{t('search.button')}</>}</button>
     </form>
     {error&&<div className="form-error" role="alert">{error}</div>}
     <section aria-live="polite" aria-busy={busy} className="search-results">
