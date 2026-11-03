@@ -15,7 +15,8 @@ export type PreviewBlock={kind:'heading'|'paragraph';text:string;style:string};
 export type DocxPreview={status:'PREVIEW_REVIEW_REQUIRED';blocks:PreviewBlock[];
   warnings:string[];truncated:boolean;verifiedFidelity:false;readyForPublication:false};
 export class DocxPreviewError extends Error{
-  constructor(public readonly code:string){super(code);this.name='DocxPreviewError';}
+  readonly code:string;
+  constructor(code:string){super(code);this.code=code;this.name='DocxPreviewError';}
 }
 const fail=(code:string):never=>{throw new DocxPreviewError(code);};
 type Entry={name:string;size:number;packed:number;method:number};
