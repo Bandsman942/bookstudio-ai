@@ -15,7 +15,7 @@
     "test:worker": "python -m unittest discover -s apps/worker-documents/tests -v",
     "db:generate": "pnpm --filter @bookstudio/database generate",
     "db:migrate": "pnpm --filter @bookstudio/database migrate",
-    "db:deploy": "pnpm --filter @bookstudio/database deploy",
+    "db:deploy": "pnpm --filter @bookstudio/database run deploy",
     "lint": "pnpm --filter @bookstudio/web lint"
   }
 }
