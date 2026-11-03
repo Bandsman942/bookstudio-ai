@@ -2,6 +2,7 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
+import SnapshotsPanel from './SnapshotsPanel';
 type Chapter={id:string;title:string;revision:number};
 export default function BookOverview({bookId,title,status,kind,chapters}:{bookId:string;title:string;status:string;kind:string;chapters:Chapter[]}){
  const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),router=useRouter();
@@ -22,6 +23,7 @@ export default function BookOverview({bookId,title,status,kind,chapters}:{bookId
   </div>
   <div className="section-header"><h2>Structure du manuscrit</h2><button className="button small" onClick={()=>setShowForm(true)}>＋ Ajouter un chapitre</button></div>
   <div className="chapter-list">{chapters.map((c,i)=><Link key={c.id} href={'/books/'+bookId+'/chapters/'+c.id} className="chapter-item"><span className="chapter-num">{String(i+1).padStart(2,'0')}</span><div><strong>{c.title}</strong><small>Révision {c.revision} · Ouvrir l'éditeur</small></div><span className="chapter-arrow">↗</span></Link>)}</div>
+  <SnapshotsPanel bookId={bookId}/>
   {showForm&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}>
   <form className="modal" onSubmit={add}><button type="button" className="close" onClick={()=>setShowForm(false)}>×</button><div className="eyebrow">NOUVEAU CHAPITRE</div><h2>Un nouveau chapitre commence.</h2>
   <label>Titre du chapitre<input autoFocus required minLength={2} maxLength={180} value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Ex. La première rencontre"/></label>

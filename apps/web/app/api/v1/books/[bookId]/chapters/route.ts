@@ -1,3 +1,14 @@
+export async function GET(_req:Request,{params}:{params:Promise<{bookId:string}>}) {
+  const user=await activeUser();if(!user)return errorResponse('UNAUTHENTICATED',401);
+  const {bookId}=await params;
+  const book=await accessToBook(bookId,user.id,false);
+  if(!book)return errorResponse('NOT_FOUND',404);
+  const chapters=book.editions[0]?.manuscript?.chapters ?? [];
+  return Response.json({chapters:chapters.map(c=>({
+    id:c.id,title:c.title,revision:c.revisionSeq,position:c.position
+  }))},{headers:{'Cache-Control':'no-store'}});
+}
+
 import {activeUser,accessToBook} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {prisma} from '@bookstudio/database';
