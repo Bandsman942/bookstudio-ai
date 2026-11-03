@@ -119,7 +119,8 @@ export function renderDocx(title:string,chapters:ExportChapter[]):Uint8Array {
   },{level:6});
 }
 
-const escapeMd=(value:string)=>value.replace(/([\\\x60*_[\]<>])/g,'\\$1');
+const mdEscapeChars=new Set(['\\','\x60','*','_','[',']','<','>','{','}','(',')','#','+','-','.','!','|','~']);
+const escapeMd=(value:string)=>[...value].map(ch=>mdEscapeChars.has(ch)?'\\'+ch:ch).join('');
 function markdownInline(node:Node):string {
   if(node.type==='hardBreak')return '  \n';
   if(node.type==='text'){
