@@ -6,6 +6,10 @@ export const dynamic='force-dynamic';
 export const metadata={title:'Archives | BookStudio AI'};
 export default async function ArchivesPage(){
  const user=await activeUser();if(!user)redirect('/login');
+ const editableWorkspaces=await prisma.membership.findMany({
+   where:{userId:user.id,role:{in:['OWNER','EDITOR']}},select:{workspaceId:true}
+ });
+ const editableIds=new Set(editableWorkspaces.map(m=>m.workspaceId));
  const books=await prisma.book.findMany({
    where:{archivedAt:{not:null},workspace:{memberships:{some:{userId:user.id}}}},
    orderBy:{updatedAt:'desc'},take:100,
