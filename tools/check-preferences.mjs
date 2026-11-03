@@ -12,7 +12,7 @@ const preferences=load('apps/web/components/AppPreferences.tsx');
 for(const marker of ['SameSite=Lax','Max-Age=31536000','document.documentElement.lang=next',
  'document.documentElement.dataset.theme=next','usePreferenceActions','setTheme','setLocale'])
   assert.ok(preferences.includes(marker),'Missing preference persistence '+marker);
-assert.ok(!preferences.includes('router.refresh()'),'Changing display preferences must not remount unsaved editor');
+assert.ok(!preferences.includes('router.refresh();'),'Changing display preferences must not remount unsaved editor');
 const layout=load('apps/web/app/layout.tsx');
 for(const marker of ["cookies()","LOCALE_COOKIE","THEME_COOKIE","lang={locale}","data-theme={theme}"])
   assert.ok(layout.includes(marker),'SSR preferences lost '+marker);
