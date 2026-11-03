@@ -18,7 +18,7 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
   <div className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></div>
   <div className="nav-section">MON ESPACE</div>
   <Link className="nav-link active" href="/library">▦ Bibliothèque</Link>
-  <span className="nav-link subdued">⌕ Recherche <small className="soon">Bientôt</small></span>
+  <Link className="nav-link" href="/search">⌕ Recherche</Link>
   <span className="nav-link subdued">▤ Modèles <small className="soon">Bientôt</small></span>
   <div className="nav-spacer"/>
   <div className="nav-user"><span className="avatar">{displayName.charAt(0).toUpperCase()}</span><span>{displayName}<small>Auteur</small></span></div>
