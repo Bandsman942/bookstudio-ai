@@ -11,7 +11,7 @@
     "dev": "pnpm --filter @bookstudio/web dev",
     "build": "pnpm --filter @bookstudio/web build",
     "typecheck": "pnpm --filter @bookstudio/web typecheck",
-    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs",
+    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check",
     "test:worker": "python -m unittest discover -s apps/worker-documents/tests -v",
     "db:generate": "pnpm --filter @bookstudio/database generate",
     "db:migrate": "pnpm --filter @bookstudio/database migrate",
