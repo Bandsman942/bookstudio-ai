@@ -11,7 +11,7 @@ type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
- const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState(false),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
+ const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
  const [recovery,setRecovery]=useState<string|null>(null);
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
  const draftKey='bookstudio:draft:'+chapterId;
@@ -115,7 +115,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <div className="editor-status"><span>{wordCount.toLocaleString('fr-FR')} mots</span><span>Révision {currentRevision}</span><span>Sauvegarde automatique</span></div>
   </main>
   {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}/>}
-  {(rightPanel||compact)&&<aside className="studio-insights" aria-label="Panneau éditorial">
+  {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside className="studio-insights" aria-label="Panneau éditorial">
     <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
     <div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
     <div className="insight-card"><span className="eyebrow">VOTRE ÉCRITURE</span><h3>Un espace pour vos idées.</h3><p>Votre manuscrit dispose d'un historique de révisions. L'IA ne modifiera jamais votre texte sans accord.</p></div>
