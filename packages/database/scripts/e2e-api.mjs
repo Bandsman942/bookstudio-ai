@@ -100,10 +100,23 @@ assert.equal(restoredChapter.data.chapter.revision,3,'restoration appends a new 
 assert.deepEqual(restoredChapter.data.chapter.content,doc,'original text restored');
 const notAllowedRestore=await request(restorePath,{method:'POST',cookie:outsider,body:{confirm:'RESTORE',expectedRevisions:{[chapterId]:3}}});
 assert.equal(notAllowedRestore.status,404,'no cross-tenant restoration');
+// Exports are sourced from verified immutable versions, not mutable editor state.
+const wordResponse=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=docx',{headers:{Cookie:author}});
+assert.equal(wordResponse.status,200,'Word snapshot export');
+assert.match(wordResponse.headers.get('content-type')||'',/wordprocessingml\.document/);
+const wordBytes=Buffer.from(await wordResponse.arrayBuffer());
+assert.equal(wordBytes.subarray(0,4).toString('hex'),'504b0304','DOCX is ZIP/OXML');
+assert.ok(wordBytes.length>700,'DOCX contains document structure');
+const markdownResponse=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=md',{headers:{Cookie:author}});
+assert.equal(markdownResponse.status,200,'Markdown snapshot export');
+const markdown=await markdownResponse.text();
+assert.ok(markdown.includes('Premier paragraphe rédigé et enregistré.'),'snapshot source preserved in export');
+const strangerExport=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=docx',{headers:{Cookie:outsider}});
+assert.equal(strangerExport.status,404,'cross-workspace export forbidden');
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
 assert.equal(logout.status,200,'logout');
 const revoked=await request('/api/v1/books',{cookie:author});
 assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
-console.log('E2E API PASS: authentication, throttling, CSRF, books, revisions, immutable snapshots, restore and ACL');
+console.log('E2E API PASS: auth, throttle, CSRF, revisions, immutable snapshots, restoration, DOCX/MD export and ACL');
