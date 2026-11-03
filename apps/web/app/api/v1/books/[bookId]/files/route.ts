@@ -76,7 +76,7 @@ export async function POST(request:Request,{params}:Ctx){
       actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
       action:'BOOK_SOURCE_UPLOAD_SIGNED',metadata:{name,size:source.size,contentType:source.contentType}
     }});
-    return Response.json({name,url,maxBytes:MAX_SOURCE_BYTES},{status:201,
+    return Response.json({name,url,contentType:source.contentType,maxBytes:MAX_SOURCE_BYTES},{status:201,
       headers:{'Cache-Control':'no-store'}});
   }catch(error){return storageError(error);}
 }

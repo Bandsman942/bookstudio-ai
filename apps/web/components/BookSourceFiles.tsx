@@ -55,22 +55,22 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({name:file.name,size:file.size,type:file.type})
       });
-      const data=await ticket.json() as {name?:string;url?:string;error?:string};
+      const data=await ticket.json() as {name?:string;url?:string;contentType?:string;error?:string};
       if(!ticket.ok){
         setError(data.error==='STORAGE_NOT_CONFIGURED'?t.notReady:
           data.error==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t.tooLarge:t.error);return;
       }
-      if(!data.url||!data.name)throw Error('NO_TICKET');
+      if(!data.url||!data.name||!data.contentType)throw Error('NO_TICKET');
       // The binary goes from the browser straight to Supabase, never through a Vercel function.
       const uploaded=await fetch(data.url,{
-        method:'PUT',headers:{'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},
+        method:'PUT',headers:{'Content-Type':data.contentType,'x-upsert':'false'},
         body:file
       });
       if(!uploaded.ok)throw Error('TRANSFER_FAILED');
       // The server checks Storage metadata; a successful PUT alone is NOT a verified source.
       const confirmation=await fetch(base,{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'confirm',name:data.name,size:file.size,type:file.type})
+        body:JSON.stringify({action:'confirm',name:data.name,size:file.size,type:data.contentType})
       });
       if(!confirmation.ok){
         const failure=await confirmation.json().catch(()=>({})) as ApiError;
