@@ -14,11 +14,6 @@ export default function SearchClient() {
   const [error,setError]=useState('');
   const [lastQuery,setLastQuery]=useState('');
 
-  useEffect(()=>{
-    const controller=new AbortController();
-    return ()=>controller.abort();
-  },[]);
-
   async function search(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q=query.trim();
