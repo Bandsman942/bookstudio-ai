@@ -1,0 +1,31 @@
+name: Create immutable release tag v0.2.0
+on:
+  push:
+    branches: [ops/40-tag-v0.2.0]
+permissions:
+  contents: write
+jobs:
+  create-release-tag:
+    if: github.repository == 'Bandsman942/bookstudio-ai' && github.ref == 'refs/heads/ops/40-tag-v0.2.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Create annotated version tag on exact READY commit
+        env:
+          DEPLOYED_SHA: 8fe15f5e152eec64abd90770b53335ab5986ff1d
+          RELEASE_TAG: v0.2.0
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEPLOYED_SHA" --no-tags
+          test "$(git rev-parse FETCH_HEAD)" = "$DEPLOYED_SHA"
+          if git ls-remote --exit-code origin "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Tag already exists, leaving it immutable"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$RELEASE_TAG" "$DEPLOYED_SHA" -m "BookStudio AI by DTSC v0.2.0-alpha — READY dpl_9opnP37tbGWv3j17RbJKjT3kNYx7"
+          git push origin "refs/tags/$RELEASE_TAG"
