@@ -4,6 +4,7 @@ import {EditorContent,useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {safeExternalHref} from '@bookstudio/domain';
 import EditorRibbon from './EditorRibbon';
+import AppIcon from './AppIcon';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
@@ -169,9 +170,9 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open':'')}>
   <aside className="studio-sidebar">
     <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
-    <Link href={'/books/'+bookId} className="back-link">← {t('editor.bookOverview')}</Link>
-    <div className="nav-section">{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
-    <div className="chapter-navigation">{chapters.map((c,i)=><Link href={'/books/'+bookId+'/chapters/'+c.id} key={c.id} className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}>{String(i+1).padStart(2,'0')} <span>{c.title}</span></Link>)}</div>
+    <Link href={'/books/'+bookId} className="back-link"><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
+    <div className="nav-section"><AppIcon name="manuscript"/>{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
+    <div className="chapter-navigation">{chapters.map((c,i)=><Link href={'/books/'+bookId+'/chapters/'+c.id} key={c.id} className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}><AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span></Link>)}</div>
     <div className="nav-spacer"/><div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>
   <main className="studio-center">
@@ -199,7 +200,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label={t('editor.panelClose')} onClick={()=>setMobilePanel(false)}/>}
   {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside className="studio-insights" aria-label="Panneau éditorial">
     <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
-    <div className="insights-header"><span>✦</span><strong>{t('editor.editorial')}</strong><small>{t('editor.coming')}</small></div>
+    <div className="insights-header"><span><AppIcon name="sparkles"/></span><strong>{t('editor.editorial')}</strong><small>{t('editor.coming')}</small></div>
     <div className="insight-card"><span className="eyebrow">{t('editor.yourWriting')}</span><h3>{t('editor.ideas')}</h3><p>{t('editor.editorialCopy')}</p></div>
     <ChapterComments bookId={bookId} chapterId={chapterId} revision={currentRevision} saveState={state} canEdit={canEdit}/>
     <div className="insight-card pale"><span className="eyebrow">{t('editor.next')}</span><p>✧ {t('editor.style')}</p><p>✧ {t('editor.suggestions')}</p><p>✧ {t('editor.bibliography')}</p></div>

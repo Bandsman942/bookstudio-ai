@@ -3,6 +3,7 @@
 import {useCallback,useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
+import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
 
 type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string};
@@ -74,8 +75,8 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
     finally{setBusy(false);}
   }
 
-  return <section className="versions-section" aria-label={t('book.versions')}>
-    <div className="section-header"><h2>{t('book.versions')}</h2>
+  return <section id="book-versions" className="versions-section" aria-label={t('book.versions')}>
+    <div className="section-header"><h2><AppIcon name="history"/>{t('book.versions')}</h2>
       <span>{t('snapshot.count',{count:versions.length})}</span>
     </div>
     <p className="versions-help">{t('snapshot.intro')}</p>

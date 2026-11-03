@@ -1,6 +1,7 @@
 'use client';
 import {useCallback,useEffect,useState} from 'react';
 import ActionMenu from './ActionMenu';
+import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
 
 type CommentView={
@@ -63,7 +64,7 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
  }
 
  return <section className="editor-comments" aria-label={t('comments.title')}>
-   <div className="insights-header"><span>◉</span><strong>{t('comments.title')}</strong><small>{items.length}</small></div>
+   <div className="insights-header"><span><AppIcon name="comment"/></span><strong>{t('comments.title')}</strong><small>{items.length}</small></div>
    <p className="editor-comments-intro">{t('comments.intro')}</p>
    {canEdit&&<form onSubmit={add} className="editor-comments-form">
      <label htmlFor="comment-body" className="sr-only">{t('comments.new')}</label>

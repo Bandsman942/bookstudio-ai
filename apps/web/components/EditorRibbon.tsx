@@ -5,6 +5,7 @@ import {useEditorState} from '@tiptap/react';
 import type {useEditor} from '@tiptap/react';
 import {safeExternalHref} from '@bookstudio/domain';
 import {useAppPreferences} from './AppPreferences';
+import AppIcon from './AppIcon';
 
 type Editor=NonNullable<ReturnType<typeof useEditor>>;
 type Props={editor:Editor|null;canEdit:boolean};
@@ -116,11 +117,11 @@ export default function EditorRibbon({editor,canEdit}:Props){
       <button type="button" role="tab" id="ribbon-tab-home"
         aria-selected={tab==='home'} aria-controls="ribbon-panel-home"
         className={tab==='home'?'is-active':''}
-        onClick={()=>setTab('home')}>{t('editor.toolbar.home')}</button>
+        onClick={()=>setTab('home')}><AppIcon name="edit" size={15}/>{t('editor.toolbar.home')}</button>
       <button type="button" role="tab" id="ribbon-tab-insert"
         aria-selected={tab==='insert'} aria-controls="ribbon-panel-insert"
         className={tab==='insert'?'is-active':''}
-        onClick={()=>setTab('insert')}>{t('editor.toolbar.insert')}</button>
+        onClick={()=>setTab('insert')}><AppIcon name="plus" size={15}/>{t('editor.toolbar.insert')}</button>
       <span className="ribbon-hint">{t('editor.toolbar.tip')}</span>
     </div>
     {tab==='home'?<div className="ribbon-scroll" role="tabpanel" id="ribbon-panel-home" aria-labelledby="ribbon-tab-home">
