@@ -2,6 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useAppPreferences} from './AppPreferences';
 import AppIcon from './AppIcon';
+import DocxPreviewDialog from './DocxPreviewDialog';
 import {
   MANUSCRIPT_ACCEPT,uploadSourceToBook,uploadErrorCode,
   type UploadStage
@@ -14,7 +15,7 @@ const text={
     choose:'Choisir un manuscrit',drop:'Glissez votre fichier ici, ou choisissez-le dans votre appareil.',
     uploading:'Envoi direct vers Supabase…',authorizing:'Vérification des autorisations…',
     confirming:'Vérification du fichier auprès du serveur…',
-    empty:'Aucun fichier source pour cet ouvrage.',refresh:'Actualiser',download:'Télécharger',
+    empty:'Aucun fichier source pour cet ouvrage.',refresh:'Actualiser',download:'Télécharger',preview:'Prévisualiser DOCX',
     remove:'Supprimer',busy:'Chargement…',notReady:'La liaison Supabase Storage n’est pas encore configurée.',
     error:'Stockage momentanément indisponible. Réessayez.',
     tooLarge:'Format non autorisé ou fichier supérieur à 20 Mio.',
@@ -30,7 +31,7 @@ const text={
     choose:'Choose manuscript',drop:'Drop your manuscript here or choose a file from your device.',
     uploading:'Uploading directly to Supabase…',authorizing:'Checking permissions…',
     confirming:'Verifying the file with the server…',
-    empty:'No source files for this book.',refresh:'Refresh',download:'Download',
+    empty:'No source files for this book.',refresh:'Refresh',download:'Download',preview:'Preview DOCX',
     remove:'Delete',busy:'Loading…',notReady:'Supabase Storage is not configured.',
     error:'Storage is temporarily unavailable. Please retry.',
     tooLarge:'Unsupported type or larger than 20 MiB.',
@@ -51,6 +52,7 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[dragging,setDragging]=useState(false),
         [stage,setStage]=useState<UploadStage|null>(null);
   const input=useRef<HTMLInputElement>(null);
+  const [previewName,setPreviewName]=useState<string|null>(null);
   const base='/api/v1/books/'+bookId+'/files';
   const refresh=useCallback(async()=>{
     try{
@@ -140,6 +142,8 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         <span title={shortName(f.name)} className="source-filename"><AppIcon name="manuscript"/>{shortName(f.name)}</span>
         <small>{humanSize(f.size)}</small>
         <div className="source-actions">
+          {f.name.toLowerCase().endsWith('.docx')&&<button type="button" className="text-button" disabled={busy}
+            onClick={()=>setPreviewName(f.name)}><AppIcon name="search" size={15}/>{t.preview}</button>}
           <button type="button" className="text-button" disabled={busy}
             onClick={()=>void act('download',f.name)}><AppIcon name="download" size={15}/>{t.download}</button>
           {editable&&<button type="button" className="text-button" disabled={busy}
@@ -147,5 +151,6 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         </div>
       </li>)}</ul>}
     <p className="source-note source-disclaimer"><AppIcon name="shield" size={17}/>{t.notImported}</p>
+    {previewName&&<DocxPreviewDialog bookId={bookId} name={previewName} onClose={()=>setPreviewName(null)}/>}
   </section>;
 }
