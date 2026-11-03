@@ -1,0 +1,32 @@
+name: Generate pnpm lockfile once
+on:
+  push:
+    branches: [fix/37-pnpm-lockfile]
+permissions:
+  contents: write
+jobs:
+  lockfile:
+    if: github.repository == 'Bandsman942/bookstudio-ai' && github.ref == 'refs/heads/fix/37-pnpm-lockfile'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.18'
+      - run: corepack enable
+      - name: Resolve reproducible pnpm dependencies
+        run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Commit lockfile exclusively to bootstrap branch
+        run: |
+          set -euo pipefail
+          test -s pnpm-lock.yaml
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo 'pnpm-lock.yaml already current'; exit 0
+          fi
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git commit -m "build: commit deterministic pnpm lockfile (#37)"
+          git push origin "HEAD:fix/37-pnpm-lockfile"
