@@ -4,7 +4,8 @@ import type {Prisma} from '@prisma/client';
 import {activeUser,accessToBook} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {isBookId,listFiles} from '@/lib/supabase-storage';
-import {prepareReviewedDocxBatch,ReviewedImportError} from '@/lib/reviewed-docx-batch';
+import {prepareReviewedDocxBatch} from '@/lib/reviewed-docx-batch';
+import {ReviewedImportError} from '@/lib/reviewed-docx-import';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
