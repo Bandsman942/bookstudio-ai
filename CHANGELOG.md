@@ -3,7 +3,9 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
-### Performance (prochain lot, NON DÉPLOYÉ)
+
+## [0.6.0] — alpha préparée, NON DÉPLOYÉE
+### Performance
 - Fonction Node.js Vercel localisée par configuration vers `pdx1` (Oregon), proche de Neon `aws-us-west-2` ; gain à confirmer avec mesures depuis Kinshasa et possibilité de revenir à `iad1` si nécessaire — #61.
 - Élimination du second chargement profond d'un livre pour calculer le droit d'édition, récupération de l'appartenance dans la requête initiale ; cache d'authentification limité au contexte de rendu React.
 - Réduction des requêtes de commentaires : aucun GET après chaque nouvelle révision, état « À revoir » calculé localement ; le panneau éditorial mobile n'est plus chargé en arrière-plan s'il est fermé.
