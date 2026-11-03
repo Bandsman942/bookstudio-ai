@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.11.0] — alpha, EN VALIDATION (NON DÉPLOYÉE)
+## [0.11.0] — 2026-11-03 (production alpha privée)
 ### BS-006a — Aperçu de structure DOCX privé avant revue humaine (issue #90)
 - Bouton « Prévisualiser DOCX » dans les fichiers sources privés, disponible aux membres lecteurs autorisés ; URL signée temporaire, téléchargement direct navigateur → Supabase sans binaire sur Vercel.
 - Inspection locale bornée de l'archive OOXML : taille, nombre d'entrées, budget de décompression, Zip Slip, contenu actif, DTD/entités ; extraction sélective XML seulement.
@@ -12,6 +12,11 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Limite 200 paragraphes/100 000 caractères, statut **fidélité non vérifiée**. Aucun chapitre modifié, aucune transmission à un fournisseur IA.
 - Tests ZIP et recette E2E. **Pas de conversion Word fidèle, antivirus ou backup de binaires livré.**
 
+
+### Déploiement
+- **READY le 2026-11-03T19:10:55.816Z** : Vercel `dpl_7iSFt4FVpnUDZd9Ud1dxfTYaehCs`, SHA `91ab14726eb06cb0b5f8233e79ca6dc878ad3eff`, CI main SUCCESS, E2E propriétaire « v0.11.0-alpha BON ».
+- Snapshot Neon `snap-wild-king-bfqcfagx`; `/api/health` et `/api/version` HTTP 200 (DB ready, v0.11.0, SHA `91ab14726eb0`). Ignored Build Step remis `exit 0`, previews off.
+- Journal `docs/deployments/2026-11-03T19-10-55Z_v0.11.0.md`. **Tag Git annoté v0.11.0 encore à créer**.
 
 ## [0.10.0] — 2026-11-03 (production alpha privée)
 ### UI import de manuscrit visible et iconographie cohérente (issue #86)
