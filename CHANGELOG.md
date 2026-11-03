@@ -3,6 +3,16 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+### Éditeur avancé — première tranche (à publier)
+- Ancienne barre de sept boutons remplacée par un ruban **Accueil / Insertion** regroupant styles Normal/Titres 1–3, gras, italique, souligné, barré, code, listes numérotées/à puces, citation, bloc de code, annulation/rétablissement, nettoyage de format, insertion de lien et séparation — #68.
+- États actifs accessibles via `useEditorState`, sans re-render de l'éditeur à chaque transaction ; interface défilable sur petit écran et compatible thème clair/sombre et FR/EN.
+- Liens volontaires uniquement : `http(s)`/`mailto` contrôlés, prévention des protocoles dangereux. Les nouvelles marques sont validées au serveur et conservées dans les versions.
+- Export DOCX/Markdown : soulignement et relations de liens conservés ; PDF : annotations de liens et soulignements dans l'édition de lecture.
+### Tests
+- Nouveau `pnpm test:export` (sécurité et rendu des liens DOCX/Markdown/PDF) et `pnpm editor:check`, exécutés avec `pnpm test`.
+- **Fonctions non encore disponibles** : tableaux, images, typographie avancée, notes, suivi des modifications, pagination fidèle. Évolutions découpées en lots. Aucun changement de données existantes ni de secret.
+
+
 ### Interface et internationalisation (à publier)
 - Thèmes clair, sombre et système, initialisés côté serveur sans flash de mode, et conservés dans des cookies de préférences non sensibles (#66).
 - Traductions FR/EN typées pour les principaux parcours (accueil, connexion, bibliothèque, ouvrage, chapitres, éditeur, versions, commentaires, archives et recherche), avec changement accessible depuis les menus « ⋯ » (#67).
