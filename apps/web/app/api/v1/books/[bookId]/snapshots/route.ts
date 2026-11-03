@@ -35,7 +35,7 @@ export async function POST(req: Request, {params}: Ctx) {
   const book = await accessToBook(bookId,user.id,true);
   if (!book) return errorResponse('NOT_FOUND',404);
   const body = await req.json().catch(()=>null);
-  const name = typeof body?.name === 'string' ? body.name.trim().replace(/\\s+/g,' ') : '';
+  const name = typeof body?.name === 'string' ? body.name.trim().replace(/\s+/g,' ') : '';
   if (name.length < 2 || name.length > 140) return errorResponse('SNAPSHOT_NAME_INVALID');
 
   try {
