@@ -22,6 +22,13 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
     setVersions(payload.snapshots);
   },[bookId]);
   useEffect(()=>{refresh().catch(()=>setError('Impossible de charger les versions.'));},[refresh]);
+  useEffect(()=>{
+    if(!pendingRestore||busy)return;
+    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setPendingRestore(null);};
+    document.addEventListener('keydown',escape);
+    return ()=>document.removeEventListener('keydown',escape);
+  },[pendingRestore,busy]);
+
 
   async function create(event:React.FormEvent){
     event.preventDefault();
