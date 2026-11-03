@@ -18,6 +18,19 @@ export function normalizeTitle(value: unknown): string {
   if (title.length < 2 || title.length > MAX_BOOK_TITLE) throw new Error('TITLE_INVALID');
   return title;
 }
+/** URL policy shared by browser UI and server-side document validation. */
+export function normalizeEditorHref(value:unknown):string|null {
+  if(typeof value!=='string'||value.length>2048)return null;
+  const href=value.trim();
+  if(!href)return null;
+  try{
+    const url=new URL(href);
+    if(!['https:','http:','mailto:'].includes(url.protocol))return null;
+    if(url.protocol==='mailto:'&&!url.pathname.includes('@'))return null;
+    if((url.protocol==='http:'||url.protocol==='https:')&&(!url.hostname||url.username||url.password))return null;
+    return url.toString();
+  }catch{return null;}
+}
 export function assertValidDocument(value: unknown): asserts value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('DOCUMENT_INVALID');
   const doc = value as Record<string, unknown>;
@@ -39,7 +52,21 @@ export function assertValidDocument(value: unknown): asserts value is Record<str
     if (item.marks !== undefined) {
       if (!Array.isArray(item.marks)) throw new Error('DOCUMENT_INVALID');
       for (const mark of item.marks) {
-        if (!mark || typeof mark !== 'object' || !['bold','italic','code','strike'].includes((mark as {type?:string}).type ?? '')) throw new Error('DOCUMENT_UNSUPPORTED_MARK');
+        if(!mark||typeof mark!=='object'||Array.isArray(mark))throw new Error('DOCUMENT_UNSUPPORTED_MARK');
+        const m=mark as {type?:string;attrs?:Record<string,unknown>};
+        if(!['bold','italic','underline','code','strike','link'].includes(m.type??''))throw new Error('DOCUMENT_UNSUPPORTED_MARK');
+        if(m.type==='link'){
+          const attrs=m.attrs;
+          if(!attrs||typeof attrs!=='object'||Array.isArray(attrs)||!normalizeEditorHref(attrs.href))throw new Error('DOCUMENT_UNSAFE_LINK');
+          if(attrs.target!=null&&!['_blank','_self'].includes(String(attrs.target)))throw new Error('DOCUMENT_UNSAFE_LINK');
+          if(attrs.rel!=null&&(typeof attrs.rel!=='string'||attrs.rel.length>120))throw new Error('DOCUMENT_UNSAFE_LINK');
+          // Opening in a new tab without noopener+noreferrer would allow reverse tabnabbing.
+          if(attrs.target==='_blank'&&(
+            typeof attrs.rel!=='string'||
+            !attrs.rel.split(/\s+/).includes('noopener')||
+            !attrs.rel.split(/\s+/).includes('noreferrer')
+          ))throw new Error('DOCUMENT_UNSAFE_LINK');
+        }
       }
     }
     if (item.attrs !== undefined && (typeof item.attrs !== 'object' || item.attrs === null || Array.isArray(item.attrs))) throw new Error('DOCUMENT_INVALID');
