@@ -151,6 +151,6 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         </div>
       </li>)}</ul>}
     <p className="source-note source-disclaimer"><AppIcon name="shield" size={17}/>{t.notImported}</p>
-    {previewName&&<DocxPreviewDialog bookId={bookId} name={previewName} onClose={()=>setPreviewName(null)}/>}
+    {previewName&&<DocxPreviewDialog bookId={bookId} name={previewName} editable={editable} onClose={()=>setPreviewName(null)}/>}
   </section>;
 }
