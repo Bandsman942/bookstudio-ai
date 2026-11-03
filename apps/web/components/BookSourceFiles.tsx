@@ -11,7 +11,8 @@ const text={
     refresh:'Actualiser',download:'Télécharger',remove:'Supprimer',busy:'Chargement…',
     notReady:'La liaison Supabase Storage n’est pas encore configurée sur le serveur.',
     error:'Connexion au stockage momentanément indisponible. Réessayez.',tooLarge:'Fichier non pris en charge ou supérieur à 20 Mo.',
-    uploaded:'Fichier envoyé et vérifié.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
+    uploaded:'Fichier confirmé par le serveur.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
+    mismatch:'Fichier reçu, mais taille ou type non conforme. Le fichier n’est pas confirmé.',
     confirm:'Supprimer définitivement ce fichier source ?',restricted:'Formats : DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 Mo maximum.',
     notImported:'La présence dans Storage ne déclenche pas encore la conversion du document dans les chapitres.',
     deleted:'Fichier supprimé.'},
@@ -20,7 +21,8 @@ const text={
     refresh:'Refresh',download:'Download',remove:'Delete',busy:'Loading…',
     notReady:'Supabase Storage is not configured on the server yet.',
     error:'Storage is temporarily unavailable. Please retry.',tooLarge:'Unsupported file or larger than 20 MB.',
-    uploaded:'File uploaded and verified.',uploadFailed:'Transfer interrupted: upload not confirmed. Retry.',
+    uploaded:'File confirmed by the server.',uploadFailed:'Transfer interrupted: upload not confirmed. Retry.',
+    mismatch:'File received, but size or type does not match. The file is not confirmed.',
     confirm:'Permanently delete this source file?',restricted:'Formats: DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 MB max.',
     notImported:'Storing a source file does not yet convert its content into editable chapters.',
     deleted:'File deleted.'}
@@ -65,10 +67,18 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         body:file
       });
       if(!uploaded.ok)throw Error('TRANSFER_FAILED');
+      // The server checks Storage metadata; a successful PUT alone is NOT a verified source.
+      const confirmation=await fetch(base,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'confirm',name:data.name,size:file.size,type:file.type})
+      });
+      if(!confirmation.ok){
+        const failure=await confirmation.json().catch(()=>({})) as ApiError;
+        setError(failure.error==='SOURCE_SIZE_MISMATCH'||failure.error==='SOURCE_TYPE_MISMATCH'?
+          t.mismatch:t.uploadFailed);
+        await refresh();return;
+      }
       await refresh();
-      // Only claim success when Storage lists the object.
-      const checked=await fetch(base,{cache:'no-store'}).then(r=>r.ok?r.json():null);
-      if(!checked||!checked.files?.some((f:Item)=>f.name===data.name))throw Error('NOT_VERIFIED');
       setNotice(t.uploaded);
     }catch{setError(t.uploadFailed);}
     finally{setBusy(false);if(input.current)input.current.value='';}

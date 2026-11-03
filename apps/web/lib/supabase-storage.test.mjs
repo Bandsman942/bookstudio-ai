@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateSource,MAX_SOURCE_BYTES,isBookId,filePath,isStoredName,signUpload,listFiles,signDownload,deleteFile} from './supabase-storage.ts';
+import {validateSource,MAX_SOURCE_BYTES,isBookId,filePath,isStoredName,signUpload,listFiles,signDownload,deleteFile,checkStoredSource,confirmStoredSource} from './supabase-storage.ts';
 
 const BOOK='123e4567-e89b-42d3-a456-426614174000';
 test('validates document type and size without accepting unsafe filenames',()=>{
@@ -38,7 +38,7 @@ test('Supabase private REST signing, listing and deleting have server-side scope
     const relative=new URL(url).pathname;
     calls.push({relative,method:options.method,headers:options.headers,body:options.body});
     if(relative.includes('/object/upload/sign/'))return Response.json({url:'/object/upload/sign/Uploaded_books/'+path+'?token=temporary'});
-    if(relative.includes('/object/list/'))return Response.json([{name,metadata:{size:1024},created_at:'2026-11-03T00:00:00Z'}]);
+    if(relative.includes('/object/list/'))return Response.json([{name,metadata:{size:1024,mimetype:'application/pdf'},created_at:'2026-11-03T00:00:00Z'}]);
     if(relative.includes('/object/sign/'))return Response.json({signedURL:'/object/sign/Uploaded_books/'+path+'?token=download'});
     if(relative==='/storage/v1/object/Uploaded_books'&&options.method==='DELETE')return Response.json([{name}]);
     throw Error('unexpected mock call '+relative);
@@ -48,16 +48,17 @@ test('Supabase private REST signing, listing and deleting have server-side scope
     assert.ok(signed.startsWith(process.env.SUPABASE_URL+'/storage/v1/object/upload/sign/'));
     assert.equal(new URL(signed).searchParams.get('token'),'temporary');
     assert.deepEqual((await listFiles(BOOK)).map(x=>x.name),[name]);
+    assert.equal(await confirmStoredSource(BOOK,{name,size:1024,type:'application/pdf'}),'ok');
     const download=await signDownload(BOOK,name);
     assert.equal(new URL(download).searchParams.get('token'),'download');
     await deleteFile(BOOK,name);
-    assert.equal(calls.length,4);
+    assert.equal(calls.length,5);
     for(const call of calls){
       assert.equal(call.headers.apikey,'sb_secret_testing_only');
       assert.ok(call.relative.startsWith('/storage/v1/object/'));
     }
-    assert.equal(calls[3].method,'DELETE');
-    assert.deepEqual(JSON.parse(calls[3].body),{prefixes:[path]});
+    assert.equal(calls[4].method,'DELETE');
+    assert.deepEqual(JSON.parse(calls[4].body),{prefixes:[path]});
   }finally{
     globalThis.fetch=oldFetch;
     for(const [key,value] of Object.entries(originals)){
@@ -65,4 +66,18 @@ test('Supabase private REST signing, listing and deleting have server-side scope
       else process.env[key]=value;
     }
   }
+});
+
+test('server-side source confirmation rejects mismatched object metadata',()=>{
+  const name='123e4567-e89b-42d3-a456-426614174000-memoire.pdf';
+  const expected={name,size:125,type:'application/pdf'};
+  const ok={name,size:125,createdAt:null,contentType:'application/pdf'};
+  assert.equal(checkStoredSource(ok,expected),'ok');
+  assert.equal(checkStoredSource(undefined,expected),'not_found');
+  assert.equal(checkStoredSource({...ok,size:124},expected),'size_mismatch');
+  assert.equal(checkStoredSource({...ok,size:MAX_SOURCE_BYTES+1},expected),'size_mismatch');
+  assert.equal(checkStoredSource({...ok,contentType:'text/plain'},expected),'type_mismatch');
+  assert.equal(checkStoredSource({...ok,contentType:null},expected),'type_mismatch');
+  assert.equal(checkStoredSource(ok,{...expected,name:'../../bad.pdf'}),'invalid');
+  assert.equal(checkStoredSource(ok,{...expected,type:'application/x-msdownload'}),'invalid');
 });
