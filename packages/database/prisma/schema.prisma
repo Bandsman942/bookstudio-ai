@@ -160,3 +160,17 @@ model AuditEvent {
   @@index([workspaceId,createdAt])
   @@map("audit_events")
 }
+
+/**
+ * Shared across serverless instances: never keep login throttles in memory.
+ * Only a SHA-256 identifier is stored, never a plaintext e-mail or IP.
+ */
+model AuthThrottle {
+  key String @id @db.Char(64)
+  attempts Int @default(0)
+  windowStart DateTime @map("window_start")
+  lockedUntil DateTime? @map("locked_until")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([updatedAt])
+  @@map("auth_throttles")
+}
