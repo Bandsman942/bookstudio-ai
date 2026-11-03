@@ -17,6 +17,6 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
     </aside>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">Bibliothèque</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>
-    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} chapters={chapters.map(c=>({id:c.id,title:c.title,revision:c.revisionSeq}))}/></main>
+    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} chapters={chapters.map(c=>({id:c.id,title:c.title,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
   </div>;
 }
