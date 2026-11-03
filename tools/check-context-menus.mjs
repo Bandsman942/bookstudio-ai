@@ -32,6 +32,9 @@ assert.ok(library.includes('className="book-card-link"'),'Book link must remain 
 assert.ok(!library.includes('<Link key={book.id}'),'No nested interactive buttons in library card links');
 const versions=file('apps/web/components/SnapshotsPanel.tsx');
 assert.ok(!versions.includes('className="version-actions"'),'No scattered export buttons');
+const studio=file('apps/web/components/StudioEditor.tsx');
+assert.ok(studio.includes('studio-mobile-insights-open'),'Mobile insights drawer toggle missing');
+assert.ok(studio.includes('studio-insights-backdrop'),'Mobile insights dismiss control missing');
 const css=file('apps/web/app/styles.css');
 for(const rule of ['.context-menu{','.context-trigger{','.chapter-item-link{','.book-card-overflow{','.versions-list{'])
   assert.ok(css.includes(rule),'Missing responsive styling: '+rule);

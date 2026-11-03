@@ -3,18 +3,21 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
-### Modifié
-- Standardisation UI/UX des actions secondaires dans des menus contextuels « ⋯ » : bibliothèque, ouvrages, chapitres, archives, versions, commentaires, options de l'éditeur et compte (BS-025 #55).
-- Hiérarchie visuelle claire : une action principale par section ; actions spécifiques regroupées par objet, modales de confirmation pour les opérations importantes.
-- Clavier et mobile : flèches, Echap, Home/End, Tab, fermeture extérieure, focus visible et évitement du masquage par les cartes.
-### Ajouté
-- Renommage des titres de chapitre depuis leur menu (BS-026 #56), sans altérer le contenu ni les révisions, avec contrôle de concurrence, autorisations et audit.
-### Corrigé
-- L'éditeur respecte le mode lecture seule pour les utilisateurs non autorisés à écrire.
-### Vérification
-- Contrat structurel `pnpm ui:check` ajouté à la CI ; E2E HTTP sur renommage de chapitre et recette tactile/clavier à réaliser avant publication.
-- **Ces changements ne sont pas encore déployés en production.** Ils seront inclus uniquement dans la prochaine version validée.
 
+## [0.5.0] — version alpha préparée, NON DÉPLOYÉE
+### Modifié
+- Menus contextuels « ⋯ » pour les commandes secondaires de la bibliothèque, des livres, chapitres, archives, versions, commentaires, options de l'éditeur et du compte — PR #57, issue #55.
+- Hiérarchie d'actions unifiée : une action primaire visible par section et confirmation des opérations importantes ; clavier, tactile et responsive.
+- Le panneau de commentaires et conseils est accessible sur tablette et mobile comme tiroir latéral refermable depuis le menu de l’éditeur.
+### Ajouté
+- Renommage d'un chapitre depuis son menu, sans modifier ses révisions ni son texte ; détection de conflit et audit — PR #57, issue #56.
+### Corrigé
+- L'éditeur est maintenant non modifiable pour les rôles sans droit d'écriture.
+### Sécurité
+- Permissions revérifiées côté serveur, protection CSRF et concurrence optimiste sur les métadonnées de chapitre.
+### Vérification et statut
+- Contrôles statiques `pnpm ui:check` et tests HTTP des droits, conflits et intégrité du contenu en CI.
+- **Publication non déclenchée** : recette E2E humaine (clavier, tactile, 320–1440 px, fichiers et autres fonctions) et feu vert du propriétaire requis avant la fusion de la release et Vercel.
 
 ## [0.4.0] — 2026-11-03 (production alpha privée)
 ### Ajouté

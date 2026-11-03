@@ -11,10 +11,26 @@ type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
- const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
+ const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState(false),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
  const [recovery,setRecovery]=useState<string|null>(null);
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
  const draftKey='bookstudio:draft:'+chapterId;
+ const drawerCloseRef=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{
+   const query=window.matchMedia('(max-width: 1150px)');
+   const update=()=>{setCompact(query.matches);if(!query.matches)setMobilePanel(false);};
+   update();
+   query.addEventListener('change',update);
+   return ()=>query.removeEventListener('change',update);
+ },[]);
+ useEffect(()=>{
+   if(!mobilePanel)return;
+   drawerCloseRef.current?.focus();
+   const handler=(event:KeyboardEvent)=>{if(event.key==='Escape')setMobilePanel(false);};
+   document.addEventListener('keydown',handler);
+   return ()=>document.removeEventListener('keydown',handler);
+ },[mobilePanel]);
+
  const editor=useEditor({
    extensions:[StarterKit],
    content:initialContent as any,
@@ -69,7 +85,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    if(command==='h2')editor.chain().focus().toggleHeading({level:2}).run();
    if(command==='bullet')editor.chain().focus().toggleBulletList().run();
  };
- return <div className={'studio '+(focus?'studio-focus':'')}>
+ return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open':'')}>
   <aside className="studio-sidebar">
     <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
     <Link href={'/books/'+bookId} className="back-link">← Vue d'ensemble</Link>
@@ -84,8 +100,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
         <ActionMenu label="Options d’affichage de l’éditeur" actions={[
           {label:focus?'Quitter le mode concentration':'Activer le mode concentration',
             onSelect:()=>setFocus(value=>!value)},
-          {label:rightPanel?'Masquer le panneau éditorial':'Afficher le panneau éditorial',
-            onSelect:()=>setRightPanel(value=>!value)}
+          {label:compact?(mobilePanel?'Fermer le panneau éditorial':'Afficher le panneau éditorial'):(rightPanel?'Masquer le panneau éditorial':'Afficher le panneau éditorial'),
+            onSelect:()=>{if(compact)setMobilePanel(value=>!value);else setRightPanel(value=>!value);}}
         ]}/>
       </div>
     </div>
@@ -98,7 +114,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <div className="editor-scroll"><article className="editor-sheet"><span className="chapter-label">MANUSCRIT · CHAPITRE</span><h1>{chapterTitle}</h1><div className="editor-rule"/><EditorContent editor={editor} className="prose-editor"/></article></div>
     <div className="editor-status"><span>{wordCount.toLocaleString('fr-FR')} mots</span><span>Révision {currentRevision}</span><span>Sauvegarde automatique</span></div>
   </main>
-  {rightPanel&&<aside className="studio-insights"><div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
+  {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}/>}
+  {(rightPanel||compact)&&<aside className="studio-insights" aria-label="Panneau éditorial">
+    <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
+    <div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
     <div className="insight-card"><span className="eyebrow">VOTRE ÉCRITURE</span><h3>Un espace pour vos idées.</h3><p>Votre manuscrit dispose d'un historique de révisions. L'IA ne modifiera jamais votre texte sans accord.</p></div>
     <ChapterComments bookId={bookId} chapterId={chapterId} revision={currentRevision} saveState={state} canEdit={canEdit}/>
     <div className="insight-card pale"><span className="eyebrow">PROCHAINES ÉVOLUTIONS</span><p>✧ Analyse stylistique</p><p>✧ Suggestions à valider</p><p>✧ Bibliographie intelligente</p></div>
