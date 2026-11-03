@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.11.0] — alpha, EN VALIDATION (NON DÉPLOYÉE)
+### BS-006a — Aperçu de structure DOCX privé avant revue humaine (issue #90)
+- Bouton « Prévisualiser DOCX » dans les fichiers sources privés, disponible aux membres lecteurs autorisés ; URL signée temporaire, téléchargement direct navigateur → Supabase sans binaire sur Vercel.
+- Inspection locale bornée de l'archive OOXML : taille, nombre d'entrées, budget de décompression, Zip Slip, contenu actif, DTD/entités ; extraction sélective XML seulement.
+- Aperçu consultatif des titres/paragraphes et avertissements sur tableaux, notes, images, modifications suivies, champs et liens externes.
+- Limite 200 paragraphes/100 000 caractères, statut **fidélité non vérifiée**. Aucun chapitre modifié, aucune transmission à un fournisseur IA.
+- Tests ZIP et recette E2E. **Pas de conversion Word fidèle, antivirus ou backup de binaires livré.**
+
+
 ## [0.10.0] — 2026-11-03 (production alpha privée)
 ### UI import de manuscrit visible et iconographie cohérente (issue #86)
 - Action « Importer un manuscrit » immédiatement visible dans la bibliothèque, avec dialogue ciblant un ouvrage autorisé et un fichier original ; accès rapide également dans les cartes.

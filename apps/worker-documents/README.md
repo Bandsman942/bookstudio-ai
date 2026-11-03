@@ -16,3 +16,6 @@ Les fichiers PDF sont rejetés de manière explicite. Les tableaux, images, note
 exigent une revue humaine et ne sont pas encore transformés fidèlement dans l'éditeur.
 
 Recette : `docs/qa/E2E-DOCX-INSPECTION.md`.
+
+## Prévisualisation Web v0.11.0-alpha (BS-006a)
+Une inspection consultative complémentaire peut être effectuée **localement dans le navigateur** depuis des sources DOCX Supabase privées, avec quotas ZIP et avertissements. Cela ne rend pas le worker Python utilisable comme service de production. Les chapitres ne sont pas créés automatiquement ; aucun antivirus/restauration n'est déclaré disponible. Voir `docs/qa/E2E-DOCX-PRIVATE-PREVIEW.md`.
