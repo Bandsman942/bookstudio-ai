@@ -11,7 +11,7 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 
 ## État de livraison
 
-Socle éditorial et exports de base avec versions nommées. **Application non déployée : aucune recette navigateur n'a été effectuée sur une URL Vercel en production.** Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
+Socle éditorial et exports de base avec versions nommées. **v0.2.0-alpha déployée en production privée le 3 novembre 2026, sous Vercel Authentication.** `/api/health` et `/api/version` répondent HTTP 200 ; la recette navigateur complète du propriétaire reste attendue. Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
 
 ### Inclus
 - Monorepo Next.js / TypeScript, Tiptap et Prisma sur Neon PostgreSQL dédié.
@@ -23,7 +23,7 @@ Socle éditorial et exports de base avec versions nommées. **Application non d�
 - Ports API pour l'intégration éventuelle à DTSC Platform sans couplage de base de données.
 
 ### Non inclus dans le MVP courant
-Import Word/PDF complet et sécurisé sur le web, OCR, export PDF et gabarits d'édition finalisés, IA et bibliographie avancée, sauvegardes/restauration d'exploitation, SSO, paiements, collaboration temps réel et déploiement production.
+Import Word/PDF complet et sécurisé sur le web, OCR, export PDF et gabarits d'édition finalisés, IA et bibliographie avancée, sauvegardes/restauration d'exploitation, SSO, paiements, collaboration temps réel et ouverture publique générale.
 
 ## Mise en route
 
