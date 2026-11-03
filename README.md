@@ -2,6 +2,13 @@
 
 Application autonome de rédaction, de révision et d'édition intelligente de livres — dépôt `Bandsman942/bookstudio-ai`.
 
+## Version et historique
+
+- Politique de versionnement : [SemVer et déploiements](docs/ops/VERSIONING.md) ; version de préparation **v0.1.0 (alpha)**.
+- Historique des changements : [CHANGELOG.md](CHANGELOG.md) ; fiche de livraison [v0.1.0](docs/releases/v0.1.0.md).
+- Après déploiement réel, la fiche reçoit SHA, ID Vercel, URL, date UTC et résultats des recettes. La version courante est exposée par `GET /api/version`.
+- **Aucun déploiement en production tant que la base, la migration, l'accès propriétaire et les parcours critiques ne sont pas vérifiés.**
+
 ## État de livraison
 
 Lot 0 — fondations et éditeur initial. Code source et cahier des charges présents ; **application non déployée, ni validée E2E en production**. Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
