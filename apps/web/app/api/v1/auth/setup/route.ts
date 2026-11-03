@@ -39,7 +39,7 @@ export async function POST(req:Request) {
   try {
     await prisma.$transaction(async tx=>{
       // Advisory lock is scoped to the transaction; the first claimant wins.
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(271828183)`;
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(271828183)::text AS acquired`;
       // Count is executed INSIDE the lock. After the first activation it
       // permanently closes this entrypoint even while Vercel env remains.
       if(await tx.user.count()>0)throw new Error('ALREADY_INITIALIZED');
