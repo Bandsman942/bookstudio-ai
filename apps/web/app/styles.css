@@ -379,3 +379,14 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .versions-create input{background:var(--input-surface)}
 .route-loading{background:var(--bg)}
 .route-loading-block,.route-loading-line,.route-loading-mark{opacity:.75}
+
+/* Display preferences live in a quiet contextual menu, not scattered buttons. */
+.public-header-actions{display:flex;align-items:center;gap:12px}
+.auth-card{position:relative}
+.auth-preferences{position:absolute;top:12px;right:15px;z-index:4}
+.preferences-actions .context-trigger{background:transparent;border-color:transparent;box-shadow:none}
+.preferences-actions .context-trigger:is(:hover,:focus-visible,[aria-expanded="true"]){
+  background:var(--menu-hover);border-color:var(--menu-hover-border);color:var(--menu-hover-ink)
+}
+.preferences-actions .context-trigger:focus-visible{outline:3px solid var(--menu-focus)}
+@media(max-width:520px){.public-header-actions{gap:5px}.auth-preferences{right:8px}}
