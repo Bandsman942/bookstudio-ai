@@ -14,7 +14,7 @@ async function authorize(bookId:string,write:boolean){
   if(!user)return null;
   const book=await prisma.book.findFirst({
     where:{id:bookId,archivedAt:null,workspace:{memberships:{some:{
-      userId:user.id,...(write?{role:{in:['OWNER','EDITOR'] as const}}:{})
+      userId:user.id,role:{in:write?['OWNER','EDITOR']:['OWNER','EDITOR','REVIEWER','VIEWER']}
     }}}},
     select:{id:true,workspaceId:true}
   });
