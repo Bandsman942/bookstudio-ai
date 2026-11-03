@@ -5,8 +5,8 @@ const base=process.env.E2E_BASE_URL||'http://localhost:3000';
 const origin=new URL(base).origin;
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-async function request(path,{method='GET',body,cookie,omitOrigin=false}={}){
-  const headers={...(omitOrigin?{}:{Origin:origin}),...(body!==undefined?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{})};
+async function request(path,{method='GET',body,cookie,omitOrigin=false,originOverride=null}={}){
+  const headers={...(omitOrigin?{}:{Origin:originOverride||origin}),...(body!==undefined?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{})};
   const response=await fetch(base+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),redirect:'manual'});
   const data=await response.json().catch(()=>({}));
   return {status:response.status,data,cookie:response.headers.get('set-cookie')?.split(';')[0]||'',setCookie:response.headers.get('set-cookie')||''};
@@ -27,6 +27,11 @@ assert.equal(versionResponse.status,200,'version route');
 assert.equal(versionResponse.data.version,'0.2.0','semver traceability');
 assert.equal(versionResponse.data.tag,'v0.2.0');
 assert.equal(versionResponse.data.channel,'alpha');
+// A second explicitly configured origin must be accepted; arbitrary origins rejected.
+const alternate=await request('/api/v1/auth/login',{method:'POST',originOverride:'http://localhost:3001',body:{email:'nobody@example.invalid',password:'wrong'}});
+assert.equal(alternate.status,401,'configured extra Origin accepted');
+const rogueOrigin=await request('/api/v1/auth/login',{method:'POST',originOverride:'https://unauthorized.example.invalid',body:{email:'nobody@example.invalid',password:'wrong'}});
+assert.equal(rogueOrigin.status,403,'unlisted Origin denied');
 const suffix=randomUUID().slice(0,8);
 const password='BookStudio-CI-Private-Only-2026!';
 

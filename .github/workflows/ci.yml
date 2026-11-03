@@ -25,6 +25,7 @@ jobs:
       DIRECT_URL: postgresql://bookstudio_ci:ci_only_password@localhost:5432/bookstudio?schema=public
       BOOKSTUDIO_PUBLIC_SIGNUP: 'false'
       APP_ORIGIN: http://localhost:3000
+      APP_ALLOWED_ORIGINS: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
