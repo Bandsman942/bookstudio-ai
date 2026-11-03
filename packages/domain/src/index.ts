@@ -18,6 +18,19 @@ export function normalizeTitle(value: unknown): string {
   if (title.length < 2 || title.length > MAX_BOOK_TITLE) throw new Error('TITLE_INVALID');
   return title;
 }
+/** Only explicit web/mail addresses are valid in editorial documents. */
+export function safeExternalHref(value:unknown):string|null {
+  if(typeof value!=='string'||value.length<4||value.length>2048||/[\\x00-\\x1F\\x7F]/.test(value) || /%0[ad]/i.test(value))return null;
+  try{
+    const url=new URL(value);
+    if(!['http:','https:','mailto:'].includes(url.protocol))return null;
+    if(url.protocol==='mailto:'){
+      if(!url.pathname.includes('@')||url.pathname.startsWith('@'))return null;
+    }else if(!url.hostname||url.username||url.password)return null;
+    return value;
+  }catch{return null;}
+}
+
 export function assertValidDocument(value: unknown): asserts value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error('DOCUMENT_INVALID');
   const doc = value as Record<string, unknown>;
@@ -39,7 +52,14 @@ export function assertValidDocument(value: unknown): asserts value is Record<str
     if (item.marks !== undefined) {
       if (!Array.isArray(item.marks)) throw new Error('DOCUMENT_INVALID');
       for (const mark of item.marks) {
-        if (!mark || typeof mark !== 'object' || !['bold','italic','code','strike'].includes((mark as {type?:string}).type ?? '')) throw new Error('DOCUMENT_UNSUPPORTED_MARK');
+        if (!mark || typeof mark !== 'object' || !['bold','italic','code','strike','underline','link'].includes((mark as {type?:string}).type ?? '')) throw new Error('DOCUMENT_UNSUPPORTED_MARK');
+        const itemMark=mark as {type:string;attrs?:Record<string,unknown>};
+        if(itemMark.type==='link'){
+          const attrs=itemMark.attrs;
+          if(!attrs||typeof attrs!=='object'||Array.isArray(attrs)||safeExternalHref(attrs.href)===null ||
+            Object.keys(attrs).some(key=>!['href','target','rel','class','title'].includes(key)))
+            throw new Error('DOCUMENT_UNSAFE_LINK');
+        }
       }
     }
     if (item.attrs !== undefined && (typeof item.attrs !== 'object' || item.attrs === null || Array.isArray(item.attrs))) throw new Error('DOCUMENT_INVALID');
