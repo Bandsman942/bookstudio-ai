@@ -27,7 +27,14 @@ test('without top-level styles, headings can be proposed with a fallback warning
 test('refuse incomplete, dangerous, excessive or ambiguous proposals',()=>{
  assert.equal(proposeDocxChapters({blocks:[h('A'),h('B')],truncated:true}).reason,'truncated');
  assert.equal(proposeDocxChapters({blocks:[p('A'),p('B')],truncated:false}).reason,'no_headings');
- assert.equal(proposeDocxChapters({blocks:Array.from({length:11},(_,i)=>h('Chapter '+i)),truncated:false}).reason,'too_many');
+ assert.equal(proposeDocxChapters({blocks:Array.from({length:11},(_,i)=>h('Chapter '+i)),truncated:false},'Introduction',10).reason,'too_many');
  assert.equal(proposeDocxChapters({blocks:[h('A'),{kind:'iframe',text:'oops'}],truncated:false}).reason,'invalid');
  assert.equal(proposeDocxChapters({blocks:[h('A'),p('x'.repeat(10001)),h('B')],truncated:false}).reason,'invalid');
+});
+
+test('long manuscripts with 250 paragraphs and 14 headings remain fully segmentable',()=>{
+ const blocks=Array.from({length:14},(_,i)=>[h('Chapitre '+(i+1)),...Array.from({length:19},(_,n)=>p('Texte '+i+':'+n+' — '+('a'.repeat(490)))]).flat();
+ const out=proposeDocxChapters({blocks,truncated:false});
+ assert.equal(out.reason,'ok');assert.equal(out.chapters.length,14);
+ assert.deepEqual(out.chapters.flatMap(x=>x.blocks),blocks);
 });
