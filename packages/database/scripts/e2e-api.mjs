@@ -113,6 +113,32 @@ assert.equal(wildcardSearch.status,200);
 assert.equal(wildcardSearch.data.hits.some(hit=>hit.bookId===bookId),false,'LIKE wildcards escaped');
 const invalidSearch=await request(searchEndpoint+'?q=a',{cookie:author});
 assert.equal(invalidSearch.status,400,'short search rejected');
+// Simple editorial comments preserve revision identity and never leak between workspaces.
+const commentsPath='/api/v1/books/'+bookId+'/chapters/'+chapterId+'/comments';
+const newComment=await request(commentsPath,{method:'POST',cookie:author,body:{
+  body:'Vérifier les sources bibliographiques avant publication.',baseRevision:1
+}});
+assert.equal(newComment.status,201,'create editorial comment');
+const commentId=newComment.data.comment.id;
+const commentsList=await request(commentsPath,{cookie:author});
+assert.equal(commentsList.status,200,'list own comments');
+assert.equal(commentsList.data.comments.some(c=>c.id===commentId && c.stale===false),true,'comment anchored to current revision');
+const outsiderComments=await request(commentsPath,{cookie:outsider});
+assert.equal(outsiderComments.status,404,'cross-tenant comments list denied');
+const outsiderCommentWrite=await request(commentsPath,{method:'POST',cookie:outsider,body:{
+  body:'Accès non autorisé',baseRevision:1
+}});
+assert.equal(outsiderCommentWrite.status,404,'cross-tenant comment creation denied');
+const commentCSRF=await request(commentsPath,{method:'POST',cookie:author,omitOrigin:true,body:{
+  body:'Interdit par CSRF',baseRevision:1
+}});
+assert.equal(commentCSRF.status,403,'comment CSRF enforced');
+const badAnchor=await request(commentsPath,{method:'POST',cookie:author,body:{
+  body:'Ancre trompeuse',baseRevision:1,quote:'INEXISTANT',startOffset:0,endOffset:10
+}});
+assert.equal(badAnchor.status,409,'incorrect text anchor rejected');
+const invalidComment=await request(commentsPath,{method:'POST',cookie:author,body:{body:'x',baseRevision:1}});
+assert.equal(invalidComment.status,400,'comment validation');
 const othersRead=await request(path,{cookie:outsider});
 assert.equal(othersRead.status,404,'no cross-user chapter read');
 const othersWrite=await request(path,{method:'PATCH',cookie:outsider,body:{baseRevision:1,content:doc}});
@@ -138,6 +164,21 @@ const nextDoc={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:
 const secondSave=await request(path,{method:'PATCH',cookie:author,body:{baseRevision:1,content:nextDoc}});
 assert.equal(secondSave.status,200,'second revision');
 assert.equal(secondSave.data.revision,2);
+const staleList=await request(commentsPath,{cookie:author});
+assert.equal(staleList.status,200);
+assert.equal(staleList.data.comments.some(c=>c.id===commentId && c.stale===true),true,'comment must require human re-anchoring after edit');
+const staleCommentWrite=await request(commentsPath,{method:'POST',cookie:author,body:{
+  body:'Commentaire sur mauvaise révision',baseRevision:1
+}});
+assert.equal(staleCommentWrite.status,409,'stale comment base rejected');
+const resolutionPath=commentsPath+'/'+commentId;
+const outsiderResolution=await request(resolutionPath,{method:'PATCH',cookie:outsider,body:{status:'RESOLVED'}});
+assert.equal(outsiderResolution.status,404,'cross-tenant comment resolution denied');
+const resolve=await request(resolutionPath,{method:'PATCH',cookie:author,body:{status:'RESOLVED'}});
+assert.equal(resolve.status,200,'editor can resolve comment');
+const listResolved=await request(commentsPath,{cookie:author});
+assert.equal(listResolved.data.comments.find(c=>c.id===commentId)?.status,'RESOLVED');
+
 const oldRevisionSearch=await request(searchEndpoint+'?q=Premier',{cookie:author});
 assert.equal(oldRevisionSearch.status,200);
 assert.equal(oldRevisionSearch.data.hits.some(hit=>hit.bookId===bookId),false,'superseded text not exposed');
@@ -186,4 +227,4 @@ const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
 assert.equal(logout.status,200,'logout');
 const revoked=await request('/api/v1/books',{cookie:author});
 assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
-console.log('E2E API PASS: auth, throttle, CSRF, private live search, revisions, snapshots, restoration, DOCX/PDF/MD export and ACL');
+console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, snapshots, restoration, exports and ACL');

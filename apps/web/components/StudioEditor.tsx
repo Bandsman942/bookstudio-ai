@@ -3,10 +3,11 @@ import {useEffect,useRef,useState} from 'react';
 import {EditorContent,useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from 'next/link';
+import ChapterComments from './ChapterComments';
 type Chapter={id:string;title:string};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error';
-type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[]};
-export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters}:Props){
+type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
+export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
  const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
@@ -76,7 +77,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   <main className="studio-center">
     <div className="studio-topbar"><span className="breadcrumb"><Link href={'/books/'+bookId}>{bookTitle}</Link> / <strong>{chapterTitle}</strong></span>
       <div className="studio-actions"><span className={'save-state save-'+state}>{state==='saved'?'✓ Enregistré':state==='editing'?'● Modifié':state==='saving'?'◌ Enregistrement…':state==='conflict'?'⚠ Conflit de versions':'⚠ Sauvegarde en attente'}</span>
-      <button title="Mode concentration" onClick={()=>setFocus(!focus)} className="icon-button">{focus?'◱':'⛶'}</button><button title="Afficher les conseils" onClick={()=>setRightPanel(!rightPanel)} className="icon-button">◧</button></div>
+      <button title="Mode concentration" onClick={()=>setFocus(!focus)} className="icon-button">{focus?'◱':'⛶'}</button><button title="Afficher les commentaires et conseils" onClick={()=>setRightPanel(!rightPanel)} className="icon-button">◧</button></div>
     </div>
     <div className="toolbar"><button onClick={()=>format('h1')}>Titre 1</button><button onClick={()=>format('h2')}>Titre 2</button><i/><button onClick={()=>format('bold')}><b>G</b></button><button onClick={()=>format('italic')}><em>I</em></button><button onClick={()=>format('bullet')}>☷ Liste</button><i/><button onClick={()=>editor?.chain().focus().undo().run()} title="Annuler">↶</button><button onClick={()=>editor?.chain().focus().redo().run()} title="Rétablir">↷</button></div>
     {recovery&&<div role="alert" className="editor-warning">Un brouillon local plus récent a été trouvé.
@@ -89,7 +90,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   </main>
   {rightPanel&&<aside className="studio-insights"><div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
     <div className="insight-card"><span className="eyebrow">VOTRE ÉCRITURE</span><h3>Un espace pour vos idées.</h3><p>Votre manuscrit dispose d'un historique de révisions. L'IA ne modifiera jamais votre texte sans accord.</p></div>
-    <div className="insight-card pale"><span className="eyebrow">AU PROGRAMME</span><p>✧ Analyse stylistique</p><p>✧ Suggestions à valider</p><p>✧ Bibliographie intelligente</p></div>
+    <ChapterComments bookId={bookId} chapterId={chapterId} revision={currentRevision} saveState={state} canEdit={canEdit}/>
+    <div className="insight-card pale"><span className="eyebrow">PROCHAINES ÉVOLUTIONS</span><p>✧ Analyse stylistique</p><p>✧ Suggestions à valider</p><p>✧ Bibliographie intelligente</p></div>
     <div className="insights-footer">BookStudio AI respecte votre voix.</div>
   </aside>}
  </div>;

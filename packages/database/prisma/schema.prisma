@@ -16,6 +16,11 @@ enum WorkspaceRole {
   REVIEWER
   VIEWER
 }
+enum EditorialCommentStatus {
+  OPEN
+  RESOLVED
+}
+
 enum BookStatus {
   DRAFT
   WRITING
@@ -39,6 +44,7 @@ model User {
   ownedBooks Book[] @relation("BookOwner")
   revisions DocumentRevision[] @relation("RevisionAuthor")
   snapshots BookSnapshot[] @relation("SnapshotAuthor")
+  editorialComments EditorialComment[] @relation("CommentAuthor")
   @@map("users")
 }
 model Session {
@@ -117,6 +123,7 @@ model Chapter {
   updatedAt DateTime @updatedAt @map("updated_at")
   manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
   revisions DocumentRevision[]
+  editorialComments EditorialComment[]
   @@unique([manuscriptId,position])
   @@index([manuscriptId,position])
   @@map("chapters")
@@ -173,4 +180,27 @@ model AuthThrottle {
   updatedAt DateTime @updatedAt @map("updated_at")
   @@index([updatedAt])
   @@map("auth_throttles")
+}
+
+/**
+ * Comments stay on their original chapter revision. After further edits
+ * the UI must display "À revoir"; no unsafe automatic anchor remapping.
+ */
+model EditorialComment {
+  id String @id @default(uuid()) @db.Uuid
+  chapterId String @map("chapter_id") @db.Uuid
+  authorId String @map("author_id") @db.Uuid
+  baseRevision Int @map("base_revision")
+  body String @db.Text
+  quote String? @db.VarChar(500)
+  startOffset Int? @map("start_offset")
+  endOffset Int? @map("end_offset")
+  status EditorialCommentStatus @default(OPEN)
+  createdAt DateTime @default(now()) @map("created_at")
+  resolvedAt DateTime? @map("resolved_at")
+  chapter Chapter @relation(fields:[chapterId],references:[id],onDelete:Cascade)
+  author User @relation("CommentAuthor",fields:[authorId],references:[id])
+  @@index([chapterId,createdAt])
+  @@index([authorId,createdAt])
+  @@map("editorial_comments")
 }
