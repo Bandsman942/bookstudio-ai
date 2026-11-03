@@ -1,5 +1,5 @@
 import {redirect,notFound} from 'next/navigation';
-import {activeUser,accessToBook} from '@/lib/auth';
+import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import {prisma} from '@bookstudio/database';
 import StudioEditor from '@/components/StudioEditor';
 export const dynamic='force-dynamic';
@@ -10,7 +10,7 @@ export default async function ChapterPage({params}:{params:Promise<{bookId:strin
   if(!book||!chapter)notFound();
   const revision=await prisma.documentRevision.findUnique({where:{chapterId_sequence:{chapterId,sequence:chapter.revisionSeq}}});
   if(!revision)notFound();
-  const canEdit=Boolean(await accessToBook(bookId,user.id,true));
+  const canEdit=canWriteBook(book);
   return <StudioEditor bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
     revision={chapter.revisionSeq} initialContent={revision.content as Record<string,unknown>}
     chapters={chapters.map(c=>({id:c.id,title:c.title}))} canEdit={canEdit}/>;
