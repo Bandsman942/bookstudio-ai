@@ -3,6 +3,17 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+### Performance (prochain lot, NON DÉPLOYÉ)
+- Fonction Node.js Vercel localisée par configuration vers `pdx1` (Oregon), proche de Neon `aws-us-west-2` ; gain à confirmer avec mesures depuis Kinshasa et possibilité de revenir à `iad1` si nécessaire — #61.
+- Élimination du second chargement profond d'un livre pour calculer le droit d'édition, récupération de l'appartenance dans la requête initiale ; cache d'authentification limité au contexte de rendu React.
+- Réduction des requêtes de commentaires : aucun GET après chaque nouvelle révision, état « À revoir » calculé localement ; le panneau éditorial mobile n'est plus chargé en arrière-plan s'il est fermé.
+- Autosauvegarde plus robuste en connexion faible : sérialisation/brouillon local regroupés sur 350 ms, suspension hors ligne, reprise à la reconnexion et backoff borné jusqu'à 30 s ; protection du conflit 409 et statut visible.
+- Chargement progressif des pages privées avec squelette non confidentiel ; en-têtes `Server-Timing` sur santé et sauvegarde pour faciliter les mesures.
+### Assurance qualité
+- Ajout du contrôle CI `pnpm perf:check`, du protocole `docs/qa/E2E-PERFORMANCE.md` et du runbook `docs/ops/PERFORMANCE.md`.
+- **Aucun gain p50/p95 annoncé sans mesures** ; la version en production reste v0.5.0-alpha jusqu'à validation et publication contrôlée.
+
+
 
 ## [0.5.0] — 2026-11-03 (production alpha privée)
 ### Modifié
