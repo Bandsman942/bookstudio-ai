@@ -390,3 +390,151 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 }
 .preferences-actions .context-trigger:focus-visible{outline:3px solid var(--menu-focus)}
 @media(max-width:520px){.public-header-actions{gap:5px}.auth-preferences{right:8px}}
+
+/* Editorial ribbon — Word-inspired groups without a crowded single-line toolbar.
+   Uses existing light/dark/system tokens; controls remain unobtrusive at rest. */
+.ribbon{
+  flex:0 0 auto;
+  min-width:0;
+  background:var(--surface);
+  color:var(--ink);
+  border-bottom:1px solid var(--line);
+}
+.ribbon-tabs{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  gap:4px;
+  border-bottom:1px solid var(--line);
+}
+.ribbon-tabs button{
+  min-height:37px;
+  min-width:82px;
+  padding:8px 14px;
+  background:transparent;
+  color:var(--muted);
+  border:0;
+  border-bottom:2px solid transparent;
+  font-size:12px;
+  font-weight:700;
+  border-radius:0;
+}
+.ribbon-tabs button.is-active{
+  border-bottom-color:var(--green);
+  color:var(--ink);
+  background:var(--surface-hover);
+}
+.ribbon-tabs button:hover{background:var(--surface-hover);color:var(--ink)}
+.ribbon-hint{font-size:10px;color:var(--muted);margin-left:auto;text-align:right}
+.ribbon-scroll{
+  display:flex;
+  gap:0;
+  align-items:stretch;
+  max-width:100%;
+  min-height:77px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+  padding:9px 12px 5px;
+}
+.ribbon-group{
+  flex:0 0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  min-width:0;
+  padding:2px 12px;
+  border-right:1px solid var(--line);
+  gap:6px;
+}
+.ribbon-group:first-child{padding-left:0}
+.ribbon-group:last-child{border-right:0}
+.ribbon-group small{
+  font-size:9px;
+  letter-spacing:1px;
+  color:var(--muted);
+  white-space:nowrap;
+  text-transform:uppercase;
+  font-weight:700;
+}
+.ribbon-tools{display:flex;align-items:center;gap:3px}
+.ribbon-tool{
+  min-width:35px;
+  min-height:35px;
+  padding:5px 7px;
+  font-size:15px;
+  font-weight:800;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:7px;
+  color:var(--ink);
+  transition:background-color .13s,border-color .13s;
+}
+.ribbon-tool:hover,.ribbon-tool.is-active{
+  background:var(--surface-hover);
+  border-color:var(--line);
+  color:var(--green);
+}
+.ribbon-tool:focus-visible{
+  outline:3px solid var(--menu-focus);
+  outline-offset:2px;
+  background:var(--surface-hover);
+  border-color:var(--menu-hover-border);
+}
+.ribbon-tool:disabled{opacity:.45}
+.ribbon-style{
+  width:160px;
+  height:35px;
+  padding:6px 9px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--input-surface);
+  color:var(--ink);
+  font-size:12px;
+  font-weight:700;
+}
+.ribbon-explain{
+  margin:auto 15px;
+  max-width:440px;
+  font-size:11px;
+  line-height:1.5;
+  color:var(--muted);
+}
+.ribbon .modal-backdrop{z-index:120}
+.prose-editor .tiptap a{
+  color:var(--green);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  overflow-wrap:anywhere;
+}
+.prose-editor .tiptap blockquote{
+  border-left:3px solid var(--green);
+  padding:0 0 0 17px;
+  margin:16px 0;
+  color:var(--muted);
+}
+.prose-editor .tiptap pre{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  padding:14px 18px;
+  border-radius:8px;
+  background:var(--surface-muted);
+  border:1px solid var(--line);
+  font:13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.prose-editor .tiptap code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.prose-editor .tiptap h3{font-size:20px}
+.prose-editor .tiptap :is(ol,ul){padding-left:25px}
+.prose-editor .tiptap hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+@media(max-width:760px){
+  .ribbon-tabs{padding:0 8px}
+  .ribbon-hint{display:none}
+  .ribbon-scroll{padding:7px 7px 4px;min-height:70px}
+  .ribbon-group{padding:0 9px}
+  .ribbon-tool{min-width:38px;min-height:38px}
+}
+@media(prefers-reduced-motion:reduce){.ribbon-tool{transition:none}}
