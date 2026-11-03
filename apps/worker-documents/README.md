@@ -1,10 +1,18 @@
-# Worker documentaire — prototype hors ligne V0
-Ce prototype traite des fichiers locaux DOCX sans uploads réseau. Il valide le type, limite les archives et extrait la structure principale sans exécuter de macros.
+# Worker documentaire BookStudio — prévalidation DOCX hors ligne
 
-Ne pas confondre avec le service d'importation de production : stockage original, antimalware, OCR, extraction fidèle et comparaison sont à développer.
+Le worker valide un document Office Open XML et en extrait **une prévisualisation** des titres/paragraphes.
+Il refuse les archives dépassant les quotas, les liens de traversal, symlinks, doublons, contenu actif,
+XML avec entités/DTD, archives corrompues et taux de compression suspects.
 
-```bash
-python -m unittest discover -s tests -v
-python import_processor.py manuscrit.docx > extraction.json
+**Ceci n'est pas une fonctionnalité d'import DOCX utilisable en production** : aucun endpoint HTTP,
+stockage du fichier original, analyse antivirus, queue, approbation éditoriale ou garantie de fidélité.
+
+```sh
+python -m unittest discover -s apps/worker-documents/tests -v
+python apps/worker-documents/import_processor.py manuscrit.docx > extraction.json
 ```
-L'import PDF n'est pas encore implémenté, il est rejeté explicitement.
+
+Les fichiers PDF sont rejetés de manière explicite. Les tableaux, images, notes et liens externes
+exigent une revue humaine et ne sont pas encore transformés fidèlement dans l'éditeur.
+
+Recette : `docs/qa/E2E-DOCX-INSPECTION.md`.
