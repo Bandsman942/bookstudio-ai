@@ -88,7 +88,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 .versions-create{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
 .versions-create input{flex:1 1 250px;min-width:0;border:1px solid #dfe5df;background:#fff;padding:12px 16px;border-radius:8px;font-size:13px;outline:none}
 .versions-create input:focus-visible{outline:2px solid #60927c;outline-offset:2px}
-.versions-list{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.versions-list{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:visible}
 .version-row{display:flex;align-items:center;gap:16px;padding:17px 20px;border-bottom:1px solid var(--line)}
 .version-row:last-child{border-bottom:0}
 .version-icon{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;background:#ecf4ef;border-radius:9px;color:#4b806c}
@@ -152,3 +152,37 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 .archive-item strong{display:block;overflow-wrap:anywhere;color:var(--navy)}
 .archive-item small{display:block;font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px}
 @media(max-width:650px){.archive-item{align-items:flex-start;flex-direction:column}.book-title-actions{align-items:flex-start}.book-controls{width:100%;flex-wrap:wrap}}
+
+/* Reusable contextual « ⋯ » system — consistent across objects and viewports. */
+.context-actions{position:relative;display:inline-flex;flex:0 0 auto;align-items:center;vertical-align:middle}
+.context-actions.is-open{z-index:80}
+.context-trigger{display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--navy);font-size:27px;font-weight:700;line-height:1;letter-spacing:1px;box-shadow:0 2px 9px #142d4b0b}
+.context-trigger:hover,.context-trigger[aria-expanded="true"]{background:#e9f3ef;border-color:#94c5b2;color:#1d7563}
+.context-trigger:disabled{opacity:.45}
+.context-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:90;min-width:224px;width:max-content;max-width:min(290px,calc(100vw - 24px));max-height:min(60vh,400px);overflow-y:auto;overflow-x:hidden;background:#fff;border:1px solid #dce6e3;border-radius:12px;padding:6px;box-shadow:0 18px 50px #142d4b29;text-align:left}
+.context-menu-item{display:flex;align-items:center;width:100%;min-height:42px;padding:10px 13px;border:0;border-radius:7px;background:transparent;color:#27384b;font-size:13px;font-weight:600;line-height:1.45;text-align:left;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+.context-menu-item:hover,.context-menu-item:focus-visible{background:#edf5f1;color:#185d50}
+.context-menu-item.is-danger{color:#a24c36}
+.context-menu-item.is-danger:hover,.context-menu-item.is-danger:focus-visible{background:#fff0e9;color:#963e2d}
+.context-menu-item:disabled{color:#a4b0b8;cursor:not-allowed}
+.context-menu-group{padding:9px 13px 5px;color:#788a90;font-size:10px;font-weight:800;letter-spacing:1.3px}
+.context-menu-separator{height:1px;background:var(--line);margin:6px}
+.context-menu [role="menuitem"]:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.book-card{position:relative;overflow:visible}
+.book-card:has(.context-actions.is-open),.version-row:has(.context-actions.is-open),.archive-item:has(.context-actions.is-open),.comment-card:has(.context-actions.is-open){z-index:70}
+.book-card-link{display:block;overflow:hidden;border-radius:14px}
+.book-card-overflow{position:absolute;right:11px;top:11px;z-index:1}
+.book-card-overflow .context-trigger{width:36px;height:36px;background:#ffffffed}
+.version-row,.archive-item,.comment-card{position:relative}
+.version-row>.context-actions{margin-left:auto}
+.comment-card-tools{display:flex;align-items:center;gap:6px}
+.comment-card-tools .context-trigger{width:32px;height:32px;font-size:23px;border-color:transparent;box-shadow:none;background:#f6f9f8}
+.comment-card-tools .context-trigger:hover,.comment-card-tools .context-trigger[aria-expanded="true"]{border-color:#94c5b2;background:#e9f3ef}
+.studio-actions>.context-actions{margin-left:2px}
+@media(max-width:650px){
+  .version-row .context-trigger,.archive-item .context-trigger{margin-left:0}
+  .version-row>.context-actions{align-self:flex-start;margin-left:auto}
+  .book-card-overflow{top:8px;right:8px}
+  .context-menu{max-height:55vh}
+}
+@media(prefers-reduced-motion:reduce){.context-trigger,.context-menu-item{transition:none}}
