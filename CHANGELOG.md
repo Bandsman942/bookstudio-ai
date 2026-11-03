@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.8.0] — alpha préparée, NON DÉPLOYÉE
+### Fichiers sources et Supabase Storage (issue #78)
+- Intégration des uploads directs navigateur → Supabase Storage privé \`Uploaded_books\`, sans stockage Vercel ni transit du binaire par fonction Next.
+- URLs d'upload éphémères émises après contrôle des droits sur l'ouvrage, lecture/téléchargement/suppression avec contrôle serveur, objets cloisonnés par ouvrage.
+- Formats DOCX/PDF/TXT/MD/EPUB/ODT/PNG/JPG/WEBP, limite applicative 20 Mo ; refus de noms dangereux, absence de réécriture silencieuse et messages d'erreur bilingues.
+- Aucun \`service_role\` / \`sb_secret_\` côté navigateur : clé uniquement en variable serveur. Bucket Supabase existant conservé privé.
+- Nouveau panneau « Fichiers sources » dans la vue de l'ouvrage. Ces sources ne sont PAS encore converties en chapitres, et aucun antivirus/backup de binaires n'est annoncé livré.
+- Tests dédiés \`pnpm storage:check\` et recette E2E \`docs/qa/E2E-SUPABASE-STORAGE.md\`.
+
+
 ## [0.7.0] — alpha préparée, NON DÉPLOYÉE
 ### Éditeur avancé — première tranche (à publier)
 - Ancienne barre de sept boutons remplacée par un ruban **Accueil / Insertion** regroupant styles Normal/Titres 1–3, gras, italique, souligné, barré, code, listes numérotées/à puces, citation, bloc de code, annulation/rétablissement, nettoyage de format, insertion de lien et séparation — #68.
