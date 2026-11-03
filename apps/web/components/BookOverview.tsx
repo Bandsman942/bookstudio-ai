@@ -7,7 +7,7 @@ import SnapshotsPanel from './SnapshotsPanel';
 import BookActionsMenu from './BookActionsMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
 
-type Chapter={id:string;title:string;revision:number};
+type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
   bookId:string;title:string;status:string;kind:string;
   chapters:Chapter[];updatedAt:string;editable:boolean
