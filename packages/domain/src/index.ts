@@ -20,7 +20,7 @@ export function normalizeTitle(value: unknown): string {
 }
 /** Only explicit web/mail addresses are valid in editorial documents. */
 export function safeExternalHref(value:unknown):string|null {
-  if(typeof value!=='string'||value.length<4||value.length>2048||/[\\x00-\\x1F\\x7F]/.test(value) || /%0[ad]/i.test(value))return null;
+  if(typeof value!=='string'||value.length<4||value.length>2048||/[\x00-\x1F\x7F]/.test(value) || /%0[ad]/i.test(value))return null;
   try{
     const url=new URL(value);
     if(!['http:','https:','mailto:'].includes(url.protocol))return null;
