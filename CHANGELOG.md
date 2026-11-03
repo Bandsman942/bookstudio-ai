@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.8.0] — alpha préparée, NON DÉPLOYÉE
+## [0.8.0] — 2026-11-03 (production alpha privée)
 ### Fichiers sources et Supabase Storage (issue #78)
 - Intégration des uploads directs navigateur → Supabase Storage privé \`Uploaded_books\`, sans stockage Vercel ni transit du binaire par fonction Next.
 - URLs d'upload éphémères émises après contrôle des droits sur l'ouvrage, lecture/téléchargement/suppression avec contrôle serveur, objets cloisonnés par ouvrage.
@@ -13,6 +13,12 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Nouveau panneau « Fichiers sources » dans la vue de l'ouvrage. Ces sources ne sont PAS encore converties en chapitres, et aucun antivirus/backup de binaires n'est annoncé livré.
 - Tests dédiés \`pnpm storage:check\` et recette E2E \`docs/qa/E2E-SUPABASE-STORAGE.md\`.
 
+
+### Déploiement
+- **READY le 2026-11-03T17:45:11.721Z**, Vercel `dpl_wxXxiQY7hShvYNswLF3giPdPrEp7`, commit `ebbcfa600289f56e34de8a9f858dc9347af40c87`, région `pdx1` ; CI `test-and-build` SUCCESS sur `main`.
+- E2E propriétaire « v0.8.0-alpha BON » ; snapshot Neon `snap-wild-art-bf10s0al`. Environnement Vercel Production : trois variables Supabase présentes (clé secrète non exposée).
+- `/api/health` et `/api/version` HTTP 200 ; base `ready` ; version `0.8.0`, commit `ebbcfa600289`. Ignored Build Step restauré (`exit 0`), previews désactivées.
+- Journal : `docs/deployments/2026-11-03T17-45-11Z_v0.8.0.md`. Tag Git annoté `v0.8.0` : **à créer**, non revendiqué comme existant.
 
 ## [0.7.0] — 2026-11-03 (production alpha privée)
 ### Éditeur avancé — première tranche
