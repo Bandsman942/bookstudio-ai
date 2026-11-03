@@ -44,12 +44,15 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
     <div className="section-header"><h2>Structure du manuscrit</h2>
       {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}>＋ Ajouter un chapitre</button>}
     </div>
-    <div className="chapter-list">{chapters.map((chapter,index)=><Link key={chapter.id}
-      href={'/books/'+bookId+'/chapters/'+chapter.id} className="chapter-item">
-      <span className="chapter-num">{String(index+1).padStart(2,'0')}</span>
-      <div><strong>{chapter.title}</strong><small>Révision {chapter.revision} · Ouvrir l'éditeur</small></div>
-      <span className="chapter-arrow" aria-hidden="true">↗</span>
-    </Link>)}</div>
+    <div className="chapter-list">{chapters.map((chapter,index)=><div key={chapter.id} className="chapter-item">
+      <Link href={'/books/'+bookId+'/chapters/'+chapter.id} className="chapter-item-link">
+        <span className="chapter-num">{String(index+1).padStart(2,'0')}</span>
+        <div><strong>{chapter.title}</strong><small>Révision {chapter.revision} · Ouvrir l’éditeur</small></div>
+        <span className="chapter-arrow" aria-hidden="true">↗</span>
+      </Link>
+      <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}
+        updatedAt={chapter.updatedAt} editable={editable}/>
+    </div>)}</div>
     <SnapshotsPanel bookId={bookId} editable={editable}/>
     {showForm&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)setShowForm(false);}}>
       <form className="modal" onSubmit={add} role="dialog" aria-modal="true" aria-label="Nouveau chapitre">
