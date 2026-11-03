@@ -5,11 +5,11 @@ const base=process.env.E2E_BASE_URL||'http://localhost:3000';
 const origin=new URL(base).origin;
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-async function request(path,{method='GET',body,cookie}={}){
-  const headers={Origin:origin,...(body!==undefined?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{})};
+async function request(path,{method='GET',body,cookie,omitOrigin=false}={}){
+  const headers={...(omitOrigin?{}:{Origin:origin}),...(body!==undefined?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{})};
   const response=await fetch(base+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),redirect:'manual'});
   const data=await response.json().catch(()=>({}));
-  return {status:response.status,data,cookie:response.headers.get('set-cookie')?.split(';')[0]||''};
+  return {status:response.status,data,cookie:response.headers.get('set-cookie')?.split(';')[0]||'',setCookie:response.headers.get('set-cookie')||''};
 }
 async function ready(){
   for(let i=0;i<90;i++){
@@ -28,10 +28,23 @@ async function user(label){
   assert.equal(signup.status,201,'private test signup');
   const login=await request('/api/v1/auth/login',{method:'POST',body:{email,password}});
   assert.equal(login.status,200,'login');
-  assert.ok(login.cookie.startsWith('bookstudio_session='),'secure session cookie');
+  assert.ok(login.cookie.startsWith('bookstudio_session='),'private session cookie');
+  assert.match(login.setCookie,/HttpOnly/i,'no JS access to cookie');
+  assert.match(login.setCookie,/SameSite=Lax/i,'CSRF cookie policy');
   return login.cookie;
 }
 const author=await user('A'),outsider=await user('B');
+// Login attempts are shared through PostgreSQL and remain uniform for unknown users.
+const unknown='unknown-'+suffix+'@example.invalid';
+for(let n=0;n<8;n++){
+  const denied=await request('/api/v1/auth/login',{method:'POST',body:{email:unknown,password:'wrong-'+n}});
+  assert.equal(denied.status,401,'unknown user does not leak account existence');
+}
+const throttled=await request('/api/v1/auth/login',{method:'POST',body:{email:unknown,password:'wrong-again'}});
+assert.equal(throttled.status,429,'distributed login throttle');
+assert.equal(throttled.data.error,'AUTH_RATE_LIMITED');
+const csrfLogin=await request('/api/v1/auth/login',{method:'POST',body:{email:unknown,password},omitOrigin:true});
+assert.equal(csrfLogin.status,403,'login rejects missing Origin');
 const created=await request('/api/v1/books',{method:'POST',body:{title:'Essai BookStudio QA',bookType:'SCIENCE',language:'fr'},cookie:author});
 assert.equal(created.status,201,'book creation');
 const {id:bookId,chapterId}=created.data.book;
@@ -60,4 +73,10 @@ const listOther=await request('/api/v1/books',{cookie:outsider});
 assert.equal(listOther.status,200);assert.equal(listOther.data.books.some(b=>b.id===bookId),false);
 const bad=await request(path,{method:'PATCH',cookie:author,body:{baseRevision:-1,content:doc}});
 assert.equal(bad.status,400);
-console.log('E2E API PASS: auth, book, chapter, revisions, conflict, ACL and invalid input');
+const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
+assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
+const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
+assert.equal(logout.status,200,'logout');
+const revoked=await request('/api/v1/books',{cookie:author});
+assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
+console.log('E2E API PASS: login throttle, CSRF, rotation, logout, books, revisions, conflicts and ACL');
