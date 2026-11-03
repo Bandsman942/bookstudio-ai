@@ -89,6 +89,9 @@ export async function DELETE(request:Request,{params}:Ctx){
   const body=await request.json().catch(()=>null);
   if(typeof body?.name!=='string'||!isStoredName(body.name))return errorResponse('VALIDATION_ERROR');
   try{
+    // Once used to create an editorial revision, the original must stay available.
+    const used=await prisma.manuscriptSourceImport.count({where:{bookId,sourceName:body.name}});
+    if(used>0)return errorResponse('SOURCE_IN_USE',409);
     await deleteFile(bookId,body.name);
     await prisma.auditEvent.create({data:{
       actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
