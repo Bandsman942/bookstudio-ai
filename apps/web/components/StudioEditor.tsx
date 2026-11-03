@@ -119,7 +119,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
        retryCountRef.current=0;retryAtRef.current=0;
        revisionRef.current=body.revision;setRevision(body.revision);
        savedContentRef.current=snapshot;
-       if(lastJson.current!==snapshot){pendingRef.current=true;setState('editing');}
+       if(pendingRef.current||serializeTimerRef.current||lastJson.current!==snapshot){pendingRef.current=true;setState('editing');}
        else{
          setState('saved');
          try{localStorage.removeItem(draftKey);}catch{}
