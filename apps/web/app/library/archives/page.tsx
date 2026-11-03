@@ -13,7 +13,7 @@ export default async function ArchivesPage(){
  const books=await prisma.book.findMany({
    where:{archivedAt:{not:null},workspace:{memberships:{some:{userId:user.id}}}},
    orderBy:{updatedAt:'desc'},take:100,
-   select:{id:true,title:true,bookType:true,updatedAt:true}
+   select:{id:true,title:true,bookType:true,updatedAt:true,workspaceId:true}
  });
  return <ArchivesClient displayName={user.name}
    books={books.map(b=>({...b,updatedAt:b.updatedAt.toISOString()}))}/>;
