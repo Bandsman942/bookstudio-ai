@@ -19,9 +19,23 @@ export async function verifyPassword(password: string, encoded: string): Promise
   } catch { return false; }
 }
 export function isSameOrigin(request: Request): boolean {
-  const origin=request.headers.get('origin'); if(!origin)return false;
-  let expected=process.env.APP_ORIGIN||new URL(request.url).origin;
-  try { expected=new URL(expected).origin;return new URL(origin).origin===expected; }catch{return false;}
+  const origin=request.headers.get('origin');
+  if(!origin)return false;
+  try {
+    const current=new URL(origin);
+    if(current.protocol!=='https:' && process.env.NODE_ENV==='production')return false;
+    const configured=[process.env.APP_ORIGIN, ...(process.env.APP_ALLOWED_ORIGINS??'').split(',')]
+      .filter((x):x is string=>typeof x==='string'&&x.trim().length>0);
+    // Explicit allowlist only in production: Host / forwarded headers are untrusted.
+    if(process.env.NODE_ENV==='production' && configured.length===0)return false;
+    const allowed=configured.length?configured:[new URL(request.url).origin];
+    return allowed.some(entry=>{
+      try {
+        const candidate=new URL(entry.trim());
+        return candidate.protocol===current.protocol && candidate.origin===current.origin;
+      }catch {return false;}
+    });
+  } catch {return false;}
 }
 export function errorResponse(reason:string,status=400,detail?:Record<string,unknown>){
   return Response.json({error:reason,...(detail??{})},{status,headers:{'Cache-Control':'no-store'}});
