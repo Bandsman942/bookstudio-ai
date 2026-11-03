@@ -8,4 +8,4 @@ Ce dossier est l'historique des déploiements **réels**, distinct du `CHANGELOG
 - Revenir sur la version des fichiers doc après déploiement via une PR et **réactiver le verrou de déploiement** avant toute fusion documentaire, pour éviter un nouveau déploiement inutile.
 - Ne jamais inclure de manuscrit privé, chaîne de connexion ou jeton dans les fiches.
 
-**À ce jour : aucune fiche de déploiement réel.** L'application est configurée sur Vercel mais aucun déploiement n'a encore été lancé.
+**Premier déploiement READY :** `2026-11-03T12-23-04Z_v0.2.0.md`. Une tentative préalable a échoué, documentée dans `2026-11-03T12-17-36Z_v0.2.0_FAILED.md`. La production est une alpha protégée, non une disponibilité commerciale.
