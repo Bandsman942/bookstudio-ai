@@ -8,7 +8,7 @@ type CommentView={
 };
 type Props={
  bookId:string;chapterId:string;revision:number;
- saveState:'saved'|'editing'|'saving'|'conflict'|'error';
+ saveState:'saved'|'editing'|'saving'|'conflict'|'error'|'offline';
  canEdit:boolean;
 };
 export default function ChapterComments({bookId,chapterId,revision,saveState,canEdit}:Props){
