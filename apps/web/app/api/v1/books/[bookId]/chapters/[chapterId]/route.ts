@@ -17,6 +17,7 @@ export async function GET(_req:Request,{params}:{params:Promise<{bookId:string;c
   return Response.json({chapter:{id:chapter.id,title:chapter.title,revision:chapter.revisionSeq,content:rev.content}},{headers:{'Cache-Control':'no-store'}});
 }
 export async function PATCH(req:Request,{params}:{params:Promise<{bookId:string;chapterId:string}>}){
+  const started=performance.now();
   if(!isSameOrigin(req))return errorResponse('ORIGIN_FORBIDDEN',403);
   const user=await activeUser();if(!user)return errorResponse('UNAUTHENTICATED',401);
   const {bookId,chapterId}=await params,chapter=await authorized(bookId,chapterId,user.id,true);
@@ -36,7 +37,7 @@ export async function PATCH(req:Request,{params}:{params:Promise<{bookId:string;
       await tx.documentRevision.create({data:{chapterId,sequence:next,content,text,contentHash,authorId:user.id}});
       return next;
     });
-    return Response.json({ok:true,revision,contentHash});
+    return Response.json({ok:true,revision,contentHash},{headers:{'Cache-Control':'private, no-store','Server-Timing':`save;dur=${(performance.now()-started).toFixed(1)}`}});
   }catch(e){
     if(e instanceof Error&&(e.message==='REVISION_CONFLICT'||e.message.includes('Unique constraint')))return errorResponse('REVISION_CONFLICT',409);
     return errorResponse('SAVE_FAILED',503);
