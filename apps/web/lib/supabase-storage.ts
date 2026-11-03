@@ -96,5 +96,5 @@ export async function signDownload(bookId:string,name:string){
 }
 export async function deleteFile(bookId:string,name:string){
   const config=getStorageConfig();
-  await storageFetch('DELETE','/object/'+encodeURIComponent(config.bucket)+'/'+filePath(bookId,name));
+  await storageFetch('DELETE','/object/'+encodeURIComponent(config.bucket),{prefixes:[filePath(bookId,name)]});
 }
