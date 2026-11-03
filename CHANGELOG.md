@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.12.0] — alpha candidate, NON DÉPLOYÉE
+## [0.12.0] — 2026-11-03 (production alpha privée)
 ### BS-006b — Reprise contrôlée d'un aperçu DOCX en nouveau chapitre (#96)
 - Dans l'aperçu privé DOCX v0.11, l'auteur OWNER/EDITOR peut relire, saisir le titre du chapitre, confirmer explicitement les omissions, puis créer **un nouveau chapitre** à partir des paragraphes/titres simples reconnus.
 - L'import d'un aperçu tronqué est bloqué ; jamais de conversion automatique silencieuse. Les fichiers sources restent privés sur Supabase et les chapitres existants ne sont pas modifiés.
@@ -14,6 +14,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Tests `pnpm reviewed-docx:check`, HTTP E2E négatifs, recette propriétaire FR/EN et thème. **Aucune promesse de fidélité Word, antivirus ou backup prouvé**.
 - La structure multi-chapitre avancée, notes, tableaux, images, styles élaborés et OCR restent dans les travaux à venir.
 
+
+### Déploiement
+- **READY le 2026-11-03T19:56:18.166Z** : Vercel `dpl_8iVxeg4TjeQLQKvPZxdbuEJgbb6F`, SHA `d9388f56c8ae8d38c893bf0fc330f5edee54b612`, GitHub CI `test-and-build` SUCCESS sur `main`.
+- E2E propriétaire « v0.12.0-alpha BON » ; snapshot Neon `snap-wispy-surf-bfil8uou`, migration additive `20261103200000_reviewed_docx_source_imports` appliquée.
+- **Incident de livraison résolu** : premier déploiement READY sans migration ; second déploiement a appliqué la migration mais son build a échoué faute de Prisma Client généré ; pipeline Vercel corrigé en `prisma migrate deploy → prisma generate → next build`. Troisième déploiement READY et fonctionnel.
+- `/api/health` et `/api/version` HTTP 200 (base prête, v0.12.0, SHA `d9388f56c8ae`). Verrou `exit 0` rétabli ; previews Vercel désactivées.
+- Journal `docs/deployments/2026-11-03T19-56-18Z_v0.12.0.md` ; tag Git annoté `v0.12.0` encore à créer.
 
 ## [0.11.0] — 2026-11-03 (production alpha privée)
 ### BS-006a — Aperçu de structure DOCX privé avant revue humaine (issue #90)
