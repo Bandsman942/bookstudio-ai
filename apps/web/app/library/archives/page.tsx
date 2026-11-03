@@ -16,5 +16,5 @@ export default async function ArchivesPage(){
    select:{id:true,title:true,bookType:true,updatedAt:true,workspaceId:true}
  });
  return <ArchivesClient displayName={user.name}
-   books={books.map(b=>({...b,updatedAt:b.updatedAt.toISOString()}))}/>;
+   books={books.map(b=>({id:b.id,title:b.title,bookType:b.bookType,updatedAt:b.updatedAt.toISOString(),canRestore:editableIds.has(b.workspaceId)}))}/>;
 }
