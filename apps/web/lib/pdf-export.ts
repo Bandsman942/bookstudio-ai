@@ -24,7 +24,7 @@ function writeBlocks(doc:PDFKit.PDFDocument,node:Node) {
     const level=Math.max(1,Math.min(3,Number(node.attrs?.level??1)));
     const value=plain(node);verifyGlyphs(value);
     const size=level===1?20:level===2?15:13;
-    doc.moveDown(.55).font('Helvetica-Bold').fontSize(size).fillColor('#182B39').text(value,{paragraphGap:8,keepTogether:true});
+    doc.moveDown(.55).font('Helvetica-Bold').fontSize(size).fillColor('#182B39').text(value,{paragraphGap:8});
   } else if(node.type==='blockquote'){
     const value=plain(node);verifyGlyphs(value);
     doc.font('Times-Italic').fontSize(11).fillColor('#596C73').text('« '+value+' »',{indent:18,paragraphGap:10});
@@ -75,7 +75,7 @@ export async function renderReadingPdf(bookTitle:string,chapters:ExportChapter[]
       assertValidDocument(chapter.content);
       verifyGlyphs(chapter.title);
       if(index>0)doc.addPage();
-      doc.font('Helvetica-Bold').fontSize(18).fillColor('#142C39').text(chapter.title,{paragraphGap:16,keepTogether:true});
+      doc.font('Helvetica-Bold').fontSize(18).fillColor('#142C39').text(chapter.title,{paragraphGap:16});
       for(const item of ((chapter.content as Node).content??[]))writeBlocks(doc,item);
     }
     doc.end();
