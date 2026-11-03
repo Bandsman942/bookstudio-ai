@@ -98,7 +98,8 @@ function paragraphText(p:Element):string{
   // Never silently cut source text. Long paragraphs are split into complete contiguous parts.
   return getWordChildren(p,'t').map(n=>n.textContent||'').join('');
 }
-function paragraphPieces(text:string):string[]{
+/** Keep all source characters, splitting only for safe individual chapter-block budgets. */
+export function paragraphPieces(text:string):string[]{
   const pieces:string[]=[];
   for(let start=0;start<text.length;){
     let end=Math.min(text.length,start+MAX_PART_CHARS);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {zipSync,strToU8} from 'fflate';
-import {inspectDocxContainer,previewDocx,DocxPreviewError} from './docx-preview.ts';
+import {inspectDocxContainer,previewDocx,DocxPreviewError,paragraphPieces} from './docx-preview.ts';
 
 const word='<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Premier paragraphe</w:t></w:r></w:p></w:body></w:document>';
 const types='<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>';
@@ -43,4 +43,18 @@ test('rejects archives with massive claimed expansion',()=>{
   const input=zipSync({'[Content_Types].xml':strToU8(types),
     'word/document.xml':strToU8('A'.repeat(300000))},{level:9});
   rejects(input,'DOCX_ARCHIVE_LIMIT');
+});
+
+test('a very long Word paragraph is split without losing any Unicode characters',()=>{
+ const original='Congo 😀 — '+('Un texte riche. '.repeat(14000));
+ const parts=paragraphPieces(original);
+ assert.ok(parts.length>20);
+ assert.ok(parts.every(part=>part.length<=9000));
+ assert.equal(parts.join(''),original);
+});
+test('valid UTF-16 surrogate pairs remain intact at split boundaries',()=>{
+ const full='a'.repeat(8999)+'😀'+'b'.repeat(9010);
+ const parts=paragraphPieces(full);
+ assert.equal(parts.join(''),full);
+ assert.ok(parts.every(part=>!/[\\uD800-\\uDBFF]$/.test(part)));
 });
