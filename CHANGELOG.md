@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.10.0] — alpha préparée, NON DÉPLOYÉE
+## [0.10.0] — 2026-11-03 (production alpha privée)
 ### UI import de manuscrit visible et iconographie cohérente (issue #86)
 - Action « Importer un manuscrit » immédiatement visible dans la bibliothèque, avec dialogue ciblant un ouvrage autorisé et un fichier original ; accès rapide également dans les cartes.
 - Espace « Fichiers sources » déplacé en tête de la fiche ouvrage, zone d'envoi avec glisser-déposer, bouton visible et messages d'état ; navigation dédiée vers les sources.
@@ -13,6 +13,12 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Tests de contrat UI `pnpm manuscript-ui:check` et recette propriétaire dédiée. **Aucune migration, aucune dépendance iconographique externe.**
 - Fonctionnalités NON livrées : import DOCX/PDF converti en chapitres, antivirus/validation binaire, OCR, sauvegarde/restauration des binaires.
 
+
+### Déploiement
+- **READY le 2026-11-03T18:45:20.151Z**, Vercel `dpl_8Rdzs7tfoyyQ4rh3dFFY726AQxEE`, commit `01bad488637244cfe60e4b9a3d32fc9c7d93cd06`, GitHub CI `test-and-build` SUCCESS sur `main`.
+- E2E propriétaire « v0.10.0-alpha BON » ; snapshot Neon `snap-little-leaf-bfbnz69h`, aucune migration SQL.
+- `/api/health` et `/api/version` HTTP 200 (Neon ready, v0.10.0, SHA `01bad4886372`), verrou Vercel restauré `exit 0`, previews désactivées.
+- Journal `docs/deployments/2026-11-03T18-45-20Z_v0.10.0.md` ; tag Git annoté `v0.10.0` encore à créer.
 
 ## [0.9.0] — 2026-11-03 (production alpha privée)
 ### Confirmation serveur des sources (#84)
