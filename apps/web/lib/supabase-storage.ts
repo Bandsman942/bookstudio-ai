@@ -91,7 +91,7 @@ export async function signDownload(bookId:string,name:string){
   const raw=response.signedURL??response.signedUrl;
   if(typeof raw!=='string')throw Error('STORAGE_UNAVAILABLE');
   const url=new URL(safeSignedUrl(raw));
-  url.searchParams.set('download',name.replace(uuid,'').replace(/^-/,''));
+  url.searchParams.set('download',name.slice(37)); // skip UUID and separator
   return url.toString();
 }
 export async function deleteFile(bookId:string,name:string){
