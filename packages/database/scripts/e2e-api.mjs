@@ -24,8 +24,8 @@ assert.equal(healthResponse.status,200,'database readiness');
 assert.equal(healthResponse.data.database,'ready');
 const versionResponse=await request('/api/version');
 assert.equal(versionResponse.status,200,'version route');
-assert.equal(versionResponse.data.version,'0.12.0','semver traceability');
-assert.equal(versionResponse.data.tag,'v0.12.0');
+assert.equal(versionResponse.data.version,'0.13.0','semver traceability');
+assert.equal(versionResponse.data.tag,'v0.13.0');
 assert.equal(versionResponse.data.channel,'alpha');
 // A second explicitly configured origin must be accepted; arbitrary origins rejected.
 const alternate=await request('/api/v1/auth/login',{method:'POST',originOverride:'http://localhost:3001',body:{email:'nobody@example.invalid',password:'wrong'}});
@@ -91,6 +91,33 @@ const exampleDocx={sourceName:'123e4567-e89b-42d3-a456-426614174000-test.docx',
   operationId:'123e4567-e89b-42d3-a456-426614174001',title:'Chapitre importé',
   confirm:'IMPORT_REVIEWED_DOCX',acknowledged:true,truncated:false,
   blocks:[{kind:'paragraph',text:'Texte inspecté par l’auteur.'}]};
+// BS-006c: bulk import needs explicit approval, CSRF, valid batch and write ACL.
+const bulkPath=docxImportPath+'/bulk';
+const batch={batchId:'123e4567-e89b-42d3-a456-426614174020',
+ sourceName:exampleDocx.sourceName,confirm:'IMPORT_REVIEWED_DOCX_BATCH',
+ acknowledged:true,truncated:false,
+ chapters:[
+ {title:'Première partie',blocks:[{kind:'heading',text:'Première partie'},{kind:'paragraph',text:'A'}]},
+ {title:'Seconde partie',blocks:[{kind:'heading',text:'Seconde partie'},{kind:'paragraph',text:'B'}]}
+ ]};
+const bulkCsrf=await request(bulkPath,{method:'POST',cookie:author,omitOrigin:true,body:batch});
+assert.equal(bulkCsrf.status,403,'bulk reviewed DOCX requires origin');
+const bulkOutsider=await request(bulkPath,{method:'POST',cookie:outsider,body:batch});
+assert.equal(bulkOutsider.status,404,'bulk reviewed DOCX enforces workspace');
+const bulkAnon=await request(bulkPath,{method:'POST',body:batch});
+assert.equal(bulkAnon.status,401,'bulk reviewed DOCX requires login');
+const bulkNoConsent=await request(bulkPath,{method:'POST',cookie:author,
+ body:{...batch,acknowledged:false}});
+assert.equal(bulkNoConsent.status,422,'bulk reviewed DOCX requires consent');
+const bulkTruncated=await request(bulkPath,{method:'POST',cookie:author,
+ body:{...batch,truncated:true}});
+assert.equal(bulkTruncated.status,422,'bulk reviewed DOCX refuses truncated preview');
+const bulkTooSmall=await request(bulkPath,{method:'POST',cookie:author,
+ body:{...batch,chapters:[batch.chapters[0]]}});
+assert.equal(bulkTooSmall.status,422,'multi-chapter mode demands at least two chapters');
+const bulkHtml=await request(bulkPath,{method:'POST',cookie:author,
+ body:{...batch,chapters:[batch.chapters[0],{title:'Bad',blocks:[{kind:'html',text:'<iframe>'}]}]}});
+assert.equal(bulkHtml.status,422,'bulk import rejects active markup kinds');
 const docxCSRF=await request(docxImportPath,{method:'POST',cookie:author,omitOrigin:true,body:exampleDocx});
 assert.equal(docxCSRF.status,403,'DOCX reviewed import enforces CSRF');
 const docxOutsider=await request(docxImportPath,{method:'POST',cookie:outsider,body:exampleDocx});
