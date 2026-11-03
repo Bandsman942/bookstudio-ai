@@ -18,6 +18,7 @@
     "db:deploy": "pnpm --filter @bookstudio/database run deploy",
     "lint": "pnpm --filter @bookstudio/web lint",
     "release:check": "node tools/check-release.mjs",
-    "ui:check": "node tools/check-context-menus.mjs"
+    "ui:check": "node tools/check-context-menus.mjs",
+    "perf:check": "node tools/check-performance.mjs"
   }
 }

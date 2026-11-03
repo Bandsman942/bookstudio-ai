@@ -8,7 +8,7 @@ type CommentView={
 };
 type Props={
  bookId:string;chapterId:string;revision:number;
- saveState:'saved'|'editing'|'saving'|'conflict'|'error';
+ saveState:'saved'|'editing'|'saving'|'conflict'|'error'|'offline';
  canEdit:boolean;
 };
 export default function ChapterComments({bookId,chapterId,revision,saveState,canEdit}:Props){
@@ -31,7 +31,7 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
      if(active)setError('Impossible de charger les commentaires.');
    }).finally(()=>{if(active)setLoading(false)});
    return ()=>{active=false};
- },[refresh,revision]);
+ },[refresh]);
 
  async function add(e:React.FormEvent){
    e.preventDefault();if(!canEdit||saveState!=='saved'||body.trim().length<2)return;
@@ -87,7 +87,7 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
        </div>
        <div className="comment-badges">
          <span className={item.status==='RESOLVED'?'comment-resolved':'comment-open'}>{item.status==='RESOLVED'?'Résolu':'Ouvert'}</span>
-         {item.stale&&<span className="comment-stale">⚠ À revoir · ancienne révision {item.baseRevision}</span>}
+         {(item.baseRevision!==revision)&&<span className="comment-stale">⚠ À revoir · ancienne révision {item.baseRevision}</span>}
        </div>
        {item.quote&&<blockquote>{item.quote}</blockquote>}
        <p>{item.body}</p>

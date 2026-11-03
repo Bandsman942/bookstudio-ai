@@ -6,14 +6,17 @@ import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
 type Chapter={id:string;title:string};
-type SaveState='saved'|'editing'|'saving'|'conflict'|'error';
+type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
 type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
- const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState(false),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
+ const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
  const [recovery,setRecovery]=useState<string|null>(null);
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
+ const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const retryCountRef=useRef(0),retryAtRef=useRef(0),conflictRef=useRef(false);
+
  const draftKey='bookstudio:draft:'+chapterId;
  const drawerCloseRef=useRef<HTMLButtonElement>(null);
  useEffect(()=>{
@@ -38,10 +41,18 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    immediatelyRender:false,
    onUpdate:({editor})=>{
      if(!canEdit)return;
-     lastJson.current=JSON.stringify(editor.getJSON());
-     setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
-     pendingRef.current=true;setState('editing');
-     try{localStorage.setItem(draftKey,lastJson.current);}catch{}
+     pendingRef.current=true;
+     setState(conflictRef.current?'conflict':'editing');
+     // Coalesce many keystrokes into one serialization, word-count and local write.
+     // Max 350ms between local draft checkpoints even while typing continuously.
+     if(serializeTimerRef.current)return;
+     serializeTimerRef.current=setTimeout(()=>{
+       serializeTimerRef.current=null;
+       lastJson.current=JSON.stringify(editor.getJSON());
+       setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
+       try{localStorage.setItem(draftKey,lastJson.current);}
+       catch{setState('error');setErrorDetail('Stockage local indisponible. Restez sur cette page jusqu’à confirmation de la sauvegarde serveur.');}
+     },350);
    }
  });
  useEffect(()=>{
@@ -52,31 +63,99 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    }catch{}
  },[editor,draftKey]);
  useEffect(()=>{
+   function networkDown(){
+     if(pendingRef.current){setState('offline');setErrorDetail('Hors ligne : brouillon local en attente de synchronisation.');}
+   }
+   function networkUp(){
+     retryAtRef.current=0;retryCountRef.current=0;
+     if(pendingRef.current&&!conflictRef.current)setState('editing');
+   }
+   window.addEventListener('offline',networkDown);
+   window.addEventListener('online',networkUp);
+   return ()=>{window.removeEventListener('offline',networkDown);window.removeEventListener('online',networkUp);};
+ },[]);
+
+ useEffect(()=>{
+   if(!canEdit)return;
    const id=setInterval(async()=>{
-     if(!pendingRef.current||savingRef.current||state==='conflict')return;
+     if(!pendingRef.current||savingRef.current||conflictRef.current||serializeTimerRef.current)return;
+     if(typeof navigator!=='undefined'&&!navigator.onLine){
+       setState('offline');
+       setErrorDetail('Hors ligne : vos dernières modifications restent sur ce navigateur.');
+       return;
+     }
+     if(Date.now()<retryAtRef.current)return;
      if(lastJson.current===savedContentRef.current){pendingRef.current=false;setState('saved');return;}
      const snapshot=lastJson.current,baseRevision=revisionRef.current;
      pendingRef.current=false;savingRef.current=true;setState('saving');
+     const controller=new AbortController();
+     const timeout=setTimeout(()=>controller.abort(),20_000);
      try{
-       const res=await fetch('/api/v1/books/'+bookId+'/chapters/'+chapterId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({baseRevision,content:JSON.parse(snapshot)})});
-       const body=await res.json();
-       if(res.status===409){
-         setState('conflict');setErrorDetail('Conflit de versions. Votre texte reste visible dans cet onglet et dans le brouillon local. Copiez-le avant de recharger.');
+       const response=await fetch('/api/v1/books/'+bookId+'/chapters/'+chapterId,{
+         method:'PATCH',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({baseRevision,content:JSON.parse(snapshot)}),
+         signal:controller.signal
+       });
+       const body=await response.json().catch(()=>({}));
+       if(response.status===409){
+         conflictRef.current=true;pendingRef.current=true;
+         setState('conflict');
+         setErrorDetail('Conflit de versions. Votre texte reste visible et en brouillon local. Copiez-le avant de recharger : aucun remplacement automatique.');
          return;
        }
-       if(!res.ok){pendingRef.current=true;setState('error');setErrorDetail('Échec de sauvegarde, nouvelle tentative automatique.');return;}
+       if(response.status===401||response.status===403){
+         conflictRef.current=true;pendingRef.current=true;
+         setState('error');
+         setErrorDetail('Session expirée ou accès refusé. Copiez votre texte avant de vous reconnecter ; aucune écriture non autorisée ne sera réessayée.');
+         return;
+       }
+       if(!response.ok||!Number.isSafeInteger(body.revision)||body.revision!==baseRevision+1){
+         pendingRef.current=true;retryCountRef.current+=1;
+         retryAtRef.current=Date.now()+Math.min(30_000,2_000*2**Math.min(4,retryCountRef.current-1));
+         setState('error');
+         setErrorDetail('Sauvegarde non confirmée. Nouvelle tentative espacée automatiquement ; brouillon local conservé.');
+         return;
+       }
+       retryCountRef.current=0;retryAtRef.current=0;
        revisionRef.current=body.revision;setRevision(body.revision);
        savedContentRef.current=snapshot;
-       if(lastJson.current!==snapshot){pendingRef.current=true;setState('editing');}
-       else{setState('saved');try{localStorage.removeItem(draftKey);}catch{}}
-     }catch{pendingRef.current=true;setState('error');setErrorDetail('Connexion interrompue. Votre brouillon reste conservé localement.');}
-     finally{savingRef.current=false;}
-   },1400);return()=>clearInterval(id);
- },[bookId,chapterId,state,draftKey]);
+       if(pendingRef.current||serializeTimerRef.current||lastJson.current!==snapshot){pendingRef.current=true;setState('editing');}
+       else{
+         setState('saved');
+         try{localStorage.removeItem(draftKey);}catch{}
+       }
+     }catch{
+       pendingRef.current=true;retryCountRef.current+=1;
+       retryAtRef.current=Date.now()+Math.min(30_000,2_000*2**Math.min(4,retryCountRef.current-1));
+       setState(typeof navigator!=='undefined'&&!navigator.onLine?'offline':'error');
+       setErrorDetail('Connexion lente ou interrompue. Le brouillon local reste disponible ; nouvelle tentative progressive.');
+     }finally{
+       clearTimeout(timeout);
+       savingRef.current=false;
+     }
+   },1_800);
+   return ()=>clearInterval(id);
+ },[bookId,chapterId,draftKey,canEdit]);
+
  useEffect(()=>{
-   const handler=(e:BeforeUnloadEvent)=>{if(pendingRef.current||savingRef.current){e.preventDefault();e.returnValue='';}};
-   window.addEventListener('beforeunload',handler);return()=>window.removeEventListener('beforeunload',handler);
- },[]);
+   if(!canEdit||!editor)return;
+   const flush=()=>{
+     if(serializeTimerRef.current){
+       clearTimeout(serializeTimerRef.current);serializeTimerRef.current=null;
+       try{
+         lastJson.current=JSON.stringify(editor.getJSON());
+         localStorage.setItem(draftKey,lastJson.current);
+       }catch{}
+     }
+   };
+   const handler=(event:BeforeUnloadEvent)=>{
+     flush();
+     if(pendingRef.current||savingRef.current){event.preventDefault();event.returnValue='';}
+   };
+   window.addEventListener('beforeunload',handler);
+   return ()=>{flush();window.removeEventListener('beforeunload',handler);};
+ },[editor,draftKey,canEdit]);
+
  const format=(command:'bold'|'italic'|'h1'|'h2'|'bullet')=>{
    if(!editor)return;
    if(command==='bold')editor.chain().focus().toggleBold().run();
@@ -96,7 +175,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   <main className="studio-center">
     <div className="studio-topbar"><span className="breadcrumb"><Link href={'/books/'+bookId}>{bookTitle}</Link> / <strong>{chapterTitle}</strong></span>
       <div className="studio-actions">
-        <span className={'save-state save-'+state}>{!canEdit?'Lecture seule':state==='saved'?'✓ Enregistré':state==='editing'?'● Modifié':state==='saving'?'◌ Enregistrement…':state==='conflict'?'⚠ Conflit de versions':'⚠ Sauvegarde en attente'}</span>
+        <span className={'save-state save-'+state}>{!canEdit?'Lecture seule':state==='saved'?'✓ Enregistré':state==='editing'?'● Modifié':state==='saving'?'◌ Enregistrement…':state==='conflict'?'⚠ Conflit de versions':state==='offline'?'◌ Hors ligne · brouillon local':'⚠ Sauvegarde en attente'}</span>
         <ActionMenu label="Options d’affichage de l’éditeur" actions={[
           {label:focus?'Quitter le mode concentration':'Activer le mode concentration',
             onSelect:()=>setFocus(value=>!value)},
@@ -110,12 +189,12 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
       <button onClick={()=>{try{editor?.commands.setContent(JSON.parse(recovery) as any);setRecovery(null);}catch{setErrorDetail('Brouillon local illisible.');}}}>Restaurer mon brouillon</button>
       <button onClick={()=>{setRecovery(null);try{localStorage.removeItem(draftKey)}catch{}}}>Ignorer</button>
     </div>}
-    {(state==='conflict'||state==='error')&&<div className="editor-warning" role="alert">{errorDetail}</div>}
+    {(state==='conflict'||state==='error'||state==='offline')&&<div className="editor-warning" role="alert">{errorDetail}</div>}
     <div className="editor-scroll"><article className="editor-sheet"><span className="chapter-label">MANUSCRIT · CHAPITRE</span><h1>{chapterTitle}</h1><div className="editor-rule"/><EditorContent editor={editor} className="prose-editor"/></article></div>
     <div className="editor-status"><span>{wordCount.toLocaleString('fr-FR')} mots</span><span>Révision {currentRevision}</span><span>Sauvegarde automatique</span></div>
   </main>
   {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}/>}
-  {(rightPanel||compact)&&<aside className="studio-insights" aria-label="Panneau éditorial">
+  {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside className="studio-insights" aria-label="Panneau éditorial">
     <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
     <div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
     <div className="insight-card"><span className="eyebrow">VOTRE ÉCRITURE</span><h3>Un espace pour vos idées.</h3><p>Votre manuscrit dispose d'un historique de révisions. L'IA ne modifiera jamais votre texte sans accord.</p></div>

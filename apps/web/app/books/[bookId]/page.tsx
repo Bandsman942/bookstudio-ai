@@ -1,13 +1,13 @@
 import {redirect,notFound} from 'next/navigation';
 import Link from 'next/link';
-import {activeUser,accessToBook} from '@/lib/auth';
+import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import BookOverview from '@/components/BookOverview';
 export const dynamic='force-dynamic';
 export default async function BookPage({params}:{params:Promise<{bookId:string}>}){
   const user=await activeUser();if(!user)redirect('/login');
   const {bookId}=await params,book=await accessToBook(bookId,user.id);
   if(!book)notFound();
-  const editable=Boolean(await accessToBook(bookId,user.id,true));
+  const editable=canWriteBook(book);
   const chapters=book.editions[0]?.manuscript?.chapters??[];
   return <div className="workspace">
     <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
