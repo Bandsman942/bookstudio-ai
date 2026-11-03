@@ -1,0 +1,30 @@
+name: Annotate BookStudio v0.6.0 deployed SHA
+on:
+  push:
+    branches: [ops/63-tag-v0.6.0]
+permissions:
+  contents: write
+jobs:
+  tag:
+    if: github.repository == 'Bandsman942/bookstudio-ai' && github.ref == 'refs/heads/ops/63-tag-v0.6.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Create immutable annotated tag on verified READY commit
+        env:
+          DEPLOYED_SHA: a6a9ca1954dfc50e62f473939a69ec1f21f5be8a
+          RELEASE_TAG: v0.6.0
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEPLOYED_SHA" --no-tags
+          test "$(git rev-parse FETCH_HEAD)" = "$DEPLOYED_SHA"
+          if git ls-remote --exit-code origin "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Existing tag preserved"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$RELEASE_TAG" "$DEPLOYED_SHA" -m "BookStudio AI v0.6.0-alpha — READY dpl_GPDiJ4zW9bDyNWrkxaS4PPudv2Qu"
+          git push origin "refs/tags/$RELEASE_TAG"
