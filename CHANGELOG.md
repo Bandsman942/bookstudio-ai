@@ -4,25 +4,20 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.4.0] — alpha préparée, NON DÉPLOYÉE
+## [0.4.0] — 2026-11-03 (production alpha privée)
 ### Ajouté
-- Gestion des ouvrages : renommage, archivage réversible et restauration des archives, avec gestion des droits et des conflits de modification — PR #51 / issue #50.
-- Rubrique « Archives » dans la bibliothèque, permettant de restaurer un ouvrage sans effacer ses chapitres, révisions, commentaires ni snapshots.
+- Gestion des ouvrages : renommage, archivage non destructif et restauration depuis `Bibliothèque → Archives`, avec conservation des chapitres, révisions, commentaires et snapshots (PR #51).
+- Messages de concurrence explicites et accès aux archives fondé sur les rôles.
 
 ### Sécurité
-- Chaque modification vérifie le rôle, l'origine de la requête et la version de l'ouvrage ; les archives d'un autre espace ne sont pas visibles.
-- Historique d'audit des changements ; aucune suppression définitive n'est exécutée.
+- Contrôles d'autorisation et d'origine, audit du renommage/archivage/restauration, absence de suppression définitive.
+- Tests E2E HTTP contre PostgreSQL pour les permissions, conflits et restaurations.
 
-### Livraison
-- À valider en E2E manuel : `docs/qa/E2E-BOOK-LIFECYCLE.md`.
-- Aucune migration PostgreSQL supplémentaire n'est nécessaire.
-- Publication uniquement après confirmation E2E v0.4.0, CI verte du commit, puis journal de déploiement et tag post-READY.
-
-### Ajouté
-- Gestion non destructive des ouvrages : renommer, archiver et restaurer depuis la bibliothèque, avec audit et prévention des conflits de modification — issue #50.
-### Sécurité
-- Archives privées isolées par espace de travail ; contrôles de rôle et de CSRF pour chaque opération ; aucune suppression physique de manuscrit.
-
+### Déploiement
+- **READY le 2026-11-03T13:44:30.481Z**, commit `227290fdf29baece2db64f7811363fd9168fb3bf`, tag Git annoté `v0.4.0`.
+- CI `41646724124` verte sur ce commit, et **E2E v0.4.0-alpha déclaré BON** par le propriétaire avant déploiement.
+- Sauvegarde Neon préalable `snap-shy-darkness-bf3ylyn5`; aucune migration SQL nécessaire ; `/api/health` et `/api/version` HTTP 200 en production.
+- Journal : `docs/deployments/2026-11-03T13-44-30Z_v0.4.0.md`.
 
 ## [0.3.0] — 2026-11-03 (production alpha privée)
 ### Ajouté
