@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
+import EditorRibbon from './EditorRibbon';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 type Chapter={id:string;title:string};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
@@ -43,6 +44,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    content:initialContent as any,
    editable:canEdit,
    immediatelyRender:false,
+   shouldRerenderOnTransaction:false,
    onUpdate:({editor})=>{
      if(!canEdit)return;
      pendingRef.current=true;
@@ -160,14 +162,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    return ()=>{flush();window.removeEventListener('beforeunload',handler);};
  },[editor,draftKey,canEdit]);
 
- const format=(command:'bold'|'italic'|'h1'|'h2'|'bullet')=>{
-   if(!editor)return;
-   if(command==='bold')editor.chain().focus().toggleBold().run();
-   if(command==='italic')editor.chain().focus().toggleItalic().run();
-   if(command==='h1')editor.chain().focus().toggleHeading({level:1}).run();
-   if(command==='h2')editor.chain().focus().toggleHeading({level:2}).run();
-   if(command==='bullet')editor.chain().focus().toggleBulletList().run();
- };
+
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open':'')}>
   <aside className="studio-sidebar">
     <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
@@ -189,7 +184,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
         ]}/>
       </div>
     </div>
-    {canEdit&&<div className="toolbar"><button onClick={()=>format('h1')}>Titre 1</button><button onClick={()=>format('h2')}>Titre 2</button><i/><button onClick={()=>format('bold')}><b>G</b></button><button onClick={()=>format('italic')}><em>I</em></button><button onClick={()=>format('bullet')}>☷ Liste</button><i/><button onClick={()=>editor?.chain().focus().undo().run()} title="Annuler">↶</button><button onClick={()=>editor?.chain().focus().redo().run()} title="Rétablir">↷</button></div>}
+    {canEdit&&<EditorRibbon editor={editor} canEdit={canEdit}/>}
     {recovery&&<div role="alert" className="editor-warning">{t('editor.draftRecovery')}
       <button onClick={()=>{try{editor?.commands.setContent(JSON.parse(recovery) as any);setRecovery(null);}catch{setErrorDetail(t('editor.draftUnreadable'));}}}>{t('editor.draftRestore')}</button>
       <button onClick={()=>{setRecovery(null);try{localStorage.removeItem(draftKey)}catch{}}}>{t('editor.draftIgnore')}</button>
