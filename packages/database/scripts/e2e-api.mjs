@@ -84,6 +84,58 @@ const created=await request('/api/v1/books',{method:'POST',body:{title:'Essai Bo
 assert.equal(created.status,201,'book creation');
 const {id:bookId,chapterId}=created.data.book;
 assert.ok(bookId&&chapterId);
+assert.ok(bookId&&chapterId);
+// Safe archive/restore lifecycle: no deletion of source, revisions or snapshots.
+const archival=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ouvrage à archiver',bookType:'ESSAY',language:'fr'}});
+assert.equal(archival.status,201,'create secondary book for lifecycle testing');
+const archiveBookId=archival.data.book.id;
+const archiveChapterId=archival.data.book.chapterId;
+const archivePath='/api/v1/books/'+archiveBookId;
+const initialBooks=await request('/api/v1/books',{cookie:author});
+assert.equal(initialBooks.status,200);
+const archiveOriginal=initialBooks.data.books.find(b=>b.id===archiveBookId);
+assert.ok(archiveOriginal?.updatedAt,'book should have concurrency token');
+const renamed=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'rename',title:'Ouvrage renommé',expectedUpdatedAt:archiveOriginal.updatedAt
+}});
+assert.equal(renamed.status,200,'book rename accepted');
+assert.equal(renamed.data.book.title,'Ouvrage renommé');
+const outdatedRename=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'rename',title:'Titre concurrent interdit',expectedUpdatedAt:archiveOriginal.updatedAt
+}});
+assert.equal(outdatedRename.status,409,'stale title edit must be refused');
+const outsiderRename=await request(archivePath,{method:'PATCH',cookie:outsider,body:{
+  action:'rename',title:'Titre pirate',expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(outsiderRename.status,404,'unauthorized book rename denied');
+const noOriginArchive=await request(archivePath,{method:'PATCH',cookie:author,omitOrigin:true,body:{
+  action:'archive',expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(noOriginArchive.status,403,'archive CSRF enforced');
+const archived=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'archive',expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(archived.status,200,'soft archive accepted');
+const liveList=await request('/api/v1/books',{cookie:author});
+assert.equal(liveList.status,200);
+assert.equal(liveList.data.books.some(b=>b.id===archiveBookId),false,'archived book excluded from active library');
+const archiveList=await request('/api/v1/books?archived=1',{cookie:author});
+assert.equal(archiveList.status,200);
+assert.equal(archiveList.data.books.some(b=>b.id===archiveBookId),true,'book accessible in own archives');
+const outsiderArchives=await request('/api/v1/books?archived=1',{cookie:outsider});
+assert.equal(outsiderArchives.status,200);
+assert.equal(outsiderArchives.data.books.some(b=>b.id===archiveBookId),false,'archive access isolated');
+const archivedChapter=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
+assert.equal(archivedChapter.status,404,'archived chapters not directly accessible');
+const restoredBook=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'restore',expectedUpdatedAt:archived.data.book.updatedAt
+}});
+assert.equal(restoredBook.status,200,'restore without data loss');
+assert.equal(restoredBook.data.book.title,'Ouvrage renommé');
+const restoredChapter=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
+assert.equal(restoredChapter.status,200,'chapter retained after archive and restore');
+const restoredList=await request('/api/v1/books',{cookie:author});
+assert.equal(restoredList.data.books.some(b=>b.id===archiveBookId),true,'restored book returned to library');
 const path='/api/v1/books/'+bookId+'/chapters/'+chapterId;
 const before=await request(path,{cookie:author});
 assert.equal(before.status,200,'chapter read');
@@ -227,4 +279,4 @@ const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
 assert.equal(logout.status,200,'logout');
 const revoked=await request('/api/v1/books',{cookie:author});
 assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
-console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, snapshots, restoration, exports and ACL');
+console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, reversible book lifecycle, snapshots, restoration, exports and ACL');
