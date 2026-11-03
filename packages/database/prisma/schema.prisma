@@ -45,6 +45,7 @@ model User {
   revisions DocumentRevision[] @relation("RevisionAuthor")
   snapshots BookSnapshot[] @relation("SnapshotAuthor")
   editorialComments EditorialComment[] @relation("CommentAuthor")
+  sourceImports ManuscriptSourceImport[] @relation("SourceImportAuthor")
   @@map("users")
 }
 model Session {
@@ -94,6 +95,7 @@ model Book {
   owner User @relation("BookOwner",fields:[ownerId],references:[id])
   editions Edition[]
   snapshots BookSnapshot[]
+  sourceImports ManuscriptSourceImport[]
   @@index([workspaceId,updatedAt])
   @@map("books")
 }
@@ -124,6 +126,7 @@ model Chapter {
   manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
   revisions DocumentRevision[]
   editorialComments EditorialComment[]
+  sourceImport ManuscriptSourceImport?
   @@unique([manuscriptId,position])
   @@index([manuscriptId,position])
   @@map("chapters")
@@ -203,4 +206,22 @@ model EditorialComment {
   @@index([chapterId,createdAt])
   @@index([authorId,createdAt])
   @@map("editorial_comments")
+}
+
+/** Reviewed DOCX import provenance. Unique operation IDs prevent duplicate chapters after retry. */
+model ManuscriptSourceImport {
+  id String @id @default(uuid()) @db.Uuid
+  bookId String @map("book_id") @db.Uuid
+  chapterId String @unique @map("chapter_id") @db.Uuid
+  operationId String @map("operation_id") @db.Uuid
+  sourceName String @map("source_name") @db.VarChar(140)
+  requestHash String @map("request_hash") @db.Char(64)
+  actorId String @map("actor_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+  chapter Chapter @relation(fields:[chapterId],references:[id],onDelete:Cascade)
+  author User @relation("SourceImportAuthor",fields:[actorId],references:[id])
+  @@unique([bookId,operationId])
+  @@index([bookId,createdAt])
+  @@map("manuscript_source_imports")
 }
