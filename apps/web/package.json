@@ -18,7 +18,8 @@
     "@tiptap/starter-kit": "3.32.2",
     "@bookstudio/domain": "workspace:*",
     "@bookstudio/database": "workspace:*",
-    "@prisma/client": "6.19.3"
+    "@prisma/client": "6.19.3",
+    "fflate": "0.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

@@ -99,3 +99,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 .versions-success{padding:10px 14px;border-radius:8px;color:#386b55;background:#edf7f0;font-size:12px}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 @media(max-width:650px){.version-row{align-items:flex-start;flex-wrap:wrap}.version-row button{margin-left:54px}}
+
+.version-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.version-actions a{padding:8px 0}
+@media(max-width:650px){.version-actions{margin-left:54px;width:calc(100% - 54px);gap:16px}.version-actions button{margin-left:0}}
