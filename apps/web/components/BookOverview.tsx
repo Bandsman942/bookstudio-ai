@@ -5,6 +5,7 @@ import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import SnapshotsPanel from './SnapshotsPanel';
 import BookActionsMenu from './BookActionsMenu';
+import ChapterActionsMenu from './ChapterActionsMenu';
 
 type Chapter={id:string;title:string;revision:number};
 type Props={
