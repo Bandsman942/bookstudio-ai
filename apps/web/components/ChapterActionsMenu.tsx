@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 
@@ -14,6 +14,13 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,edi
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const router=useRouter();
   function close(){if(!busy){setRenaming(false);setError('');}}
+  useEffect(()=>{
+    if(!renaming||busy)return;
+    const onEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')setRenaming(false);};
+    document.addEventListener('keydown',onEscape);
+    return ()=>document.removeEventListener('keydown',onEscape);
+  },[renaming,busy]);
+
   async function rename(event:React.FormEvent){
     event.preventDefault();if(!editable||busy)return;
     setBusy(true);setError('');
