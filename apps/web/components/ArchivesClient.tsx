@@ -3,7 +3,7 @@ import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {useState} from 'react';
 
-type Archived={id:string;title:string;bookType:string;updatedAt:string};
+type Archived={id:string;title:string;bookType:string;updatedAt:string;canRestore:boolean};
 export default function ArchivesClient({books,displayName}:{books:Archived[];displayName:string}){
  const [busyId,setBusyId]=useState<string|null>(null),[error,setError]=useState('');
  const router=useRouter();
