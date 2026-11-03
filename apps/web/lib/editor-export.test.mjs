@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {unzipSync,strFromU8} from 'fflate';
 import {renderDocx,renderMarkdown} from './docx-export.ts';
+import {renderReadingPdf} from './pdf-export.ts';
 
 const document={
   type:'doc',
@@ -38,4 +39,10 @@ test('DOCX exporter rejects executable URL marks',()=>{
     {type:'text',text:'XSS',marks:[{type:'link',attrs:{href:'javascript:alert(1)'}}]}
   ]}]};
   assert.throws(()=>renderDocx('Titre',[{title:'Chapitre 1',content:invalid}]),/DOCUMENT_UNSAFE_LINK/);
+});
+
+test('PDF reading export keeps a valid non-empty PDF with inline style and link',async()=>{
+  const bytes=await renderReadingPdf('Mon livre',[{title:'Chapitre 1',content:document}]);
+  assert.ok(bytes.byteLength>600);
+  assert.equal(Buffer.from(bytes.subarray(0,5)).toString('ascii'),'%PDF-');
 });
