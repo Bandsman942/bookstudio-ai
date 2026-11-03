@@ -21,8 +21,8 @@ async function ready(){
 await ready();
 const versionResponse=await request('/api/version');
 assert.equal(versionResponse.status,200,'version route');
-assert.equal(versionResponse.data.version,'0.1.0','semver traceability');
-assert.equal(versionResponse.data.tag,'v0.1.0');
+assert.equal(versionResponse.data.version,'0.2.0','semver traceability');
+assert.equal(versionResponse.data.tag,'v0.2.0');
 assert.equal(versionResponse.data.channel,'alpha');
 const suffix=randomUUID().slice(0,8);
 const password='BookStudio-CI-Private-Only-2026!';
