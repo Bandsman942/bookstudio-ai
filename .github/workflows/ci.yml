@@ -36,5 +36,13 @@ jobs:
       - run: python -m unittest discover -s apps/worker-documents/tests -v
       - run: pnpm db:generate
       - run: pnpm db:deploy
+      - name: HTTP E2E — private users, chapters, revisions, ACL
+        env:
+          BOOKSTUDIO_PUBLIC_SIGNUP: 'true'
+        run: |
+          pnpm dev >/tmp/bookstudio-e2e-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          node packages/database/scripts/e2e-api.mjs || { cat /tmp/bookstudio-e2e-server.log; exit 1; }
       - run: pnpm typecheck
       - run: pnpm build
