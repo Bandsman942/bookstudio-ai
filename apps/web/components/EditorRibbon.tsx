@@ -5,6 +5,7 @@ import type {ReactNode,FormEvent,KeyboardEvent} from 'react';
 import {useEditorState} from '@tiptap/react';
 import type {Editor} from '@tiptap/react';
 import {useAppPreferences} from './AppPreferences';
+import {normalizeEditorHref} from '@bookstudio/domain';
 
 type Props={editor:Editor|null;canEdit:boolean};
 type RibbonTab='home'|'insert';
@@ -13,16 +14,6 @@ type RibbonToolProps={
   active?:boolean;disabled?:boolean;shortcut?:string;large?:boolean;
 };
 
-export function validateEditorHref(value:string):string|null{
-  const input=value.trim();
-  try{
-    const url=new URL(input);
-    if(!['https:','http:','mailto:'].includes(url.protocol))return null;
-    if(url.protocol==='mailto:'&&!url.pathname.includes('@'))return null;
-    if((url.protocol==='https:'||url.protocol==='http:')&&!url.hostname)return null;
-    return url.toString();
-  }catch{return null;}
-}
 
 function RibbonTool({label,icon,onActivate,active=false,disabled=false,shortcut,large=false}:RibbonToolProps){
   return <button type="button" className={'ribbon-tool'+(active?' is-active':'')+(large?' is-large':'')}
@@ -35,7 +26,7 @@ function RibbonTool({label,icon,onActivate,active=false,disabled=false,shortcut,
 
 /** BookStudio's accessible, extensible ribbon; all commands operate on saved Tiptap JSON. */
 export default function EditorRibbon({editor,canEdit}:Props){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
   const [tab,setTab]=useState<RibbonTab>('home');
   const [showLink,setShowLink]=useState(false);
   const [href,setHref]=useState('');
@@ -85,7 +76,7 @@ export default function EditorRibbon({editor,canEdit}:Props){
   function submitLink(event:FormEvent){
     event.preventDefault();
     if(!enabled||!editor)return;
-    const normalized=validateEditorHref(href);
+    const normalized=normalizeEditorHref(href);
     if(!normalized){setLinkError(t('editor.toolbar.linkInvalid'));return;}
     editor.chain().focus().extendMarkRange('link').setLink({
       href:normalized,target:'_blank',rel:'noopener noreferrer nofollow'
@@ -126,7 +117,7 @@ export default function EditorRibbon({editor,canEdit}:Props){
         </div>
         <div className="ribbon-group" role="group" aria-label={t('editor.toolbar.font')}>
           <div className="ribbon-tools">
-            <RibbonTool label={t('editor.toolbar.bold')} icon={<b>G</b>} shortcut="Ctrl/Cmd+B" disabled={!enabled}
+            <RibbonTool label={t('editor.toolbar.bold')} icon={<b>{locale==='fr'?'G':'B'}</b>} shortcut="Ctrl/Cmd+B" disabled={!enabled}
               active={state?.bold} onActivate={()=>editor?.chain().focus().toggleBold().run()}/>
             <RibbonTool label={t('editor.toolbar.italic')} icon={<em>I</em>} shortcut="Ctrl/Cmd+I" disabled={!enabled}
               active={state?.italic} onActivate={()=>editor?.chain().focus().toggleItalic().run()}/>
