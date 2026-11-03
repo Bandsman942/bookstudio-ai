@@ -132,8 +132,8 @@ const restoredBook=await request(archivePath,{method:'PATCH',cookie:author,body:
 }});
 assert.equal(restoredBook.status,200,'restore without data loss');
 assert.equal(restoredBook.data.book.title,'Ouvrage renommé');
-const restoredChapter=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
-assert.equal(restoredChapter.status,200,'chapter retained after archive and restore');
+const restoredArchivalChapter=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
+assert.equal(restoredArchivalChapter.status,200,'chapter retained after archive and restore');
 const restoredList=await request('/api/v1/books',{cookie:author});
 assert.equal(restoredList.data.books.some(b=>b.id===archiveBookId),true,'restored book returned to library');
 const path='/api/v1/books/'+bookId+'/chapters/'+chapterId;
