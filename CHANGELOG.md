@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.13.0] — alpha en validation, NON DÉPLOYÉE
+## [0.13.0] — 2026-11-03 (production alpha privée)
 ### BS-006c — DOCX multi-chapitres sous contrôle humain (#100)
 - Dans la prévisualisation privée DOCX, proposition de deux à dix chapitres selon les titres Word et section introductive éventuelle. Tous les blocs conservés dans leur ordre ; relecture et titres modifiables avant confirmation.
 - Action explicite « Créer plusieurs chapitres » et avertissements si segmentation approximative, document tronqué ou trop nombreuses parties. Aucun découpage silencieux ni promesse de fidélité Word.
@@ -13,6 +13,12 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Réutilisation du schéma v0.12, **aucune migration SQL** ; tests découpage, idempotence et API négatifs, UI FR/EN mobile et thèmes.
 - Hors périmètre : tableaux/images/notes/styles Word complets, antivirus, sauvegarde-restauration des binaires, PDF/OCR.
 
+
+### Déploiement
+- **READY le 2026-11-03T20:17:33.826Z** : Vercel `dpl_LahJ2LEMPeE1ocm5iLoNr4gLJ6gE` sur SHA `8b5181e215e1f8bcfeb7a3debf25400d5023b048`, GitHub CI `test-and-build` SUCCESS sur `main`, recette propriétaire « E2E v0.13.0-alpha BON ».
+- Snapshot Neon `snap-ancient-cell-bf9w7s06`, sans migration SQL supplémentaire ; pipeline Vercel `prisma migrate deploy → prisma generate → next build`, 4 migrations déjà appliquées.
+- `/api/health` et `/api/version` HTTP 200 (base ready, v0.13.0, commit `8b5181e215e1`). Ignored-build-step restauré à `exit 0`, previews désactivées.
+- Journal `docs/deployments/2026-11-03T20-17-33Z_v0.13.0.md`. Tag Git annoté `v0.13.0` encore à créer.
 
 ## [0.12.0] — 2026-11-03 (production alpha privée)
 ### BS-006b — Reprise contrôlée d'un aperçu DOCX en nouveau chapitre (#96)
