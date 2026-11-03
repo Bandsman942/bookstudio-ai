@@ -3,6 +3,8 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+
+## [0.7.0] — alpha préparée, NON DÉPLOYÉE
 ### Éditeur avancé — première tranche (à publier)
 - Ancienne barre de sept boutons remplacée par un ruban **Accueil / Insertion** regroupant styles Normal/Titres 1–3, gras, italique, souligné, barré, code, listes numérotées/à puces, citation, bloc de code, annulation/rétablissement, nettoyage de format, insertion de lien et séparation — #68.
 - États actifs accessibles via `useEditorState`, sans re-render de l'éditeur à chaque transaction ; interface défilable sur petit écran et compatible thème clair/sombre et FR/EN.
