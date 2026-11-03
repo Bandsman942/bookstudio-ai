@@ -41,6 +41,8 @@ jobs:
         env:
           BOOKSTUDIO_PUBLIC_SIGNUP: 'true'
         run: |
+          export BOOKSTUDIO_BOOTSTRAP_TOKEN_HASH="$(node -e "console.log(require('crypto').createHash('sha256').update('BookStudio_CI_Owner_Setup_Token_2026_Safe_TestOnly').digest('hex'))")"
+          export BOOKSTUDIO_BOOTSTRAP_EXPIRES_AT="2099-01-01T00:00:00Z"
           pnpm dev >/tmp/bookstudio-e2e-server.log 2>&1 &
           server_pid=$!
           trap 'kill $server_pid 2>/dev/null || true' EXIT

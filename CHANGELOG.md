@@ -7,6 +7,9 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Export PDF de lecture A4 depuis un snapshot vérifié, contrôles d'accès et intégrité, traitement explicite des caractères non pris en charge — PR à venir (#29).
 
 ### Sécurité
+- Activation initiale du propriétaire par code à usage unique, expiration courte et création atomique ; choix personnel du mot de passe sur HTTPS — #31.
+
+### Sécurité
 - Analyse DOCX hors ligne renforcée : archives ZIP piégées, chemins traversants, macros, XML dangereux, contenus suspects et rapports exigeant une revue humaine — PR #27.
 
 ### En cours
