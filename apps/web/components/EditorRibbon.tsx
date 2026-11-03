@@ -164,7 +164,7 @@ export default function EditorRibbon({editor,canEdit}:Props){
           disabled={!editor||!canEdit} onClick={openLink}>🔗</button>
         {item('unlink',t('editor.toolbar.unlink'),'×🔗',active.link)}
         {item('divider',t('editor.toolbar.divider'),'―')}
-        {item('hardBreak',t('editor.toolbar.insertHelp'),'↵')}
+        {item('hardBreak',t('editor.toolbar.hardBreak'),'↵')}
       </div><small>{t('editor.toolbar.insertHelp')}</small></div>
       <p className="ribbon-explain">{t('editor.toolbar.notWord')}</p>
     </div>}
