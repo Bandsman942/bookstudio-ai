@@ -3,10 +3,17 @@ import {normalizeTitle,emptyDocument} from '@bookstudio/domain';
 import {activeUser} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {createHash} from 'node:crypto';
-export async function GET() {
+export async function GET(req:Request) {
   const user=await activeUser();if(!user)return errorResponse('UNAUTHENTICATED',401);
-  const books=await prisma.book.findMany({where:{archivedAt:null,workspace:{memberships:{some:{userId:user.id}}}},orderBy:{updatedAt:'desc'},take:100,select:{id:true,title:true,bookType:true,status:true,updatedAt:true}});
-  return Response.json({books},{headers:{'Cache-Control':'no-store'}});
+  const mode=new URL(req.url).searchParams.get('archived');
+  if(mode!==null && mode!=='1')return errorResponse('VALIDATION_ERROR',400);
+  const archived=mode==='1';
+  const books=await prisma.book.findMany({
+    where:{archivedAt:archived?{not:null}:null,workspace:{memberships:{some:{userId:user.id}}}},
+    orderBy:{updatedAt:'desc'},take:100,
+    select:{id:true,title:true,bookType:true,status:true,updatedAt:true,archivedAt:true}
+  });
+  return Response.json({books},{headers:{'Cache-Control':'private, no-store'}});
 }
 export async function POST(req:Request){
   if(!isSameOrigin(req))return errorResponse('ORIGIN_FORBIDDEN',403);
