@@ -3,6 +3,7 @@ import { activeUser, accessToBook } from '@/lib/auth';
 import { errorResponse } from '@/lib/security';
 import { manifestHash, parseSnapshotManifest } from '@/lib/snapshots';
 import { renderDocx, renderMarkdown, type ExportChapter } from '@/lib/docx-export';
+import { renderReadingPdf, UnsupportedPdfGlyph } from '@/lib/pdf-export';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -15,7 +16,7 @@ export async function GET(req:Request,{params}:Ctx) {
   const book=await accessToBook(bookId,user.id);
   if(!book)return errorResponse('NOT_FOUND',404);
   const format=new URL(req.url).searchParams.get('format');
-  if(format!=='docx' && format!=='md')return errorResponse('EXPORT_FORMAT_UNSUPPORTED',400);
+  if(format!=='docx' && format!=='md' && format!=='pdf')return errorResponse('EXPORT_FORMAT_UNSUPPORTED',400);
 
   const snapshot=await prisma.bookSnapshot.findFirst({
     where:{id:snapshotId,bookId},select:{revisionManifest:true,contentHash:true}
@@ -39,19 +40,21 @@ export async function GET(req:Request,{params}:Ctx) {
       if(total>8*1024*1024)return errorResponse('EXPORT_TOO_LARGE',413);
       chapters.push({title:item.title,content:source.content});
     }
-    const bytes=format==='docx'?renderDocx(book.title,chapters):new TextEncoder().encode(renderMarkdown(book.title,chapters));
+    const bytes = format==='pdf' ? await renderReadingPdf(book.title,chapters) : format==='docx' ? renderDocx(book.title,chapters) : new TextEncoder().encode(renderMarkdown(book.title,chapters));
     return new Response(new Uint8Array(bytes),{
       status:200,
       headers:{
         'Content-Type':format==='docx'
           ?'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          :'text/markdown; charset=utf-8',
+          :format==='pdf' ? 'application/pdf' : 'text/markdown; charset=utf-8',
         'Content-Disposition':'attachment; filename="bookstudio-'+snapshotId+'.'+format+'"',
         'Cache-Control':'private, no-store, max-age=0',
         'X-Content-Type-Options':'nosniff'
       }
     });
-  }catch{
+  }catch(error){
+    if(error instanceof UnsupportedPdfGlyph)return errorResponse('EXPORT_UNSUPPORTED_GLYPHS',422);
+    if(error instanceof Error && error.message==='EXPORT_TOO_LARGE')return errorResponse('EXPORT_TOO_LARGE',413);
     return errorResponse('EXPORT_FAILED',503);
   }
 }
