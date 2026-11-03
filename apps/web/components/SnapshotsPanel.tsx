@@ -79,7 +79,11 @@ export default function SnapshotsPanel({bookId}:{bookId:string}){
           <div className="version-details"><strong>{v.name}</strong>
             <small>{new Date(v.createdAt).toLocaleString('fr-FR')} · {v.chapterCount} chapitre(s) · Empreinte {v.integrityHash.slice(0,10)}</small>
           </div>
-          <button className="text-button" type="button" disabled={busy} onClick={()=>restore(v)}>Restaurer</button>
+          <div className="version-actions">
+            <a className="text-button" href={'/api/v1/books/'+bookId+'/snapshots/'+v.id+'/export?format=docx'} title="Télécharger la version Word">Word</a>
+            <a className="text-button" href={'/api/v1/books/'+bookId+'/snapshots/'+v.id+'/export?format=md'} title="Télécharger la version Markdown">Markdown</a>
+            <button className="text-button" type="button" disabled={busy} onClick={()=>restore(v)}>Restaurer</button>
+          </div>
         </div>)}
     </div>
   </section>;
