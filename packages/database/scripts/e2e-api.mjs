@@ -38,6 +38,28 @@ async function user(label){
   assert.match(login.setCookie,/SameSite=Lax/i,'CSRF cookie policy');
   return login.cookie;
 }
+const bootstrapToken='BookStudio_CI_Owner_Setup_Token_2026_Safe_TestOnly';
+const ownerEmail='owner-'+suffix+'@example.invalid';
+const ownerPassword='BookStudio-Owner-CI-Test-2026!';
+const initialActivation=await request('/api/v1/auth/setup',{method:'POST',body:{
+  token:bootstrapToken,email:ownerEmail,name:'Owner E2E',password:ownerPassword
+}});
+assert.equal(initialActivation.status,201,'first owner activation must succeed');
+const activatedLogin=await request('/api/v1/auth/login',{method:'POST',
+  body:{email:ownerEmail,password:ownerPassword}});
+assert.equal(activatedLogin.status,200,'owner can sign in');
+const secondActivation=await request('/api/v1/auth/setup',{method:'POST',
+  body:{token:bootstrapToken,email:'other-'+suffix+'@example.invalid',
+    name:'Second Owner',password:ownerPassword}});
+assert.equal(secondActivation.status,403,'one-time owner activation impossible twice');
+const invalidBootstrap=await request('/api/v1/auth/setup',{method:'POST',
+  body:{token:'x'.repeat(43),email:'other-'+suffix+'@example.invalid',
+    name:'Second Owner',password:ownerPassword}});
+assert.equal(invalidBootstrap.status,403,'invalid setup token rejected');
+const bootstrapCSRF=await request('/api/v1/auth/setup',{method:'POST',omitOrigin:true,
+  body:{token:bootstrapToken,email:'other-'+suffix+'@example.invalid',
+    name:'Second Owner',password:ownerPassword}});
+assert.equal(bootstrapCSRF.status,403,'setup enforces same-origin policy');
 const author=await user('A'),outsider=await user('B');
 // Login attempts are shared through PostgreSQL and remain uniform for unknown users.
 const unknown='unknown-'+suffix+'@example.invalid';
