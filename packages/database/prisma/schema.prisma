@@ -6,9 +6,25 @@ datasource db {
   url = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-enum UserStatus { ACTIVE DISABLED }
-enum WorkspaceRole { OWNER EDITOR REVIEWER VIEWER }
-enum BookStatus { DRAFT WRITING REVIEW APPROVED PRODUCTION PUBLISHED ARCHIVED }
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+enum WorkspaceRole {
+  OWNER
+  EDITOR
+  REVIEWER
+  VIEWER
+}
+enum BookStatus {
+  DRAFT
+  WRITING
+  REVIEW
+  APPROVED
+  PRODUCTION
+  PUBLISHED
+  ARCHIVED
+}
 
 model User {
   id String @id @default(uuid()) @db.Uuid
