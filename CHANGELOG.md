@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.3.0] — version alpha préparée, NON DÉPLOYÉE
+## [0.3.0] — 2026-11-03 (production alpha privée)
 ### Ajouté
 - Recherche privée dans les seules révisions enregistrées courantes, avec navigation au chapitre et isolation des espaces — PR #43.
 - Commentaires éditoriaux par chapitre, résolution/réouverture, protection des ancres révisionnelles et signalement « À revoir » — PR #45.
@@ -12,9 +12,10 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 ### Sécurité
 - Contrôles d'autorisation et d'origine pour la recherche et les commentaires. Textes privés jamais envoyés à l'IA pour ces fonctions.
 
-### Prérequis de livraison
-- Migration additive `20261103132000_editorial_comments` validée en développement ; pas encore appliquée en production.
-- Recette E2E du propriétaire sur navigateur, sauvegarde et restauration Neon vérifiées avant fusion et déploiement.
+### Déploiement
+- Production Vercel **READY le 2026-11-03T13:18:20.867Z**, commit exact `cb6f4e39d011306d06172c83e160f6771fcb0daf`, tag annoté `v0.3.0` ; CI verte, API de santé/version vérifiées. Fiche : `docs/deployments/2026-11-03T13-18-20Z_v0.3.0.md`.
+- Migration additive `20261103132000_editorial_comments` appliquée sur Neon Production après snapshot préalable et répétition de restauration sur branche isolée.
+- E2E utilisateur **déclaré bon** avant publication ; recette d'interactions sur la production connectée non revendiquée.
 - Stockage privé et import web DOCX/PDF encore bloqués (#46) : exclus de cette version.
 
 ### Ajouté
