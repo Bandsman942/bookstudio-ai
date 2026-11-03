@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+enum WorkspaceRole {
+  OWNER
+  EDITOR
+  REVIEWER
+  VIEWER
+}
+enum BookStatus {
+  DRAFT
+  WRITING
+  REVIEW
+  APPROVED
+  PRODUCTION
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique @db.VarChar(320)
+  name String @db.VarChar(140)
+  passwordHash String @map("password_hash") @db.Text
+  status UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  sessions Session[]
+  memberships Membership[]
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  ownedBooks Book[] @relation("BookOwner")
+  revisions DocumentRevision[] @relation("RevisionAuthor")
+  snapshots BookSnapshot[] @relation("SnapshotAuthor")
+  @@map("users")
+}
+model Session {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  tokenHash String @unique @map("token_hash") @db.Char(64)
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@index([userId,expiresAt])
+  @@map("sessions")
+}
+model Workspace {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @map("owner_id") @db.Uuid
+  name String @db.VarChar(140)
+  createdAt DateTime @default(now()) @map("created_at")
+  owner User @relation("WorkspaceOwner",fields:[ownerId],references:[id])
+  memberships Membership[]
+  books Book[]
+  @@map("workspaces")
+}
+model Membership {
+  id String @id @default(uuid()) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  role WorkspaceRole @default(VIEWER)
+  createdAt DateTime @default(now()) @map("created_at")
+  workspace Workspace @relation(fields:[workspaceId],references:[id],onDelete:Cascade)
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  @@unique([workspaceId,userId])
+  @@map("memberships")
+}
+model Book {
+  id String @id @default(uuid()) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  ownerId String @map("owner_id") @db.Uuid
+  title String @db.VarChar(180)
+  bookType String @default("GENERAL") @map("book_type") @db.VarChar(40)
+  language String @default("fr") @db.VarChar(10)
+  status BookStatus @default(DRAFT)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
+  workspace Workspace @relation(fields:[workspaceId],references:[id])
+  owner User @relation("BookOwner",fields:[ownerId],references:[id])
+  editions Edition[]
+  snapshots BookSnapshot[]
+  @@index([workspaceId,updatedAt])
+  @@map("books")
+}
+model Edition {
+  id String @id @default(uuid()) @db.Uuid
+  bookId String @map("book_id") @db.Uuid
+  number Int @default(1)
+  language String @default("fr") @db.VarChar(10)
+  book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+  manuscript Manuscript?
+  @@unique([bookId,number])
+  @@map("editions")
+}
+model Manuscript {
+  id String @id @default(uuid()) @db.Uuid
+  editionId String @unique @map("edition_id") @db.Uuid
+  edition Edition @relation(fields:[editionId],references:[id],onDelete:Cascade)
+  chapters Chapter[]
+  @@map("manuscripts")
+}
+model Chapter {
+  id String @id @default(uuid()) @db.Uuid
+  manuscriptId String @map("manuscript_id") @db.Uuid
+  title String @db.VarChar(180)
+  position Int @default(0)
+  revisionSeq Int @default(0) @map("revision_seq")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
+  revisions DocumentRevision[]
+  @@unique([manuscriptId,position])
+  @@index([manuscriptId,position])
+  @@map("chapters")
+}
+model DocumentRevision {
+  id String @id @default(uuid()) @db.Uuid
+  chapterId String @map("chapter_id") @db.Uuid
+  sequence Int
+  content Json
+  text String @db.Text
+  contentHash String @map("content_hash") @db.Char(64)
+  authorId String @map("author_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  chapter Chapter @relation(fields:[chapterId],references:[id],onDelete:Cascade)
+  author User @relation("RevisionAuthor",fields:[authorId],references:[id])
+  @@unique([chapterId,sequence])
+  @@index([chapterId,createdAt])
+  @@map("document_revisions")
+}
+model BookSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+  bookId String @map("book_id") @db.Uuid
+  name String @db.VarChar(140)
+  revisionManifest Json @map("revision_manifest")
+  contentHash String @map("content_hash") @db.Char(64)
+  authorId String @map("author_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+  author User @relation("SnapshotAuthor",fields:[authorId],references:[id])
+  @@index([bookId,createdAt])
+  @@map("book_snapshots")
+}
+model AuditEvent {
+  id String @id @default(uuid()) @db.Uuid
+  actorId String? @map("actor_id") @db.Uuid
+  workspaceId String? @map("workspace_id") @db.Uuid
+  subjectId String? @map("subject_id") @db.Uuid
+  action String @db.VarChar(100)
+  metadata Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([workspaceId,createdAt])
+  @@map("audit_events")
+}

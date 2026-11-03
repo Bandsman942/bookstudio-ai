@@ -1,0 +1,2 @@
+# BookStudio AI, isolated Neon database.
+provider = "postgresql"

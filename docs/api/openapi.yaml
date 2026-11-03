@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: BookStudio AI API
+  version: 0.1.0
+  description: API autonome, aucune connexion directe à DTSC Platform.
+servers:
+  - url: /api/v1
+paths:
+  /auth/login:
+    post:
+      summary: Authentification locale
+      responses:
+        '200': {description: Session établie}
+        '401': {description: Identifiants invalides}
+  /auth/logout:
+    post:
+      summary: Révoquer la session
+      responses:
+        '200': {description: Révoquée}
+  /books:
+    get:
+      summary: Livres accessibles
+      responses:
+        '200': {description: Liste}
+        '401': {description: Non authentifié}
+    post:
+      summary: Créer un livre, une édition et un premier chapitre
+      responses:
+        '201': {description: Créé}
+  /books/{bookId}/chapters:
+    post:
+      summary: Ajouter un chapitre
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '201': {description: Créé}
+  /books/{bookId}/chapters/{chapterId}:
+    get:
+      summary: Lire la révision courante
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: chapterId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: Contenu structuré}
+        '404': {description: Introuvable ou inaccessible}
+    patch:
+      summary: Sauvegarde optimiste
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: chapterId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [baseRevision,content]
+              properties:
+                baseRevision: {type: integer, minimum: 0}
+                content: {type: object}
+      responses:
+        '200': {description: Révision incrémentée}
+        '409': {description: Conflit de révision}

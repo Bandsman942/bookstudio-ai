@@ -1,0 +1,21 @@
+name: Demande de fonctionnalité
+description: Modification BookStudio AI à critères vérifiables
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objectif, périmètre et hors périmètre
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation, tests et E2E
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Données, sécurité, migration et rollback
+    validations:
+      required: true
