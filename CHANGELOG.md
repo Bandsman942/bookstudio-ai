@@ -4,13 +4,19 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.9.0] — alpha, en cours de validation (NON DÉPLOYÉE)
+## [0.9.0] — 2026-11-03 (production alpha privée)
 ### Confirmation serveur des sources (#84)
 - Après chaque upload direct vers le bucket privé Supabase, vérification côté serveur de la présence de l'objet, de sa taille effectivement stockée et du type MIME déclaré par Storage ; l'interface ne revendique plus une réussite sur la seule base du PUT.
 - Messages d'erreur distincts pour objet manquant, taille et type non conformes ; audit de confirmation sans sauvegarder les secrets ni le binaire.
-- Limite Storage de 20 Mio appliquée également au bucket privé ; tests de vérification et E2E v0.9.0-alpha à valider avant publication.
+- Limite Storage de 20 Mio appliquée également au bucket privé ; tests de vérification et E2E v0.9.0-alpha propriétaire validés.
 - **Non livré** : analyse du contenu binaire/antivirus, backup/restauration, import DOCX/PDF en chapitres, OCR et accès public.
 
+
+### Déploiement
+- **READY le 2026-11-03T18:21:54.023Z**, Vercel `dpl_BWGkPaaB6EywQvfoagU9Ss4wweGT`, SHA `11a565c0789eb796747b2c3fa9acd1eba80b2e30`, GitHub CI `test-and-build` SUCCESS sur `main`.
+- E2E propriétaire « v0.9.0-alpha BON » ; snapshot Neon `snap-flat-surf-bfrln7h5`, aucune migration SQL.
+- `/api/health` et `/api/version` : HTTP 200, base prête et version `0.9.0`. Vercel reverrouillé (`exit 0`), previews désactivées.
+- Journal : `docs/deployments/2026-11-03T18-21-54Z_v0.9.0.md`. Tag Git annoté `v0.9.0` : **à créer**.
 
 ## [0.8.0] — 2026-11-03 (production alpha privée)
 ### Fichiers sources et Supabase Storage (issue #78)
