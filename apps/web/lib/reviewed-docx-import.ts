@@ -1,5 +1,7 @@
 import {assertValidDocument,normalizeTitle,plainText} from '@bookstudio/domain';
-import {isStoredName} from './supabase-storage';
+// Self-contained validation also runs in Node's strip-types unit runner.
+const STORED=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}-[a-z0-9][a-z0-9._-]{0,95}$/i;
+const isStoredName=(name:string)=>STORED.test(name)&&!name.includes('..');
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export type ReviewedBlock={kind:'heading'|'paragraph';text:string};
