@@ -6,7 +6,7 @@ import {useAppPreferences} from './AppPreferences';
 import {previewDocx,type DocxPreview,DocxPreviewError} from '@/lib/docx-preview';
 
 const MAX_BYTES=20*1024*1024;
-const PREVIEW_PAGE_SIZE=80;
+const PREVIEW_PAGE_SIZE=24;
 const copy={
  fr:{
   title:'Prévisualisation complète du manuscrit DOCX',
@@ -14,7 +14,7 @@ const copy={
   analysing:'Analyse de tous les paragraphes Word lisibles…',
   subtitle:'Aperçu à réviser — fidélité Word non vérifiée',
   intro:'Le fichier original est conservé. Le texte est analysé dans votre navigateur sans envoi vers l’IA.',
-  close:'Fermer',empty:'Aucun paragraphe simple détecté.',
+  close:'Fermer',goImport:'Aller à la création des chapitres',empty:'Aucun paragraphe simple détecté.',
   invalid:'Ce DOCX dépasse les limites de sécurité de l’archive ou contient des éléments suspects. Aucune portion n’est masquée : analyse refusée.',
   corrupted:'Ce DOCX paraît corrompu ou contient du XML invalide.',
   network:'Connexion au stockage interrompue ou lien expiré. Rouvrez ce fichier.',
@@ -37,7 +37,7 @@ const copy={
   analysing:'Analyzing all readable Word paragraphs…',
   subtitle:'Review required — Word fidelity not verified',
   intro:'The original file remains stored. Text is analyzed in your browser, not sent to AI.',
-  close:'Close',empty:'No simple paragraphs found.',
+  close:'Close',goImport:'Go to chapter creation',empty:'No simple paragraphs found.',
   invalid:'This DOCX exceeds archive safety limits or contains unsafe elements. No partial preview is shown.',
   corrupted:'The DOCX appears corrupt or contains invalid XML.',
   network:'Storage connection failed or signed link expired. Reopen this file.',
@@ -127,6 +127,7 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
        <p className="docx-review-status" role="status"><AppIcon name="shield"/>{t.subtitle}</p>
        <p className="source-note">{fmt(t.count,{
          count:preview.blocks.length,chars:preview.blocks.reduce((n,b)=>n+b.text.length,0)})}</p>
+       {editable&&preview.blocks.length>0&&<a href="#docx-complete-title" className="docx-jump-import"><AppIcon name="chapter" size={17}/>{t.goImport}</a>}
        <div className="docx-preview-article" ref={articleRef}>
          {!preview.blocks.length?<p>{t.empty}</p>:
            visible.map((block,i)=>block.kind==='heading'?

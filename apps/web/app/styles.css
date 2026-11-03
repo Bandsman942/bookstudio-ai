@@ -709,3 +709,13 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .docx-complete-import .docx-split-chapters label{display:grid;gap:7px}
 .docx-complete-import .docx-split-chapters input{width:100%;min-height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--input-surface);color:var(--ink)}
 @media(max-width:600px){.docx-complete-import{padding:14px 10px}.docx-page-actions{gap:7px}.docx-page-actions .text-button{padding:6px 9px}.docx-import-modes button{flex:1 1 160px}}
+
+/* One scroll context for DOCX dialog; individual pages only render 24 blocks. */
+.docx-preview-modal .docx-preview-article{max-height:none;overflow:visible}
+.docx-jump-import{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border-radius:9px;
+  color:var(--ink);background:var(--surface-muted);border:1px solid var(--line);
+  font-size:13px;font-weight:700;text-decoration:none;min-height:42px;margin:6px 0 12px}
+.docx-jump-import>.app-icon{color:var(--green)}
+.docx-jump-import:hover{border-color:var(--green);background:var(--surface-hover)}
+.docx-jump-import:focus-visible{outline:3px solid var(--menu-focus);outline-offset:3px}
+#docx-complete-title{scroll-margin-top:15px}
