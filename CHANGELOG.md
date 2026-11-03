@@ -3,6 +3,20 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+
+## [0.3.0] — version alpha préparée, NON DÉPLOYÉE
+### Ajouté
+- Recherche privée dans les seules révisions enregistrées courantes, avec navigation au chapitre et isolation des espaces — PR #43.
+- Commentaires éditoriaux par chapitre, résolution/réouverture, protection des ancres révisionnelles et signalement « À revoir » — PR #45.
+
+### Sécurité
+- Contrôles d'autorisation et d'origine pour la recherche et les commentaires. Textes privés jamais envoyés à l'IA pour ces fonctions.
+
+### Prérequis de livraison
+- Migration additive `20261103132000_editorial_comments` validée en développement ; pas encore appliquée en production.
+- Recette E2E du propriétaire sur navigateur, sauvegarde et restauration Neon vérifiées avant fusion et déploiement.
+- Stockage privé et import web DOCX/PDF encore bloqués (#46) : exclus de cette version.
+
 ### Ajouté
 - Commentaires éditoriaux par chapitre, résolution/réouverture, audit, ancrage strict sur révision et indicateur « À revoir » lorsque le texte évolue — issue #44.
 ### Sécurité
