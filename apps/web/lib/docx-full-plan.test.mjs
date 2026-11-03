@@ -14,8 +14,11 @@ test('a manuscript with over 200 paragraphs is preserved in ordered, resumable b
  assert.ok(plan.continuations>0);
 });
 test('more than 100,000 characters and more than ten chapters can be segmented without text loss',()=>{
- const original=Array.from({length:17},(_,i)=>[h('Chapitre '+(i+1)),
- ...Array.from({length:12},(_,n)=>p('Texte '+i+'-'+n+' '+('B'.repeat(620)))]).flat();
+ const original=[];
+ for(let i=0;i<17;i++){
+   original.push(h('Chapitre '+(i+1)));
+   for(let n=0;n<12;n++)original.push(p('Texte '+i+'-'+n+' '+('B'.repeat(620))));
+ }
  const plan=planCompleteDocxImport({blocks:original,truncated:false},'sections');
  assert.ok(plan.sourceCharacters>100000);
  assert.equal(plan.hasHeadings,true);
