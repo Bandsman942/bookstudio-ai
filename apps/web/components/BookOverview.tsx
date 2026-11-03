@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import SnapshotsPanel from './SnapshotsPanel';
+import BookSourceFiles from './BookSourceFiles';
 import BookActionsMenu from './BookActionsMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
 import {useAppPreferences} from './AppPreferences';
@@ -55,6 +56,7 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
       <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}
         updatedAt={chapter.updatedAt} editable={editable}/>
     </div>)}</div>
+    <BookSourceFiles bookId={bookId} editable={editable}/>
     <SnapshotsPanel bookId={bookId} editable={editable}/>
     {showForm&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)setShowForm(false);}}>
       <form className="modal" onSubmit={add} role="dialog" aria-modal="true" aria-label={t('book.newChapter')}>

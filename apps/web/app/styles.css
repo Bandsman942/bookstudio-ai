@@ -538,3 +538,19 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
   .ribbon-tool{min-width:38px;min-height:38px}
 }
 @media(prefers-reduced-motion:reduce){.ribbon-tool{transition:none}}
+
+/* Private Supabase source attachments: adaptive to both UI themes. */
+.source-files{margin-top:30px;margin-bottom:36px;padding:22px 24px;background:var(--white);border:1px solid var(--line);border-radius:16px;min-width:0}
+.source-files .section-header{margin:0 0 10px}.source-files .section-header h2{margin:0}
+.source-note{font-size:12px;color:var(--muted);line-height:1.65;margin:12px 0}
+.source-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0}
+.source-controls input[type=file]{position:absolute;width:1px;height:1px;opacity:0;clip-path:inset(50%);overflow:hidden}
+.source-controls label:has(+ input[type=file]:focus-visible){outline:3px solid var(--green);outline-offset:3px}
+.source-controls small{color:var(--muted);font-size:11px}
+.source-success{color:var(--green);font-size:13px;font-weight:700}
+.source-list{list-style:none;padding:0;margin:18px 0}
+.source-list li{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.source-filename{font-weight:650;overflow-wrap:anywhere;min-width:0;flex:1}
+.source-list li small{color:var(--muted);white-space:nowrap}
+.source-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media (max-width:640px){.source-files{padding:18px 14px}.source-actions{width:100%;justify-content:flex-start}.source-list li{gap:8px}}
