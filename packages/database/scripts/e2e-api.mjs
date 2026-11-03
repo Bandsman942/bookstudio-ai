@@ -112,6 +112,14 @@ assert.match(wordResponse.headers.get('content-type')||'',/wordprocessingml\.doc
 const wordBytes=Buffer.from(await wordResponse.arrayBuffer());
 assert.equal(wordBytes.subarray(0,4).toString('hex'),'504b0304','DOCX is ZIP/OXML');
 assert.ok(wordBytes.length>700,'DOCX contains document structure');
+const pdfResponse=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=pdf',{headers:{Cookie:author}});
+assert.equal(pdfResponse.status,200,'PDF snapshot export');
+assert.match(pdfResponse.headers.get('content-type')||'',/application\/pdf/);
+const pdfBytes=Buffer.from(await pdfResponse.arrayBuffer());
+assert.equal(pdfBytes.subarray(0,5).toString('ascii'),'%PDF-','PDF signature');
+assert.ok(pdfBytes.length>700,'PDF contains pages');
+const strangerPdf=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=pdf',{headers:{Cookie:outsider}});
+assert.equal(strangerPdf.status,404,'cross-user PDF export forbidden');
 const markdownResponse=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=md',{headers:{Cookie:author}});
 assert.equal(markdownResponse.status,200,'Markdown snapshot export');
 const markdown=await markdownResponse.text();
