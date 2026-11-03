@@ -3,6 +3,11 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+### Ajouté
+- Gestion non destructive des ouvrages : renommer, archiver et restaurer depuis la bibliothèque, avec audit et prévention des conflits de modification — issue #50.
+### Sécurité
+- Archives privées isolées par espace de travail ; contrôles de rôle et de CSRF pour chaque opération ; aucune suppression physique de manuscrit.
+
 
 ## [0.3.0] — 2026-11-03 (production alpha privée)
 ### Ajouté

@@ -139,3 +139,16 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 .comment-card p{font-size:12px;line-height:1.7;white-space:pre-wrap}
 .comment-card blockquote{font:italic 12px/1.6 Georgia,serif;color:#607e73;border-left:2px solid #8fbbb0;margin:9px 0;padding:3px 0 3px 9px}
 .comment-card button{padding:5px 0}
+
+/* Book lifecycle and reversible private archives */
+.book-title-actions{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.book-title-actions>div:first-child{min-width:0;flex:1}
+.book-controls{display:flex;align-items:center;gap:12px}
+.book-controls button{border:1px solid var(--line);padding:10px 13px;border-radius:8px;background:white}
+.book-controls .archive-action{color:#8c5837}
+.archive-list{display:grid;gap:13px;max-width:880px}
+.archive-item{display:flex;gap:18px;align-items:center;justify-content:space-between;padding:21px 24px;border:1px solid var(--line);background:white;border-radius:13px}
+.archive-item>div{min-width:0}
+.archive-item strong{display:block;overflow-wrap:anywhere;color:var(--navy)}
+.archive-item small{display:block;font-size:11px;line-height:1.6;color:var(--muted);margin-top:8px}
+@media(max-width:650px){.archive-item{align-items:flex-start;flex-direction:column}.book-title-actions{align-items:flex-start}.book-controls{width:100%;flex-wrap:wrap}}

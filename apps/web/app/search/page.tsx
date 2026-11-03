@@ -13,6 +13,7 @@ export default async function SearchPage(){
       <div className="nav-section">MON ESPACE</div>
       <Link href="/library" className="nav-link">▦ Bibliothèque</Link>
       <Link href="/search" className="nav-link active" aria-current="page">⌕ Recherche</Link>
+      <Link href="/library/archives" className="nav-link">▤ Archives</Link>
       <div className="nav-spacer"/>
       <div className="nav-user"><span className="avatar">{user.name.charAt(0).toUpperCase()}</span><span>{user.name}<small>Auteur</small></span></div>
     </aside>
