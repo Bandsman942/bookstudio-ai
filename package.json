@@ -20,6 +20,7 @@
     "release:check": "node tools/check-release.mjs",
     "ui:check": "node tools/check-context-menus.mjs",
     "perf:check": "node tools/check-performance.mjs",
-    "prefs:check": "node tools/check-preferences.mjs"
+    "prefs:check": "node tools/check-preferences.mjs",
+    "test:export": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/editor-export.test.mjs"
   }
 }
