@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.6.0] — alpha préparée, NON DÉPLOYÉE
+## [0.6.0] — 2026-11-03 (production alpha privée)
 ### Performance
 - Fonction Node.js Vercel localisée par configuration vers `pdx1` (Oregon), proche de Neon `aws-us-west-2` ; gain à confirmer avec mesures depuis Kinshasa et possibilité de revenir à `iad1` si nécessaire — #61.
 - Élimination du second chargement profond d'un livre pour calculer le droit d'édition, récupération de l'appartenance dans la requête initiale ; cache d'authentification limité au contexte de rendu React.
@@ -13,7 +13,11 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Chargement progressif des pages privées avec squelette non confidentiel ; en-têtes `Server-Timing` sur santé et sauvegarde pour faciliter les mesures.
 ### Assurance qualité
 - Ajout du contrôle CI `pnpm perf:check`, du protocole `docs/qa/E2E-PERFORMANCE.md` et du runbook `docs/ops/PERFORMANCE.md`.
-- **Aucun gain p50/p95 annoncé sans mesures** ; la version en production reste v0.5.0-alpha jusqu'à validation et publication contrôlée.
+- **Aucun gain p50/p95 annoncé sans mesures** ; le changement de région devra être évalué depuis Kinshasa.
+### Déploiement
+- **READY le 2026-11-03T15:49:26.220Z**, ID Vercel `dpl_GPDiJ4zW9bDyNWrkxaS4PPudv2Qu`, SHA `a6a9ca1954dfc50e62f473939a69ec1f21f5be8a`, tag Git annoté `v0.6.0`.
+- CI `41667404333` success, E2E propriétaire déclaré « bon », région `pdx1` vérifiée, santé/version HTTP 200.
+- Snapshot Neon avant release `snap-dark-glade-bftfx31a`, aucune migration ; journal : `docs/deployments/2026-11-03T15-49-26Z_v0.6.0.md`.
 
 
 
