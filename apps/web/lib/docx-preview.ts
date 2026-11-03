@@ -103,7 +103,7 @@ function paragraphPieces(text:string):string[]{
   for(let start=0;start<text.length;){
     let end=Math.min(text.length,start+MAX_PART_CHARS);
     // Keep UTF-16 surrogate pairs together for emoji and rare scripts.
-    if(end<text.length&&end>start&&/^[\\uDC00-\\uDFFF]$/.test(text[end]))end--;
+    if(end<text.length&&end>start&&/^[\uDC00-\uDFFF]$/.test(text[end]))end--;
     if(end===start)end=Math.min(text.length,start+2);
     pieces.push(text.slice(start,end));start=end;
   }
@@ -148,7 +148,7 @@ export function previewDocx(data:Uint8Array):DocxPreview{
     const fullText=paragraphText(child);
     if(!fullText.trim())continue;
     const style=getWordChildren(child,'pStyle')[0]?.getAttributeNS(WORD_NS,'val')||'';
-    const kind=/^(heading|titre)[\\s_-]*[1-9]/i.test(style)?'heading':'paragraph';
+    const kind=/^(heading|titre)[\s_-]*[1-9]/i.test(style)?'heading':'paragraph';
     const pieces=paragraphPieces(fullText);
     if(pieces.length>1)warnings.add('LONG_PARAGRAPH_SEGMENTED');
     for(const piece of pieces){

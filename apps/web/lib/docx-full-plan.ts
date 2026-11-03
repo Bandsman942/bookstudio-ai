@@ -1,4 +1,4 @@
-import {proposeDocxChapters,type SplitBlock} from './docx-chapter-split';
+import {proposeDocxChapters,type SplitBlock} from './docx-chapter-split.ts';
 
 // These are transport/transaction budgets, not manuscript preview limits.
 export const DOCX_PART_MAX_BLOCKS=180;
