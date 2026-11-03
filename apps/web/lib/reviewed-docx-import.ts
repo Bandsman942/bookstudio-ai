@@ -35,8 +35,7 @@ export function prepareReviewedDocxImport(value:unknown):ReviewedDocxImport{
   for(const b of blocks as unknown[]){
     if(!b||typeof b!=='object'||Array.isArray(b))reject('DOCX_BLOCKS_INVALID');
     const item=b as Record<string,unknown>;
-    const rawText=item.text;
-    if(typeof rawText!=='string')reject('DOCX_BLOCKS_INVALID');
+    const rawText=typeof item.text==='string'?item.text:'';
     if(!['heading','paragraph'].includes(String(item.kind))||
        rawText.length>10000||!rawText.trim())reject('DOCX_BLOCKS_INVALID');
     chars+=rawText.length;
