@@ -28,7 +28,7 @@ export async function POST(req:Request){
     const created=await tx.book.create({data:{workspaceId:membership.workspaceId,ownerId:user.id,title,bookType:type,language:lang}});
     const edition=await tx.edition.create({data:{bookId:created.id,number:1,language:lang}});
     const manuscript=await tx.manuscript.create({data:{editionId:edition.id}});
-    const chapter=await tx.chapter.create({data:{manuscriptId:manuscript.id,title:'Chapitre 1',position:0}});
+    const chapter=await tx.chapter.create({data:{manuscriptId:manuscript.id,title:lang==='en'?'Chapter 1':'Chapitre 1',position:0}});
     const content=emptyDocument(),text='';
     const hash=createHash('sha256').update(JSON.stringify(content)).digest('hex');
     await tx.documentRevision.create({data:{chapterId:chapter.id,sequence:0,content,text,contentHash:hash,authorId:user.id}});

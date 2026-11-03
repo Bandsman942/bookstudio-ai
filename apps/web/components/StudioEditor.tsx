@@ -5,10 +5,14 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
+import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 type Chapter={id:string;title:string};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
 type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
+ const {t,locale}=useAppPreferences();
+ const preferenceActions=usePreferenceActions();
+ const currentTRef=useRef(t);currentTRef.current=t;
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
  const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
@@ -51,7 +55,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
        lastJson.current=JSON.stringify(editor.getJSON());
        setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
        try{localStorage.setItem(draftKey,lastJson.current);}
-       catch{setState('error');setErrorDetail('Stockage local indisponible. Restez sur cette page jusqu’à confirmation de la sauvegarde serveur.');}
+       catch{setState('error');setErrorDetail(currentTRef.current('editor.storageUnavailable'));}
      },350);
    }
  });
@@ -64,7 +68,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  },[editor,draftKey]);
  useEffect(()=>{
    function networkDown(){
-     if(pendingRef.current){setState('offline');setErrorDetail('Hors ligne : brouillon local en attente de synchronisation.');}
+     if(pendingRef.current){setState('offline');setErrorDetail(currentTRef.current('editor.offlinePending'));}
    }
    function networkUp(){
      retryAtRef.current=0;retryCountRef.current=0;
@@ -81,7 +85,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
      if(!pendingRef.current||savingRef.current||conflictRef.current||serializeTimerRef.current)return;
      if(typeof navigator!=='undefined'&&!navigator.onLine){
        setState('offline');
-       setErrorDetail('Hors ligne : vos dernières modifications restent sur ce navigateur.');
+       setErrorDetail(currentTRef.current('editor.offlineSaved'));
        return;
      }
      if(Date.now()<retryAtRef.current)return;
@@ -100,20 +104,20 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
        if(response.status===409){
          conflictRef.current=true;pendingRef.current=true;
          setState('conflict');
-         setErrorDetail('Conflit de versions. Votre texte reste visible et en brouillon local. Copiez-le avant de recharger : aucun remplacement automatique.');
+         setErrorDetail(currentTRef.current('editor.conflictDetailed'));
          return;
        }
        if(response.status===401||response.status===403){
          conflictRef.current=true;pendingRef.current=true;
          setState('error');
-         setErrorDetail('Session expirée ou accès refusé. Copiez votre texte avant de vous reconnecter ; aucune écriture non autorisée ne sera réessayée.');
+         setErrorDetail(currentTRef.current('editor.sessionExpired'));
          return;
        }
        if(!response.ok||!Number.isSafeInteger(body.revision)||body.revision!==baseRevision+1){
          pendingRef.current=true;retryCountRef.current+=1;
          retryAtRef.current=Date.now()+Math.min(30_000,2_000*2**Math.min(4,retryCountRef.current-1));
          setState('error');
-         setErrorDetail('Sauvegarde non confirmée. Nouvelle tentative espacée automatiquement ; brouillon local conservé.');
+         setErrorDetail(currentTRef.current('editor.retry'));
          return;
        }
        retryCountRef.current=0;retryAtRef.current=0;
@@ -128,7 +132,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
        pendingRef.current=true;retryCountRef.current+=1;
        retryAtRef.current=Date.now()+Math.min(30_000,2_000*2**Math.min(4,retryCountRef.current-1));
        setState(typeof navigator!=='undefined'&&!navigator.onLine?'offline':'error');
-       setErrorDetail('Connexion lente ou interrompue. Le brouillon local reste disponible ; nouvelle tentative progressive.');
+       setErrorDetail(currentTRef.current('editor.connectionRetry'));
      }finally{
        clearTimeout(timeout);
        savingRef.current=false;
@@ -167,40 +171,41 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open':'')}>
   <aside className="studio-sidebar">
     <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
-    <Link href={'/books/'+bookId} className="back-link">← Vue d'ensemble</Link>
-    <div className="nav-section">MANUSCRIT</div><div className="studio-book-title">{bookTitle}</div>
+    <Link href={'/books/'+bookId} className="back-link">← {t('editor.bookOverview')}</Link>
+    <div className="nav-section">{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
     <div className="chapter-navigation">{chapters.map((c,i)=><Link href={'/books/'+bookId+'/chapters/'+c.id} key={c.id} className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}>{String(i+1).padStart(2,'0')} <span>{c.title}</span></Link>)}</div>
-    <div className="nav-spacer"/><div className="sidebar-footer">Un livre, une idée à la fois. ✦</div>
+    <div className="nav-spacer"/><div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>
   <main className="studio-center">
     <div className="studio-topbar"><span className="breadcrumb"><Link href={'/books/'+bookId}>{bookTitle}</Link> / <strong>{chapterTitle}</strong></span>
       <div className="studio-actions">
-        <span className={'save-state save-'+state}>{!canEdit?'Lecture seule':state==='saved'?'✓ Enregistré':state==='editing'?'● Modifié':state==='saving'?'◌ Enregistrement…':state==='conflict'?'⚠ Conflit de versions':state==='offline'?'◌ Hors ligne · brouillon local':'⚠ Sauvegarde en attente'}</span>
-        <ActionMenu label="Options d’affichage de l’éditeur" actions={[
-          {label:focus?'Quitter le mode concentration':'Activer le mode concentration',
+        <span className={'save-state save-'+state}>{!canEdit?t('common.readOnly'):state==='saved'?'✓ '+t('editor.saved'):state==='editing'?'● '+t('editor.modified'):state==='saving'?'◌ '+t('editor.saving'):state==='conflict'?'⚠ '+t('editor.conflict'):state==='offline'?'◌ '+t('editor.offlineDraft'):'⚠ '+t('editor.unsaved')}</span>
+        <ActionMenu label={t('editor.display')} actions={[
+          {label:t(focus?'editor.focusOff':'editor.focusOn'),
             onSelect:()=>setFocus(value=>!value)},
-          {label:compact?(mobilePanel?'Fermer le panneau éditorial':'Afficher le panneau éditorial'):(rightPanel?'Masquer le panneau éditorial':'Afficher le panneau éditorial'),
-            onSelect:()=>{if(compact)setMobilePanel(value=>!value);else setRightPanel(value=>!value);}}
+          {label:compact?t(mobilePanel?'editor.panelClose':'editor.panelOn'):t(rightPanel?'editor.panelOff':'editor.panelOn'),
+            onSelect:()=>{if(compact)setMobilePanel(value=>!value);else setRightPanel(value=>!value);}},
+          ...preferenceActions
         ]}/>
       </div>
     </div>
     {canEdit&&<div className="toolbar"><button onClick={()=>format('h1')}>Titre 1</button><button onClick={()=>format('h2')}>Titre 2</button><i/><button onClick={()=>format('bold')}><b>G</b></button><button onClick={()=>format('italic')}><em>I</em></button><button onClick={()=>format('bullet')}>☷ Liste</button><i/><button onClick={()=>editor?.chain().focus().undo().run()} title="Annuler">↶</button><button onClick={()=>editor?.chain().focus().redo().run()} title="Rétablir">↷</button></div>}
-    {recovery&&<div role="alert" className="editor-warning">Un brouillon local plus récent a été trouvé.
-      <button onClick={()=>{try{editor?.commands.setContent(JSON.parse(recovery) as any);setRecovery(null);}catch{setErrorDetail('Brouillon local illisible.');}}}>Restaurer mon brouillon</button>
-      <button onClick={()=>{setRecovery(null);try{localStorage.removeItem(draftKey)}catch{}}}>Ignorer</button>
+    {recovery&&<div role="alert" className="editor-warning">{t('editor.draftRecovery')}
+      <button onClick={()=>{try{editor?.commands.setContent(JSON.parse(recovery) as any);setRecovery(null);}catch{setErrorDetail(t('editor.draftUnreadable'));}}}>{t('editor.draftRestore')}</button>
+      <button onClick={()=>{setRecovery(null);try{localStorage.removeItem(draftKey)}catch{}}}>{t('editor.draftIgnore')}</button>
     </div>}
     {(state==='conflict'||state==='error'||state==='offline')&&<div className="editor-warning" role="alert">{errorDetail}</div>}
-    <div className="editor-scroll"><article className="editor-sheet"><span className="chapter-label">MANUSCRIT · CHAPITRE</span><h1>{chapterTitle}</h1><div className="editor-rule"/><EditorContent editor={editor} className="prose-editor"/></article></div>
-    <div className="editor-status"><span>{wordCount.toLocaleString('fr-FR')} mots</span><span>Révision {currentRevision}</span><span>Sauvegarde automatique</span></div>
+    <div className="editor-scroll"><article className="editor-sheet"><span className="chapter-label">{t('editor.chapterTitle')}</span><h1>{chapterTitle}</h1><div className="editor-rule"/><EditorContent editor={editor} className="prose-editor"/></article></div>
+    <div className="editor-status"><span>{t('editor.wordCount',{count:wordCount.toLocaleString(locale==='fr'?'fr-FR':'en-US')})}</span><span>{t('editor.revision',{count:currentRevision})}</span><span>{t('editor.autosave')}</span></div>
   </main>
-  {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}/>}
+  {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label={t('editor.panelClose')} onClick={()=>setMobilePanel(false)}/>}
   {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside className="studio-insights" aria-label="Panneau éditorial">
     <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
-    <div className="insights-header"><span>✦</span><strong>Intelligence éditoriale</strong><small>À venir</small></div>
-    <div className="insight-card"><span className="eyebrow">VOTRE ÉCRITURE</span><h3>Un espace pour vos idées.</h3><p>Votre manuscrit dispose d'un historique de révisions. L'IA ne modifiera jamais votre texte sans accord.</p></div>
+    <div className="insights-header"><span>✦</span><strong>{t('editor.editorial')}</strong><small>{t('editor.coming')}</small></div>
+    <div className="insight-card"><span className="eyebrow">{t('editor.yourWriting')}</span><h3>{t('editor.ideas')}</h3><p>{t('editor.editorialCopy')}</p></div>
     <ChapterComments bookId={bookId} chapterId={chapterId} revision={currentRevision} saveState={state} canEdit={canEdit}/>
-    <div className="insight-card pale"><span className="eyebrow">PROCHAINES ÉVOLUTIONS</span><p>✧ Analyse stylistique</p><p>✧ Suggestions à valider</p><p>✧ Bibliographie intelligente</p></div>
-    <div className="insights-footer">BookStudio AI respecte votre voix.</div>
+    <div className="insight-card pale"><span className="eyebrow">{t('editor.next')}</span><p>✧ {t('editor.style')}</p><p>✧ {t('editor.suggestions')}</p><p>✧ {t('editor.bibliography')}</p></div>
+    <div className="insights-footer">{t('editor.respects')}</div>
   </aside>}
  </div>;
 }

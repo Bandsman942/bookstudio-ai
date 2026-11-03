@@ -253,3 +253,140 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 @media(prefers-reduced-motion:reduce){
   .context-trigger{transition:none}
 }
+
+/* BS-029: coherent design tokens for every application surface. */
+:root{
+  color-scheme:light;
+  --surface:#ffffff;
+  --surface-muted:#f5f8f7;
+  --surface-hover:#edf5f1;
+  --input-surface:#ffffff;
+  --paper:#ffffff;
+  --paper-ink:#253446;
+  --editor-canvas:#f1f3f4;
+  --cta-bg:#142d4b;
+  --cta-ink:#ffffff;
+  --cta-hover:#224b76;
+  --brand-bg:#142d4b;
+  --brand-ink:#ffffff;
+  --nav-text:#566577;
+  --input-border:#d8dee5;
+  --success-bg:#edf7f0;
+  --success-ink:#386b55;
+  --warning-bg:#fff0d9;
+  --warning-ink:#8d5b21;
+  --danger-bg:#fff3f1;
+  --danger-ink:#8b3d30;
+  --menu-hover:#e9f3ef;
+  --menu-hover-border:#94c5b2;
+  --menu-hover-ink:#1d7563;
+  --menu-focus:#2e9580;
+  --landing-bg:radial-gradient(circle at 85% 8%,#e1f1eb 0,transparent 37%),#fafbfa;
+  --auth-bg:linear-gradient(120deg,#f6faf8 55%,#e6f1ed);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#e3edf8;
+  --muted:#afc0d0;
+  --navy:#e9f2ff;
+  --green:#75d6b7;
+  --bg:#0b1523;
+  --line:#324458;
+  --ivory:#131f2e;
+  --white:#152438;
+  --surface:#152438;
+  --surface-muted:#1d2f44;
+  --surface-hover:#22443f;
+  --input-surface:#122133;
+  --paper:#182b40;
+  --paper-ink:#eaf2fc;
+  --editor-canvas:#0b1523;
+  --cta-bg:#24816e;
+  --cta-ink:#ffffff;
+  --cta-hover:#31a18a;
+  --brand-bg:#2b4e71;
+  --brand-ink:#ffffff;
+  --nav-text:#bac9d9;
+  --input-border:#475c74;
+  --success-bg:#183c32;
+  --success-ink:#a3e8ca;
+  --warning-bg:#49371e;
+  --warning-ink:#ffe0a6;
+  --danger-bg:#482928;
+  --danger-ink:#ffb8aa;
+  --menu-hover:#244740;
+  --menu-hover-border:#56a894;
+  --menu-hover-ink:#ccf7e8;
+  --menu-focus:#83e4c3;
+  --landing-bg:radial-gradient(circle at 85% 8%,#153b37 0,transparent 37%),#0b1523;
+  --auth-bg:linear-gradient(120deg,#101e2e 55%,#132d33);
+}
+@media(prefers-color-scheme:dark){
+  :root[data-theme="system"]{
+    color-scheme:dark;
+    --ink:#e3edf8;--muted:#afc0d0;--navy:#e9f2ff;--green:#75d6b7;
+    --bg:#0b1523;--line:#324458;--ivory:#131f2e;--white:#152438;
+    --surface:#152438;--surface-muted:#1d2f44;--surface-hover:#22443f;
+    --input-surface:#122133;--paper:#182b40;--paper-ink:#eaf2fc;
+    --editor-canvas:#0b1523;--cta-bg:#24816e;--cta-ink:#fff;--cta-hover:#31a18a;
+    --brand-bg:#2b4e71;--brand-ink:#fff;--nav-text:#bac9d9;--input-border:#475c74;
+    --success-bg:#183c32;--success-ink:#a3e8ca;--warning-bg:#49371e;--warning-ink:#ffe0a6;
+    --danger-bg:#482928;--danger-ink:#ffb8aa;
+    --menu-hover:#244740;--menu-hover-border:#56a894;--menu-hover-ink:#ccf7e8;--menu-focus:#83e4c3;
+    --landing-bg:radial-gradient(circle at 85% 8%,#153b37 0,transparent 37%),#0b1523;
+    --auth-bg:linear-gradient(120deg,#101e2e 55%,#132d33);
+  }
+}
+/* Token consumers: prevents light tiles, dialogs and menus remaining white in dark mode. */
+.landing{background:var(--landing-bg)}
+.auth-bg{background:var(--auth-bg)}
+.auth-card,.paper,.modal,.content-top,.studio-topbar,.toolbar,
+.editor-status,.stat-row>div,.overview-cards>div,.book-card,.chapter-list,
+.versions-list,.version-row,.search-hit,.archive-item,.comment-card,
+.studio-insights,.studio-insights-close,.route-loading-nav,.route-loading-top{
+  background:var(--surface);
+  color:var(--ink);
+  border-color:var(--line);
+}
+.new-book-card,.preview,.insight-card.pale,.search-empty{background:var(--surface-muted);color:var(--ink)}
+.nav-link{color:var(--nav-text)}
+.nav-link:hover,.nav-link.active,.chapter-nav-link.selected,.chapter-item:hover,
+.context-menu-item:hover,.context-menu-item:focus-visible,.toolbar button:hover,
+.new-book-card>span{background:var(--surface-hover);color:var(--green)}
+.brand-symbol{background:var(--brand-bg);color:var(--brand-ink)}
+.button{background:var(--cta-bg);color:var(--cta-ink)}
+.button:hover{background:var(--cta-hover);color:var(--cta-ink)}
+input,select,.editor-comments textarea,.versions-create input{
+  background:var(--input-surface);color:var(--ink);border-color:var(--input-border)
+}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+.studio,.editor-scroll{background:var(--editor-canvas)}
+.editor-sheet{background:var(--paper);color:var(--paper-ink)}
+.prose-editor .tiptap,.prose-editor .tiptap p,.paper p{color:var(--paper-ink)}
+.context-menu{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.context-menu-item{color:var(--ink)}
+.context-menu-item.is-danger{color:var(--danger-ink)}
+.context-menu-item.is-danger:hover{background:var(--danger-bg);color:var(--danger-ink)}
+.toolbar button{color:var(--ink)}
+.search-hit-snippet,.nav-section,.breadcrumb,.editor-comments-intro,.comment-note{color:var(--muted)}
+.versions-success,.comment-open{background:var(--success-bg);color:var(--success-ink)}
+.comment-stale{background:var(--warning-bg);color:var(--warning-ink)}
+.form-error,.editor-warning{background:var(--danger-bg);color:var(--danger-ink);border-color:var(--line)}
+.comment-resolved{background:var(--surface-muted);color:var(--muted)}
+.comment-card blockquote{color:var(--muted)}
+.editor-warning button{background:var(--surface);color:var(--ink)}
+.studio-insights-close{background:var(--surface-muted)}
+.versions-create input{background:var(--input-surface)}
+.route-loading{background:var(--bg)}
+.route-loading-block,.route-loading-line,.route-loading-mark{opacity:.75}
+
+/* Display preferences live in a quiet contextual menu, not scattered buttons. */
+.public-header-actions{display:flex;align-items:center;gap:12px}
+.auth-card{position:relative}
+.auth-preferences{position:absolute;top:12px;right:15px;z-index:4}
+.preferences-actions .context-trigger{background:transparent;border-color:transparent;box-shadow:none}
+.preferences-actions .context-trigger:is(:hover,:focus-visible,[aria-expanded="true"]){
+  background:var(--menu-hover);border-color:var(--menu-hover-border);color:var(--menu-hover-ink)
+}
+.preferences-actions .context-trigger:focus-visible{outline:3px solid var(--menu-focus)}
+@media(max-width:520px){.public-header-actions{gap:5px}.auth-preferences{right:8px}}
