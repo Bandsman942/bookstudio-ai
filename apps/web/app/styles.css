@@ -649,3 +649,17 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .docx-review-warnings ul{margin:0;padding-left:19px}
 .docx-review-warnings p{margin:0;color:var(--muted)}
 @media(max-width:640px){.docx-preview-modal{padding:30px 15px}.docx-preview-article{padding:20px 15px;max-height:40dvh}}
+
+/* Author-controlled DOCX-to-new-chapter review, never automatic. */
+.docx-import-panel{display:grid;gap:12px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface-muted)}
+.docx-import-panel>h3{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink);margin:0}
+.docx-import-panel>h3>.app-icon{color:var(--green)}
+.docx-import-form{display:grid;gap:15px}
+.docx-import-form>label{display:grid;gap:7px;font-size:12px;font-weight:700}
+.docx-import-form input[type=text]{min-height:43px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--input-surface);color:var(--ink)}
+.docx-import-form .docx-acknowledge{display:flex;align-items:flex-start;gap:11px;font-weight:550;line-height:1.65}
+.docx-acknowledge input{margin-top:4px;min-width:18px;min-height:18px;accent-color:var(--green)}
+.docx-import-form .button{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:normal;text-align:center}
+.docx-import-form input:focus-visible{outline:3px solid var(--menu-focus);outline-offset:2px}
+@media(max-width:640px){.docx-import-panel{padding:13px 11px}}
+@media(prefers-reduced-motion:reduce){.docx-import-panel{scroll-behavior:auto}}

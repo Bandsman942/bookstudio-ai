@@ -24,8 +24,8 @@ assert.equal(healthResponse.status,200,'database readiness');
 assert.equal(healthResponse.data.database,'ready');
 const versionResponse=await request('/api/version');
 assert.equal(versionResponse.status,200,'version route');
-assert.equal(versionResponse.data.version,'0.11.0','semver traceability');
-assert.equal(versionResponse.data.tag,'v0.11.0');
+assert.equal(versionResponse.data.version,'0.12.0','semver traceability');
+assert.equal(versionResponse.data.tag,'v0.12.0');
 assert.equal(versionResponse.data.channel,'alpha');
 // A second explicitly configured origin must be accepted; arbitrary origins rejected.
 const alternate=await request('/api/v1/auth/login',{method:'POST',originOverride:'http://localhost:3001',body:{email:'nobody@example.invalid',password:'wrong'}});
@@ -85,6 +85,28 @@ assert.equal(created.status,201,'book creation');
 const {id:bookId,chapterId}=created.data.book;
 assert.ok(bookId&&chapterId);
 assert.ok(bookId&&chapterId);
+// BS-006b: only explicit, reviewed sources can create a fresh chapter.
+const docxImportPath='/api/v1/books/'+bookId+'/import/docx';
+const exampleDocx={sourceName:'123e4567-e89b-42d3-a456-426614174000-test.docx',
+  operationId:'123e4567-e89b-42d3-a456-426614174001',title:'Chapitre importé',
+  confirm:'IMPORT_REVIEWED_DOCX',acknowledged:true,truncated:false,
+  blocks:[{kind:'paragraph',text:'Texte inspecté par l’auteur.'}]};
+const docxCSRF=await request(docxImportPath,{method:'POST',cookie:author,omitOrigin:true,body:exampleDocx});
+assert.equal(docxCSRF.status,403,'DOCX reviewed import enforces CSRF');
+const docxOutsider=await request(docxImportPath,{method:'POST',cookie:outsider,body:exampleDocx});
+assert.equal(docxOutsider.status,404,'DOCX reviewed import excludes foreign workspaces');
+const docxUnauthenticated=await request(docxImportPath,{method:'POST',body:exampleDocx});
+assert.equal(docxUnauthenticated.status,401,'DOCX reviewed import requires login');
+const docxNotAcknowledged=await request(docxImportPath,{method:'POST',cookie:author,
+  body:{...exampleDocx,acknowledged:false}});
+assert.equal(docxNotAcknowledged.status,422,'DOCX import requires explicit reviewed consent');
+const docxTruncated=await request(docxImportPath,{method:'POST',cookie:author,
+  body:{...exampleDocx,truncated:true}});
+assert.equal(docxTruncated.status,422,'incomplete DOCX preview must not be silently imported');
+const docxBadPayload=await request(docxImportPath,{method:'POST',cookie:author,
+  body:{...exampleDocx,blocks:[{kind:'html',text:'<img onerror=alert(1)>'}]}});
+assert.equal(docxBadPayload.status,422,'untrusted active markup rejected by DOCX import');
+
 // Safe archive/restore lifecycle: no deletion of source, revisions or snapshots.
 const archival=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ouvrage à archiver',bookType:'ESSAY',language:'fr'}});
 assert.equal(archival.status,201,'create secondary book for lifecycle testing');
