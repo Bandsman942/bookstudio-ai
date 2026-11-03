@@ -36,6 +36,10 @@ const studio=file('apps/web/components/StudioEditor.tsx');
 assert.ok(studio.includes('studio-mobile-insights-open'),'Mobile insights drawer toggle missing');
 assert.ok(studio.includes('studio-insights-backdrop'),'Mobile insights dismiss control missing');
 const css=file('apps/web/app/styles.css');
+assert.ok(css.includes('BS-028: overflow triggers blend into any surface at rest'),'Missing quiet overflow UI contract');
+assert.ok(css.includes('border:1px solid transparent'),'Overflow triggers must not have idle visible borders');
+assert.ok(css.includes(':focus-visible{'),'Keyboard-visible focus required');
+assert.ok(css.includes('--menu-hover-border'),'Hover must reveal border again');
 for(const rule of ['.context-menu{','.context-trigger{','.chapter-item-link{','.book-card-overflow{','.versions-list{'])
   assert.ok(css.includes(rule),'Missing responsive styling: '+rule);
 const route=file('apps/web/app/api/v1/books/[bookId]/chapters/[chapterId]/metadata/route.ts');
