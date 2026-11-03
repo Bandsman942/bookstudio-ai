@@ -14,8 +14,8 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Tests dédiés \`pnpm storage:check\` et recette E2E \`docs/qa/E2E-SUPABASE-STORAGE.md\`.
 
 
-## [0.7.0] — alpha préparée, NON DÉPLOYÉE
-### Éditeur avancé — première tranche (à publier)
+## [0.7.0] — 2026-11-03 (production alpha privée)
+### Éditeur avancé — première tranche
 - Ancienne barre de sept boutons remplacée par un ruban **Accueil / Insertion** regroupant styles Normal/Titres 1–3, gras, italique, souligné, barré, code, listes numérotées/à puces, citation, bloc de code, annulation/rétablissement, nettoyage de format, insertion de lien et séparation — #68.
 - États actifs accessibles via `useEditorState`, sans re-render de l'éditeur à chaque transaction ; interface défilable sur petit écran et compatible thème clair/sombre et FR/EN.
 - Liens volontaires uniquement : `http(s)`/`mailto` contrôlés, prévention des protocoles dangereux. Les nouvelles marques sont validées au serveur et conservées dans les versions.
@@ -25,19 +25,24 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - **Fonctions non encore disponibles** : tableaux, images, typographie avancée, notes, suivi des modifications, pagination fidèle. Évolutions découpées en lots. Aucun changement de données existantes ni de secret.
 
 
-### Interface et internationalisation (à publier)
+### Interface et internationalisation
 - Thèmes clair, sombre et système, initialisés côté serveur sans flash de mode, et conservés dans des cookies de préférences non sensibles (#66).
 - Traductions FR/EN typées pour les principaux parcours (accueil, connexion, bibliothèque, ouvrage, chapitres, éditeur, versions, commentaires, archives et recherche), avec changement accessible depuis les menus « ⋯ » (#67).
 - Séparation entre la langue de l'interface et celle du manuscrit. Un livre créé en anglais commence avec un chapitre « Chapter 1 », sans traduire automatiquement les textes des auteurs.
 - Tokens communs de surfaces, texte, papier éditorial, boutons et focus pour harmoniser les futurs modules.
 ### Qualité
 - Contrôle automatisé structurel `pnpm prefs:check`, documentation `docs/design/THEMES-I18N.md` et recette `docs/qa/E2E-PREFERENCES-I18N.md`.
-- **Non encore en production :** publication après recette et version SemVer.
+- Publication privée après validation E2E propriétaire ; CI sur le commit déployé et contrôles santé/version réussis.
 
 
-### Interface (à publier)
+### Interface
 - Menus « ⋯ » sans fond, bordure ni ombre au repos, quel que soit leur composant parent. Surbrillance au survol/à l'ouverture ; contour de focus clavier maintenu, y compris à forte magnification — issue #65.
 
+
+### Déploiement
+- **READY le 2026-11-03T17:16:33.853Z**, Vercel `dpl_8Zu1pTByw8592Z8FdUBEkegtfRSp`, commit `434fb699259f973bcb0b085ea94998e473cde3ae`, région `pdx1` ; GitHub CI `41681419960` success.
+- E2E propriétaire « v0.7.0-alpha BON », snapshot Neon `snap-falling-pine-bfpe9r23` ; `/api/health` et `/api/version` : HTTP 200, base ready, SemVer/SHA conformes ; zéro log runtime d'erreur dans la fenêtre inspectée.
+- Tag Git annoté `v0.7.0` : **à finaliser** (l'outil GitHub connecté n'expose pas la mutation de création de tag). La version et la production sont vérifiées indépendamment de ce tag ; journal `docs/deployments/2026-11-03T17-16-33Z_v0.7.0.md`.
 
 ## [0.6.0] — 2026-11-03 (production alpha privée)
 ### Performance
