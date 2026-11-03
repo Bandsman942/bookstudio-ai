@@ -8,6 +8,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 ### Modifié
 - Menus contextuels « ⋯ » pour les commandes secondaires de la bibliothèque, des livres, chapitres, archives, versions, commentaires, options de l'éditeur et du compte — PR #57, issue #55.
 - Hiérarchie d'actions unifiée : une action primaire visible par section et confirmation des opérations importantes ; clavier, tactile et responsive.
+- Le panneau de commentaires et conseils est accessible sur tablette et mobile comme tiroir latéral refermable depuis le menu de l’éditeur.
 ### Ajouté
 - Renommage d'un chapitre depuis son menu, sans modifier ses révisions ni son texte ; détection de conflit et audit — PR #57, issue #56.
 ### Corrigé
