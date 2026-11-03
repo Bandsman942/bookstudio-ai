@@ -39,7 +39,7 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
      {books.length===0?<div className="search-empty">Aucun ouvrage archivé. <Link href="/library">Retour à la bibliothèque ↗</Link></div>:
      <div className="archive-list">{books.map(book=><div className="archive-item" key={book.id}>
        <div><strong>{book.title}</strong><small>Archivé · dernière modification {new Date(book.updatedAt).toLocaleDateString('fr-FR')}</small></div>
-       <button type="button" className="button small" disabled={busyId!==null} onClick={()=>restore(book)}>{busyId===book.id?'Restauration…':'Restaurer'}</button>
+       {book.canRestore?<button type="button" className="button small" disabled={busyId!==null} onClick={()=>restore(book)}>{busyId===book.id?'Restauration…':'Restaurer'}</button>:<span className="status">Lecture seule</span>}
      </div>)}</div>}
     </div>
    </main>
