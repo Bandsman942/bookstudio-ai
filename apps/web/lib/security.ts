@@ -14,7 +14,7 @@ export async function verifyPassword(password: string, encoded: string): Promise
   try {
     const [algorithm,n,r,p,salt,expected]=encoded.split('$');
     if(algorithm!=='scrypt'||n!=='16384'||r!=='8'||p!=='1'||!/^[0-9a-f]{32}$/.test(salt)||!/^[0-9a-f]{128}$/.test(expected))return false;
-    const actual=(await scrypt(password,salt,64,{N:16384,r:8,p:1,maxmem:32*1024*1024})) as Buffer;
+    const actual=await derive(password,salt);
     return timingSafeEqual(actual,Buffer.from(expected,'hex'));
   } catch { return false; }
 }
