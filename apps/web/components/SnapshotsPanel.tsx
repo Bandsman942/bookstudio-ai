@@ -1,44 +1,47 @@
 'use client';
+
 import {useCallback,useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
+import ActionMenu from './ActionMenu';
 
 type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string};
 type Chapter={id:string;revision:number};
 
-export default function SnapshotsPanel({bookId}:{bookId:string}){
+export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable:boolean}){
   const [versions,setVersions]=useState<Version[]>([]);
   const [name,setName]=useState('');
   const [busy,setBusy]=useState(false);
+  const [pendingRestore,setPendingRestore]=useState<Version|null>(null);
   const [message,setMessage]=useState('');
   const [error,setError]=useState('');
   const router=useRouter();
   const refresh=useCallback(async()=>{
     const response=await fetch('/api/v1/books/'+bookId+'/snapshots',{cache:'no-store'});
     if(!response.ok)throw new Error('Les versions sont momentanément indisponibles.');
-    const body=await response.json();
-    setVersions(body.snapshots);
+    const payload=await response.json();
+    setVersions(payload.snapshots);
   },[bookId]);
   useEffect(()=>{refresh().catch(()=>setError('Impossible de charger les versions.'));},[refresh]);
 
-  async function create(e:React.FormEvent){
-    e.preventDefault();
-    if(!name.trim())return;
+  async function create(event:React.FormEvent){
+    event.preventDefault();
+    if(!editable||!name.trim())return;
     setBusy(true);setError('');setMessage('');
     try{
       const response=await fetch('/api/v1/books/'+bookId+'/snapshots',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({name:name.trim()})
       });
-      const body=await response.json();
-      if(!response.ok){setError(body.error||'Création du point impossible.');return;}
-      setName('');setMessage('Point de restauration enregistré et vérifiable.');
+      const payload=await response.json();
+      if(!response.ok){setError(payload.error||'Création du point impossible.');return;}
+      setName('');setMessage('Version enregistrée et vérifiable.');
       await refresh();
-    }catch{setError('Connexion interrompue : aucun point confirmé.');}
+    }catch{setError('Connexion interrompue : aucune version confirmée.');}
     finally{setBusy(false);}
   }
 
   async function restore(version:Version){
-    if(!window.confirm('Restaurer « '+version.name+' » ? Cette opération crée de nouvelles révisions et conserve tout l’historique. Les chapitres ajoutés depuis resteront présents.'))return;
+    if(!editable||busy)return;
     setBusy(true);setError('');setMessage('');
     try{
       const current=await fetch('/api/v1/books/'+bookId+'/chapters',{cache:'no-store'});
@@ -50,42 +53,59 @@ export default function SnapshotsPanel({bookId}:{bookId:string}){
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({confirm:'RESTORE',expectedRevisions})
       });
-      const body=await response.json();
+      const payload=await response.json();
       if(!response.ok){
-        setError(response.status===409?'Conflit ou changement du livre : rechargez avant de restaurer.':(body.error||'Restauration impossible.'));
+        setError(response.status===409?'Conflit de versions : rechargez avant de restaurer.':(payload.error||'Restauration impossible.'));
         return;
       }
-      setMessage(body.restored+' chapitre(s) restauré(s). Les anciennes révisions ont été conservées.');
+      setPendingRestore(null);
+      setMessage(payload.restored+' chapitre(s) restauré(s). Les anciennes révisions sont conservées.');
       router.refresh();
     }catch(err){setError(err instanceof Error?err.message:'Restauration interrompue.');}
     finally{setBusy(false);}
   }
 
   return <section className="versions-section" aria-label="Versions du manuscrit">
-    <div className="section-header"><h2>Versions & historique</h2><span>{versions.length} point{versions.length>1?'s':''} enregistré{versions.length>1?'s':''}</span></div>
-    <p className="versions-help">Enregistrez un état cohérent du livre avant une réorganisation. Une restauration n'efface jamais l'historique.</p>
-    <form className="versions-create" onSubmit={create}>
-      <label htmlFor="snapshot-name" className="sr-only">Nom du point de restauration</label>
-      <input id="snapshot-name" required minLength={2} maxLength={140} value={name} onChange={e=>setName(e.target.value)}
-        placeholder="Ex. Manuscrit avant relecture scientifique" />
-      <button type="submit" className="button small" disabled={busy}>{busy?'Opération…':'＋ Créer une version'}</button>
-    </form>
-    {error&&<div role="alert" className="form-error">{error}</div>}
+    <div className="section-header"><h2>Versions & historique</h2>
+      <span>{versions.length} version{versions.length>1?'s':''} enregistrée{versions.length>1?'s':''}</span>
+    </div>
+    <p className="versions-help">Enregistrez une version avant toute réorganisation. Une restauration n’efface jamais l’historique.</p>
+    {editable&&<form className="versions-create" onSubmit={create}>
+      <label htmlFor="snapshot-name" className="sr-only">Nom de la nouvelle version</label>
+      <input id="snapshot-name" required minLength={2} maxLength={140} value={name}
+        onChange={event=>setName(event.target.value)} placeholder="Ex. Manuscrit avant relecture"/>
+      <button className="button small" type="submit" disabled={busy}>{busy?'Enregistrement…':'＋ Créer une version'}</button>
+    </form>}
+    {error&&<div className="form-error" role="alert">{error}</div>}
     {message&&<p role="status" className="versions-success">{message}</p>}
     <div className="versions-list">
-      {versions.length===0?<p className="versions-empty">Aucune version nommée. Le premier point de restauration peut être créé dès maintenant.</p>:
-        versions.map(v=><div className="version-row" key={v.id}>
+      {versions.length===0?<p className="versions-empty">Aucune version enregistrée pour ce livre.</p>:
+        versions.map(version=><div className="version-row" key={version.id}>
           <div className="version-icon" aria-hidden="true">↺</div>
-          <div className="version-details"><strong>{v.name}</strong>
-            <small>{new Date(v.createdAt).toLocaleString('fr-FR')} · {v.chapterCount} chapitre(s) · Empreinte {v.integrityHash.slice(0,10)}</small>
+          <div className="version-details"><strong>{version.name}</strong>
+            <small>{new Date(version.createdAt).toLocaleString('fr-FR')} · {version.chapterCount} chapitre(s) · Empreinte {version.integrityHash.slice(0,10)}</small>
           </div>
-          <div className="version-actions">
-            <a className="text-button" href={'/api/v1/books/'+bookId+'/snapshots/'+v.id+'/export?format=pdf'} title="Télécharger une version PDF de lecture">PDF</a>
-            <a className="text-button" href={'/api/v1/books/'+bookId+'/snapshots/'+v.id+'/export?format=docx'} title="Télécharger la version Word">Word</a>
-            <a className="text-button" href={'/api/v1/books/'+bookId+'/snapshots/'+v.id+'/export?format=md'} title="Télécharger la version Markdown">Markdown</a>
-            <button className="text-button" type="button" disabled={busy} onClick={()=>restore(v)}>Restaurer</button>
-          </div>
+          <ActionMenu label={'Actions pour la version « '+version.name+' »'} disabled={busy} actions={[
+            {label:'Télécharger · PDF',href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=pdf',group:'EXPORTER'},
+            {label:'Télécharger · Word',href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=docx'},
+            {label:'Télécharger · Markdown',href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=md'},
+            ...(editable?[{label:'Restaurer cette version…',separatorBefore:true,
+              onSelect:()=>{setError('');setPendingRestore(version);}}]:[])
+          ]}/>
         </div>)}
     </div>
+    {pendingRestore&&<div className="modal-backdrop" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setPendingRestore(null);}}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label="Confirmer la restauration">
+        <button className="close" type="button" disabled={busy} aria-label="Fermer" onClick={()=>setPendingRestore(null)}>×</button>
+        <div className="eyebrow">RESTAURATION DE VERSION</div>
+        <h2>Restaurer « {pendingRestore.name} » ?</h2>
+        <p>De nouvelles révisions seront créées sans supprimer les précédentes. Les chapitres ajoutés depuis resteront présents.</p>
+        {error&&<p className="form-error" role="alert">{error}</p>}
+        <button className="button full" type="button" disabled={busy} onClick={()=>void restore(pendingRestore)}>
+          {busy?'Restauration…':'Confirmer la restauration'}
+        </button>
+        <button className="text-button" type="button" disabled={busy} onClick={()=>setPendingRestore(null)}>Annuler</button>
+      </div>
+    </div>}
   </section>;
 }
