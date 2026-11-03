@@ -1,5 +1,6 @@
 'use client';
 import {useCallback,useEffect,useState} from 'react';
+import ActionMenu from './ActionMenu';
 
 type CommentView={
  id:string;body:string;quote:string|null;status:'OPEN'|'RESOLVED';
@@ -76,17 +77,21 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
    {loading?<p className="comment-note">Chargement des commentaires…</p>:
      items.length===0?<p className="comment-note">Aucun commentaire pour ce chapitre.</p>:
      <div className="comment-list">{items.map(item=><article key={item.id} className="comment-card">
-       <div className="comment-card-header"><strong>{item.authorName}</strong><small>{new Date(item.createdAt).toLocaleDateString('fr-FR')}</small></div>
+       <div className="comment-card-header"><strong>{item.authorName}</strong>
+         <div className="comment-card-tools">
+           <small>{new Date(item.createdAt).toLocaleDateString('fr-FR')}</small>
+           {canEdit&&<ActionMenu label={'Actions pour le commentaire de '+item.authorName} disabled={saving}
+             actions={[{label:item.status==='OPEN'?'Marquer comme résolu':'Rouvrir le commentaire',
+               onSelect:()=>void change(item.id,item.status==='OPEN'?'RESOLVED':'OPEN')}]}/>}
+         </div>
+       </div>
        <div className="comment-badges">
          <span className={item.status==='RESOLVED'?'comment-resolved':'comment-open'}>{item.status==='RESOLVED'?'Résolu':'Ouvert'}</span>
          {item.stale&&<span className="comment-stale">⚠ À revoir · ancienne révision {item.baseRevision}</span>}
        </div>
        {item.quote&&<blockquote>{item.quote}</blockquote>}
        <p>{item.body}</p>
-       {canEdit&&<button type="button" className="text-button" disabled={saving}
-         onClick={()=>change(item.id,item.status==='OPEN'?'RESOLVED':'OPEN')}>
-         {item.status==='OPEN'?'Marquer résolu':'Rouvrir'}
-       </button>}
+       
      </article>)}</div>}
  </section>;
 }
