@@ -134,6 +134,40 @@ assert.equal(restoredBook.status,200,'restore without data loss');
 assert.equal(restoredBook.data.book.title,'Ouvrage renommé');
 const restoredArchivalChapter=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
 assert.equal(restoredArchivalChapter.status,200,'chapter retained after archive and restore');
+// Metadata commands from contextual chapter menus never alter revision history.
+const chapterIndex=await request(archivePath+'/chapters',{cookie:author});
+assert.equal(chapterIndex.status,200,'chapter list available');
+const archiveChapterIndex=chapterIndex.data.chapters.find(c=>c.id===archiveChapterId);
+assert.ok(archiveChapterIndex?.updatedAt,'chapter metadata concurrency token included');
+const chapterMetaPath=archivePath+'/chapters/'+archiveChapterId+'/metadata';
+const chapterRenamed=await request(chapterMetaPath,{method:'PATCH',cookie:author,body:{
+  title:'Chapitre renommé sans toucher le texte',expectedUpdatedAt:archiveChapterIndex.updatedAt
+}});
+assert.equal(chapterRenamed.status,200,'chapter can be renamed');
+assert.equal(chapterRenamed.data.chapter.title,'Chapitre renommé sans toucher le texte');
+assert.equal(chapterRenamed.data.chapter.revision,0,'renaming does not create a document revision');
+const chapterStale=await request(chapterMetaPath,{method:'PATCH',cookie:author,body:{
+  title:'Ancien titre concurrent',expectedUpdatedAt:archiveChapterIndex.updatedAt
+}});
+assert.equal(chapterStale.status,409,'chapter title optimistic concurrency');
+const chapterOutsider=await request(chapterMetaPath,{method:'PATCH',cookie:outsider,body:{
+  title:'Tentative non autorisée',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt
+}});
+assert.equal(chapterOutsider.status,404,'chapter metadata isolated by membership');
+const chapterCsrf=await request(chapterMetaPath,{method:'PATCH',cookie:author,omitOrigin:true,body:{
+  title:'Tentative CSRF',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt
+}});
+assert.equal(chapterCsrf.status,403,'chapter metadata CSRF enforced');
+const chapterInvalid=await request(chapterMetaPath,{method:'PATCH',cookie:author,body:{
+  title:'a',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt
+}});
+assert.equal(chapterInvalid.status,400,'chapter title validation');
+const chapterAfterRename=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
+assert.equal(chapterAfterRename.status,200);
+assert.equal(chapterAfterRename.data.chapter.title,'Chapitre renommé sans toucher le texte');
+assert.equal(chapterAfterRename.data.chapter.revision,0);
+assert.deepEqual(chapterAfterRename.data.chapter.content,restoredArchivalChapter.data.chapter.content,'title rename preserves all text');
+
 const restoredList=await request('/api/v1/books',{cookie:author});
 assert.equal(restoredList.data.books.some(b=>b.id===archiveBookId),true,'restored book returned to library');
 const path='/api/v1/books/'+bookId+'/chapters/'+chapterId;

@@ -2,6 +2,7 @@
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {useState} from 'react';
+import ActionMenu from './ActionMenu';
 
 type Archived={id:string;title:string;bookType:string;updatedAt:string;canRestore:boolean};
 export default function ArchivesClient({books,displayName}:{books:Archived[];displayName:string}){
@@ -39,7 +40,11 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
      {books.length===0?<div className="search-empty">Aucun ouvrage archivé. <Link href="/library">Retour à la bibliothèque ↗</Link></div>:
      <div className="archive-list">{books.map(book=><div className="archive-item" key={book.id}>
        <div><strong>{book.title}</strong><small>Archivé · dernière modification {new Date(book.updatedAt).toLocaleDateString('fr-FR')}</small></div>
-       {book.canRestore?<button type="button" className="button small" disabled={busyId!==null} onClick={()=>restore(book)}>{busyId===book.id?'Restauration…':'Restaurer'}</button>:<span className="status">Lecture seule</span>}
+       {book.canRestore?
+         <ActionMenu label={'Actions pour l’ouvrage archivé « '+book.title+' »'} disabled={busyId!==null} actions={[
+           {label:'Restaurer cet ouvrage',onSelect:()=>void restore(book)}
+         ]}/>:
+         <span className="status">Lecture seule</span>}
      </div>)}</div>}
     </div>
    </main>

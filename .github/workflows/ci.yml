@@ -34,6 +34,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm release:check
+      - run: pnpm ui:check
       - run: pnpm test
       - run: python -m unittest discover -s apps/worker-documents/tests -v
       - run: pnpm db:generate
