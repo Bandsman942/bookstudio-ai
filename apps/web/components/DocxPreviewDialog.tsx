@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import AppIcon from './AppIcon';
+import DocxBulkImportPanel from './DocxBulkImportPanel';
 import {useAppPreferences} from './AppPreferences';
 import {previewDocx,type DocxPreview,DocxPreviewError} from '@/lib/docx-preview';
 
@@ -194,6 +195,7 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
             </button>
           </form>:null}
         </div>}
+        {editable&&!preview.truncated&&<DocxBulkImportPanel bookId={bookId} name={name} preview={preview}/>}
       </>}
     </section>
   </div>;
