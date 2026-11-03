@@ -13,3 +13,5 @@ Ce dossier est l'historique des déploiements **réels**, distinct du `CHANGELOG
 **Deuxième déploiement READY :** `2026-11-03T13-18-20Z_v0.3.0.md` ; recherche privée et commentaires, migration additive après snapshot/reprise testée. Le site reste privé sous Vercel Authentication.
 
 **Troisième déploiement READY :** `2026-11-03T13-44-30Z_v0.4.0.md` ; renommage, archivage et restauration réversibles. CI et recette propriétaire validées ; snapshot Neon avant publication. Production privée toujours protégée.
+
+**Quatrième déploiement READY :** `2026-11-03T15-49-26Z_v0.6.0.md` ; mode réseau faible, réduction des requêtes, région Vercel `pdx1` confirmée et snapshot préalable.
