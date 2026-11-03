@@ -4,6 +4,11 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 ### Ajouté
+- Commentaires éditoriaux par chapitre, résolution/réouverture, audit, ancrage strict sur révision et indicateur « À revoir » lorsque le texte évolue — issue #44.
+### Sécurité
+- Contrôles RBAC, validation de l'origine, prévention d'ancres ambiguës et absence de contenu provenant d'autres espaces.
+
+### Ajouté
 - Recherche privée sur les passages des **révisions courantes enregistrées** dans les seuls livres autorisés ; navigation vers les chapitres, résultats bornés et états UX accessibles — issue #42.
 ### Sécurité
 - Requêtes paramétrées, caractères SQL LIKE littéralement échappés, isolation par espace et aucune fuite de contenu historique ni de requête vers un fournisseur IA.
