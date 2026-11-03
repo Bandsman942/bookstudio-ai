@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {useState} from 'react';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
+import AppIcon from './AppIcon';
 
 type Archived={id:string;title:string;bookType:string;updatedAt:string;canRestore:boolean};
 export default function ArchivesClient({books,displayName}:{books:Archived[];displayName:string}){
@@ -28,9 +29,9 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
  return <div className="workspace">
    <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
    <div className="nav-section">{t('library.mySpace')}</div>
-   <Link className="nav-link" href="/library">▦ {t('common.library')}</Link>
-   <Link className="nav-link" href="/search">⌕ {t('common.search')}</Link>
-   <Link className="nav-link active" href="/library/archives" aria-current="page">▤ {t('common.archives')}</Link>
+   <Link className="nav-link" href="/library"><AppIcon name="library"/><span>{t('common.library')}</span></Link>
+   <Link className="nav-link" href="/search"><AppIcon name="search"/><span>{t('common.search')}</span></Link>
+   <Link className="nav-link active" href="/library/archives" aria-current="page"><AppIcon name="archive"/><span>{t('common.archives')}</span></Link>
    <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{displayName.charAt(0).toUpperCase()}</span>{displayName}</div>
    </aside>
    <main className="content">

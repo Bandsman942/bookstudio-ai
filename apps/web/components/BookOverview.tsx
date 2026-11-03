@@ -8,6 +8,7 @@ import BookSourceFiles from './BookSourceFiles';
 import BookActionsMenu from './BookActionsMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
 import {useAppPreferences} from './AppPreferences';
+import AppIcon from './AppIcon';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
@@ -37,26 +38,29 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
     <span className="eyebrow">{t('book.projectOverview')}</span>
     <div className="book-title-actions">
       <div><h1>{title}<span className="dot">.</span></h1><p>{t('book.overviewSubtitle')}</p></div>
-      {editable&&<BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt} editable onArchive="library"/>}
+      {editable&&<div className="book-header-actions">
+        <a className="button small" href="#book-source-files"><AppIcon name="upload"/>{t('book.importManuscript')}</a>
+        <BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt} editable onArchive="library"/>
+      </div>}
     </div>
+    <BookSourceFiles bookId={bookId} editable={editable}/>
     <div className="overview-cards">
       <div><span>{t('book.chapters')}</span><strong>{chapters.length}</strong><small>{t('book.organized')}</small></div>
       <div><span>{t('book.status')}</span><strong className="status-label">{status==='DRAFT'?t('library.draft'):status}</strong><small>{t('book.historySaved')}</small></div>
       <div><span>{t('book.type')}</span><strong className="status-label">{kind==='NOVEL'?t('library.kindNovel'):kind==='MEDICINE'?t('library.kindMedicine'):kind==='SCIENCE'?t('library.kindScience'):t('library.kindGeneral')}</strong><small>{t('book.customizable')}</small></div>
     </div>
-    <div className="section-header"><h2>{t('book.structure')}</h2>
-      {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}>＋ {t('book.chapterAdd')}</button>}
+    <div className="section-header" id="book-structure"><h2><AppIcon name="chapter"/>{t('book.structure')}</h2>
+      {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}><AppIcon name="plus"/>{t('book.chapterAdd')}</button>}
     </div>
     <div className="chapter-list">{chapters.map((chapter,index)=><div key={chapter.id} className="chapter-item">
       <Link href={'/books/'+bookId+'/chapters/'+chapter.id} className="chapter-item-link">
         <span className="chapter-num">{String(index+1).padStart(2,'0')}</span>
         <div><strong>{chapter.title}</strong><small>{t('book.chapterRevision',{count:chapter.revision})}</small></div>
-        <span className="chapter-arrow" aria-hidden="true">↗</span>
+        <AppIcon name="chevronRight" className="chapter-arrow"/>
       </Link>
       <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}
         updatedAt={chapter.updatedAt} editable={editable}/>
     </div>)}</div>
-    <BookSourceFiles bookId={bookId} editable={editable}/>
     <SnapshotsPanel bookId={bookId} editable={editable}/>
     {showForm&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)setShowForm(false);}}>
       <form className="modal" onSubmit={add} role="dialog" aria-modal="true" aria-label={t('book.newChapter')}>

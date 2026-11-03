@@ -4,6 +4,8 @@ import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import ActionMenu from './ActionMenu';
 import BookActionsMenu from './BookActionsMenu';
+import ManuscriptImportDialog from './ManuscriptImportDialog';
+import AppIcon from './AppIcon';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import type {Locale,MessageKey} from '@/lib/i18n';
 
@@ -20,7 +22,7 @@ const bookTypes:{value:string;key:MessageKey}[]=[
 export default function LibraryClient({books,displayName}:{books:Book[];displayName:string}){
   const {t,locale}=useAppPreferences();
   const prefs=usePreferenceActions();
-  const [creating,setCreating]=useState(false),[title,setTitle]=useState(''),
+  const [creating,setCreating]=useState(false),[importing,setImporting]=useState(false),[title,setTitle]=useState(''),
     [kind,setKind]=useState('GENERAL'),[bookLanguage,setBookLanguage]=useState<Locale>(locale),
     [loading,setLoading]=useState(false),[error,setError]=useState('');
   const router=useRouter();
@@ -42,10 +44,10 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
   return <div className="workspace"><aside className="nav">
     <div className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></div>
     <div className="nav-section">{t('library.mySpace')}</div>
-    <Link className="nav-link active" href="/library">▦ {t('common.library')}</Link>
-    <Link className="nav-link" href="/search">⌕ {t('common.search')}</Link>
-    <Link className="nav-link" href="/library/archives">▤ {t('common.archives')}</Link>
-    <span className="nav-link subdued">▤ {t('library.models')} <small className="soon">{t('library.soon')}</small></span>
+    <Link className="nav-link active" href="/library" aria-current="page"><AppIcon name="library"/><span>{t('common.library')}</span></Link>
+    <Link className="nav-link" href="/search"><AppIcon name="search"/><span>{t('common.search')}</span></Link>
+    <Link className="nav-link" href="/library/archives"><AppIcon name="archive"/><span>{t('common.archives')}</span></Link>
+    <span className="nav-link subdued"><AppIcon name="template"/><span>{t('library.models')}</span><small className="soon">{t('library.soon')}</small></span>
     <div className="nav-spacer"/>
     <div className="nav-user"><span className="avatar">{displayName.charAt(0).toUpperCase()}</span>
       <span>{displayName}<small>{t('common.author')}</small></span></div>
@@ -65,15 +67,20 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
     <div className="content-inner"><div className="title-row">
       <div><span className="eyebrow">{t('library.myWorkshop')}</span>
         <h1>{t('library.myLibrary')}<span className="dot">.</span></h1><p>{t('library.subtitle')}</p></div>
-      <button type="button" className="button" onClick={()=>{setBookLanguage(locale);setCreating(true)}}>
-        ＋ {t('library.newBook')}
-      </button>
+      <div className="library-primary-actions">
+        <button type="button" className="button library-import-button" onClick={()=>setImporting(true)}>
+          <AppIcon name="upload"/>{t('library.importManuscript')}
+        </button>
+        <button type="button" className="button" onClick={()=>{setBookLanguage(locale);setCreating(true)}}>
+          <AppIcon name="plus"/>{t('library.newBook')}
+        </button>
+      </div>
     </div>
     <div className="stat-row"><div><strong>{books.length}</strong><span>{t('common.books')}</span></div>
       <div><strong>{books.filter(book=>book.status==='WRITING').length}</strong><span>{t('library.writing')}</span></div>
       <div><strong>{books.filter(book=>book.status==='REVIEW').length}</strong><span>{t('library.review')}</span></div>
     </div>
-    <div className="section-header"><h2>{t('library.myWorks')}</h2>
+    <div className="section-header"><h2><AppIcon name="book"/>{t('library.myWorks')}</h2>
       <span>{books.length} {t(books.length===1?'library.project':'library.projects')}</span></div>
     <div className="book-grid">
       {books.map((book,index)=><article key={book.id} className="book-card">
@@ -87,11 +94,19 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
         <div className="book-card-overflow"><BookActionsMenu bookId={book.id} title={book.title}
           updatedAt={book.updatedAt} editable={book.editable} showOpen onArchive="refresh"/></div>
       </article>)}
+      <button type="button" className="new-book-card import-book-card" onClick={()=>setImporting(true)}>
+        <span className="import-card-glyph"><AppIcon name="upload" size={26}/></span>
+        <strong>{t('library.importManuscript')}</strong><small>{t('library.importHint')}</small>
+      </button>
       <button type="button" className="new-book-card" onClick={()=>{setBookLanguage(locale);setCreating(true)}}>
         <span>＋</span><strong>{t('library.start')}</strong><small>{t('library.fromScratch')}</small>
       </button>
     </div></div>
   </main>
+  {importing&&<ManuscriptImportDialog books={books.filter(book=>book.editable).map(book=>({id:book.id,title:book.title}))}
+    onClose={()=>setImporting(false)}
+    onCreateBook={()=>{setImporting(false);setBookLanguage(locale);setCreating(true);}}
+    onUploaded={bookId=>{setImporting(false);router.push('/books/'+bookId+'#book-source-files');router.refresh();}}/>}
   {creating&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setCreating(false)}}>
     <form className="modal" onSubmit={create} role="dialog" aria-modal="true" aria-label={t('library.newWork')}>
       <button type="button" className="close" aria-label={t('common.close')} onClick={()=>setCreating(false)}>×</button>
