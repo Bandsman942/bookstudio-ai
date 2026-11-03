@@ -2,13 +2,14 @@
 import Link from 'next/link';
 import {APP_VERSION} from '@/lib/version';
 import {useAppPreferences} from '@/components/AppPreferences';
+import DisplayPreferencesMenu from '@/components/DisplayPreferencesMenu';
 
 export default function Home(){
   const {t}=useAppPreferences();
   return <main className="landing">
     <header className="public-header">
       <div className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></div>
-      <Link className="button small" href="/login">{t('home.open')}</Link>
+      <div className="public-header-actions"><DisplayPreferencesMenu/><Link className="button small" href="/login">{t('home.open')}</Link></div>
     </header>
     <section className="hero">
       <div className="eyebrow">{t('home.eyebrow')}</div>
