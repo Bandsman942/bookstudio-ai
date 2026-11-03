@@ -554,3 +554,81 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .source-list li small{color:var(--muted);white-space:nowrap}
 .source-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 @media (max-width:640px){.source-files{padding:18px 14px}.source-actions{width:100%;justify-content:flex-start}.source-list li{gap:8px}}
+
+
+/* BS-034 — unified professional self-hosted vector icon system. */
+.app-icon{display:inline-block;flex:0 0 auto;vertical-align:middle}
+.nav-link{justify-content:flex-start;gap:11px;min-width:0}
+.nav-link>.app-icon{color:var(--muted)}
+.nav-link.active>.app-icon,.nav-link:hover>.app-icon{color:var(--green)}
+.nav-link>span:not(.soon){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-link>.soon{margin-left:auto}
+.back-link,.chapter-nav-link{display:flex;align-items:center;gap:10px}
+.chapter-nav-link>.app-icon{color:var(--muted)}
+.studio-sidebar .nav-section:has(.app-icon){display:flex;align-items:center;gap:9px}
+.section-header h2{display:flex;align-items:center;gap:10px;min-width:0}
+.section-header h2>.app-icon{color:var(--green)}
+.ribbon-tabs button{display:flex;align-items:center;justify-content:center;gap:7px}
+.studio-insights .insights-header .app-icon{color:var(--green)}
+.button>.app-icon,.text-button>.app-icon{flex:0 0 auto}
+.source-actions .text-button,.source-files .section-header .text-button{display:inline-flex;align-items:center;gap:6px}
+.book-header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.book-header-actions .button{white-space:normal;text-align:center}
+.library-primary-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.library-primary-actions .button{display:inline-flex;align-items:center;gap:8px}
+.library-import-button{border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:none}
+.library-import-button:hover{background:var(--surface-hover);color:var(--ink);border-color:var(--green)}
+.import-book-card{padding:30px 22px;display:flex;min-height:300px;flex-direction:column;align-items:flex-start;justify-content:center;gap:14px}
+.import-book-card .import-card-glyph{display:grid;place-items:center;width:58px;height:58px;background:var(--surface-muted);color:var(--green);border-radius:17px}
+.import-book-card strong{font-size:16px;line-height:1.4}
+.import-book-card small{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* The upload affordance is above the manuscript structure — never hidden below long lists. */
+.source-files{scroll-margin-top:30px;margin-top:22px;margin-bottom:22px;background:var(--surface);border:1px solid var(--line);box-shadow:0 6px 28px #142d4b0a}
+.source-files .section-header{margin:0 0 9px}
+.source-files .source-note{max-width:850px}
+.source-dropzone{display:flex;flex-direction:column;align-items:center;gap:9px;margin:18px 0;padding:32px 20px;border:2px dashed var(--line);border-radius:14px;background:var(--surface-muted);text-align:center;transition:border-color .15s,background-color .15s}
+.source-dropzone:hover,.source-dropzone.is-dragging{border-color:var(--green);background:var(--surface-hover)}
+.source-dropzone-icon{color:var(--green)}
+.source-dropzone strong{font-size:17px;color:var(--ink)}
+.source-dropzone p{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 4px}
+.source-dropzone small{display:block;max-width:440px;font-size:11px;line-height:1.6;color:var(--muted)}
+.source-dropzone input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);opacity:0}
+.source-dropzone .button:focus-visible{outline:3px solid var(--menu-focus);outline-offset:4px}
+.source-success{display:flex;align-items:center;gap:8px}
+.source-filename{display:flex;align-items:center;gap:9px}
+.source-filename .app-icon{color:var(--green)}
+.source-disclaimer{display:flex;gap:9px;align-items:flex-start;padding:12px 15px;background:var(--surface-muted);border-radius:10px}
+.source-disclaimer .app-icon{color:var(--green);margin-top:2px}
+#book-structure,#book-versions{scroll-margin-top:25px}
+
+/* Library quick import: modal in both themes, fully keyboard reachable. */
+.import-modal{width:min(100%,540px);max-height:min(92dvh,850px);overflow-y:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.import-modal h2{display:flex;align-items:center;gap:10px;color:var(--ink);padding-right:16px}
+.import-modal h2>.app-icon{color:var(--green)}
+.import-modal label{min-width:0}
+.import-modal input[type=file]{max-width:100%;padding:10px;border:1px dashed var(--line);border-radius:10px;background:var(--input-surface);color:var(--ink)}
+.import-modal select{background:var(--input-surface);color:var(--ink)}
+.import-modal .source-note{margin:0}
+.import-modal .import-disclaimer{display:flex;gap:9px;align-items:flex-start;background:var(--surface-muted);border-radius:10px;padding:12px 14px;font-size:12px}
+.import-disclaimer>.app-icon{color:var(--green);margin-top:4px}
+.import-modal .import-chosen{display:flex;align-items:center;gap:8px;color:var(--ink);min-width:0}
+.import-chosen strong{overflow-wrap:anywhere}
+.import-modal .import-empty{display:grid;gap:15px;justify-items:start;padding:16px;background:var(--surface-muted);border-radius:12px}
+.import-empty .app-icon{color:var(--green)}
+.import-modal .button{display:inline-flex;align-items:center;gap:8px}
+@media(max-width:760px){
+  .library-primary-actions{width:100%;justify-content:flex-start}
+  .library-primary-actions .button{flex:1 1 185px}
+  .source-dropzone{padding:25px 12px}
+  .book-header-actions{width:100%}
+  .import-book-card{min-height:180px}
+}
+@media(max-width:460px){
+  .library-primary-actions .button{width:100%;flex-basis:100%}
+  .source-files{padding:18px 14px}
+  .source-dropzone strong{font-size:15px}
+  .import-modal{padding:28px 18px}
+  .book-header-actions .button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.source-dropzone{transition:none}}

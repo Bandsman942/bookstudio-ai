@@ -3,12 +3,11 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {useAppPreferences} from './AppPreferences';
 import AppIcon from './AppIcon';
 import {
-  MANUSCRIPT_ACCEPT,MANUSCRIPT_MAX_BYTES,uploadSourceToBook,uploadErrorCode,
+  MANUSCRIPT_ACCEPT,uploadSourceToBook,uploadErrorCode,
   type UploadStage
 } from '@/lib/source-upload-client';
 
 type Item={name:string;size:number;createdAt:string|null};
-type ApiError={error?:string};
 const text={
   fr:{heading:'Fichiers sources',action:'Importer un manuscrit',
     explain:'Ajoutez ici le fichier original de votre livre. Il est enregistré directement dans votre espace privé Supabase Storage.',
