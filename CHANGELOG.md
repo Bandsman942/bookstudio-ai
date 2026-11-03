@@ -3,6 +3,16 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+### Interface et internationalisation (à publier)
+- Thèmes clair, sombre et système, initialisés côté serveur sans flash de mode, et conservés dans des cookies de préférences non sensibles (#66).
+- Traductions FR/EN typées pour les principaux parcours (accueil, connexion, bibliothèque, ouvrage, chapitres, éditeur, versions, commentaires, archives et recherche), avec changement accessible depuis les menus « ⋯ » (#67).
+- Séparation entre la langue de l'interface et celle du manuscrit. Un livre créé en anglais commence avec un chapitre « Chapter 1 », sans traduire automatiquement les textes des auteurs.
+- Tokens communs de surfaces, texte, papier éditorial, boutons et focus pour harmoniser les futurs modules.
+### Qualité
+- Contrôle automatisé structurel `pnpm prefs:check`, documentation `docs/design/THEMES-I18N.md` et recette `docs/qa/E2E-PREFERENCES-I18N.md`.
+- **Non encore en production :** publication après recette et version SemVer.
+
+
 ### Interface (à publier)
 - Menus « ⋯ » sans fond, bordure ni ombre au repos, quel que soit leur composant parent. Surbrillance au survol/à l'ouverture ; contour de focus clavier maintenu, y compris à forte magnification — issue #65.
 
