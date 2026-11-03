@@ -14,7 +14,11 @@ export type SnapshotManifest = {
 };
 
 function canonical(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (value === null || typeof value !== 'object') {
+    const encoded = JSON.stringify(value);
+    if (encoded === undefined) throw new Error('SNAPSHOT_INVALID');
+    return encoded;
+  }
   if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
   const obj = value as Record<string, unknown>;
   return '{' + Object.keys(obj).sort().map(key => JSON.stringify(key) + ':' + canonical(obj[key])).join(',') + '}';
