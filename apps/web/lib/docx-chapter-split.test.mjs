@@ -33,7 +33,11 @@ test('refuse incomplete, dangerous, excessive or ambiguous proposals',()=>{
 });
 
 test('long manuscripts with 250 paragraphs and 14 headings remain fully segmentable',()=>{
- const blocks=Array.from({length:14},(_,i)=>[h('Chapitre '+(i+1)),...Array.from({length:19},(_,n)=>p('Texte '+i+':'+n+' — '+('a'.repeat(490)))]).flat();
+ const blocks=[];
+ for(let i=0;i<14;i++){
+   blocks.push(h('Chapitre '+(i+1)));
+   for(let n=0;n<19;n++)blocks.push(p('Texte '+i+':'+n+' — '+('a'.repeat(490))));
+ }
  const out=proposeDocxChapters({blocks,truncated:false});
  assert.equal(out.reason,'ok');assert.equal(out.chapters.length,14);
  assert.deepEqual(out.chapters.flatMap(x=>x.blocks),blocks);
