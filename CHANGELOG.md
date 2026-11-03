@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.5.0] — version alpha préparée, NON DÉPLOYÉE
+## [0.5.0] — 2026-11-03 (production alpha privée)
 ### Modifié
 - Menus contextuels « ⋯ » pour les commandes secondaires de la bibliothèque, des livres, chapitres, archives, versions, commentaires, options de l'éditeur et du compte — PR #57, issue #55.
 - Hiérarchie d'actions unifiée : une action primaire visible par section et confirmation des opérations importantes ; clavier, tactile et responsive.
@@ -15,9 +15,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - L'éditeur est maintenant non modifiable pour les rôles sans droit d'écriture.
 ### Sécurité
 - Permissions revérifiées côté serveur, protection CSRF et concurrence optimiste sur les métadonnées de chapitre.
-### Vérification et statut
-- Contrôles statiques `pnpm ui:check` et tests HTTP des droits, conflits et intégrité du contenu en CI.
-- **Publication non déclenchée** : recette E2E humaine (clavier, tactile, 320–1440 px, fichiers et autres fonctions) et feu vert du propriétaire requis avant la fusion de la release et Vercel.
+### Déploiement
+- **READY à 2026-11-03T15:09:55.930Z** sur Vercel, déploiement `dpl_35aB6LZsC2jXV3dnp5KX1su9T3Rt`, commit `be62cb8f5e161090e855986b89bdf0ff121b1623` et tag annoté `v0.5.0`.
+- CI GitHub `41660559176` réussie ; E2E propriétaire déclaré bon avant déploiement ; `/api/health` et `/api/version` HTTP 200.
+- Snapshot Neon pré-release `snap-raspy-sound-bfd69sod`, aucune migration nécessaire. Verrou Vercel rétabli après READY.
+- Registre : `docs/deployments/2026-11-03T15-09-55Z_v0.5.0.md`.
+
+### Observabilité
+- Suspicions de latence réseau entre Vercel `iad1` et Neon `us-west-2` ; diagnostic et optimisation planifiés dans la version suivante, sans métriques inventées.
 
 ## [0.4.0] — 2026-11-03 (production alpha privée)
 ### Ajouté
