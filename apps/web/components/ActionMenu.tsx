@@ -27,13 +27,15 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
   const rootRef=useRef<HTMLDivElement>(null);
   const triggerRef=useRef<HTMLButtonElement>(null);
   const menuRef=useRef<HTMLDivElement>(null);
+  const firstFocus=useRef<'first'|'last'>('first');
   const available=actions.some(item=>!item.disabled);
 
   useEffect(()=>{
     if(!open)return;
     // Focus an actual action when opened with mouse, touch or keyboard.
-    const focusable=menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])');
-    focusable?.focus();
+    const focusable=[...(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])')??[])];
+    if(firstFocus.current==='last')focusable.at(-1)?.focus();
+    else focusable[0]?.focus();
     function outside(event:PointerEvent){
       if(rootRef.current&&!rootRef.current.contains(event.target as Node))setOpen(false);
     }
@@ -81,10 +83,10 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
       aria-controls={open?id:undefined}
       aria-expanded={open}
       disabled={disabled||!available}
-      onClick={()=>setOpen(value=>!value)}
+      onClick={()=>{firstFocus.current='first';setOpen(value=>!value);}}
       onKeyDown={event=>{
         if(event.key==='ArrowDown'||event.key==='ArrowUp'){
-          event.preventDefault();setOpen(true);
+          event.preventDefault();firstFocus.current=event.key==='ArrowUp'?'last':'first';setOpen(true);
         } else if(event.key==='Escape'&&open){event.preventDefault();close(true);}
       }}
     >⋯</button>
@@ -97,7 +99,7 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
             href={item.href} onClick={()=>close()} tabIndex={-1}>{item.label}</a>:
           <button role="menuitem" className={'context-menu-item'+(item.destructive?' is-danger':'')}
             type="button" disabled={item.disabled} aria-disabled={item.disabled||undefined}
-            tabIndex={item.disabled?-1:-1}
+            tabIndex={-1}
             onClick={()=>{if(item.disabled)return;close();item.onSelect?.();}}>
             {item.label}
           </button>}
