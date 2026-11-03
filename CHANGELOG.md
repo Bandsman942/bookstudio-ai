@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.9.0] — alpha, en cours de validation (NON DÉPLOYÉE)
+### Confirmation serveur des sources (#84)
+- Après chaque upload direct vers le bucket privé Supabase, vérification côté serveur de la présence de l'objet, de sa taille effectivement stockée et du type MIME déclaré par Storage ; l'interface ne revendique plus une réussite sur la seule base du PUT.
+- Messages d'erreur distincts pour objet manquant, taille et type non conformes ; audit de confirmation sans sauvegarder les secrets ni le binaire.
+- Limite Storage de 20 Mio appliquée également au bucket privé ; tests de vérification et E2E v0.9.0-alpha à valider avant publication.
+- **Non livré** : analyse du contenu binaire/antivirus, backup/restauration, import DOCX/PDF en chapitres, OCR et accès public.
+
+
 ## [0.8.0] — 2026-11-03 (production alpha privée)
 ### Fichiers sources et Supabase Storage (issue #78)
 - Intégration des uploads directs navigateur → Supabase Storage privé \`Uploaded_books\`, sans stockage Vercel ni transit du binaire par fonction Next.

@@ -2,7 +2,7 @@ import {prisma} from '@bookstudio/database';
 import {activeUser} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {MAX_SOURCE_BYTES,isBookId,isStoredName,validateSource,makeStoredName,
-  signUpload,signDownload,deleteFile,listFiles} from '@/lib/supabase-storage';
+  signUpload,signDownload,deleteFile,listFiles,confirmStoredSource} from '@/lib/supabase-storage';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -41,6 +41,7 @@ export async function POST(request:Request,{params}:Ctx){
   const payload=await request.json().catch(()=>null);
   if(!payload||typeof payload!=='object')return errorResponse('VALIDATION_ERROR');
   const download=payload.action==='download';
+  const confirm=payload.action==='confirm';
   const auth=await authorize(bookId,!download);
   if(!auth)return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
   try{
@@ -52,6 +53,20 @@ export async function POST(request:Request,{params}:Ctx){
       return Response.json({url:await signDownload(bookId,payload.name)},
         {headers:{'Cache-Control':'no-store'}});
     }
+    if(confirm){
+      if(typeof payload.name!=='string'||typeof payload.type!=='string'||
+         !Number.isSafeInteger(payload.size))return errorResponse('VALIDATION_ERROR');
+      const status=await confirmStoredSource(bookId,{name:payload.name,size:payload.size,type:payload.type});
+      if(status==='invalid')return errorResponse('FILE_NOT_ALLOWED_OR_TOO_LARGE',422);
+      if(status==='not_found')return errorResponse('SOURCE_NOT_FOUND',404);
+      if(status==='size_mismatch')return errorResponse('SOURCE_SIZE_MISMATCH',409);
+      if(status==='type_mismatch')return errorResponse('SOURCE_TYPE_MISMATCH',409);
+      await prisma.auditEvent.create({data:{
+        actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
+        action:'BOOK_SOURCE_UPLOAD_CONFIRMED',metadata:{name:payload.name,size:payload.size}
+      }});
+      return Response.json({ok:true,confirmed:true},{headers:{'Cache-Control':'no-store'}});
+    }
     if(payload.action!==undefined)return errorResponse('VALIDATION_ERROR');
     const source=validateSource(payload);
     if(!source)return errorResponse('FILE_NOT_ALLOWED_OR_TOO_LARGE',422,{maxBytes:MAX_SOURCE_BYTES});
@@ -61,7 +76,7 @@ export async function POST(request:Request,{params}:Ctx){
       actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
       action:'BOOK_SOURCE_UPLOAD_SIGNED',metadata:{name,size:source.size,contentType:source.contentType}
     }});
-    return Response.json({name,url,maxBytes:MAX_SOURCE_BYTES},{status:201,
+    return Response.json({name,url,contentType:source.contentType,maxBytes:MAX_SOURCE_BYTES},{status:201,
       headers:{'Cache-Control':'no-store'}});
   }catch(error){return storageError(error);}
 }

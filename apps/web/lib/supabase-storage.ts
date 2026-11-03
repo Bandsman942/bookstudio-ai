@@ -8,7 +8,7 @@ const types: Record<string,string[]> = {
   epub:['application/epub+zip','application/zip'],odt:['application/vnd.oasis.opendocument.text','application/zip'],
   png:['image/png'],jpg:['image/jpeg'],jpeg:['image/jpeg'],webp:['image/webp']
 };
-export type FileInfo={name:string;size:number;createdAt:string|null};
+export type FileInfo={name:string;size:number;createdAt:string|null;contentType:string|null};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const storedName=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}-[a-z0-9][a-z0-9._-]{0,95}$/i;
 export function isBookId(value:string){return uuid.test(value);}
@@ -81,7 +81,9 @@ export async function listFiles(bookId:string):Promise<FileInfo[]>{
   return results.filter((x):x is Record<string,any>=>!!x&&typeof x==='object'
     &&typeof x.name==='string'&&isStoredName(x.name)).map(x=>({
     name:x.name,size:Number.isFinite(Number(x.metadata?.size))?Number(x.metadata.size):0,
-    createdAt:typeof x.created_at==='string'?x.created_at:null
+    createdAt:typeof x.created_at==='string'?x.created_at:null,
+    contentType:typeof (x.metadata?.mimetype??x.metadata?.contentType)==='string'?
+      String(x.metadata.mimetype??x.metadata.contentType).toLowerCase().split(';')[0].trim():null
   }));
 }
 export async function signDownload(bookId:string,name:string){
@@ -97,4 +99,21 @@ export async function signDownload(bookId:string,name:string){
 export async function deleteFile(bookId:string,name:string){
   const config=getStorageConfig();
   await storageFetch('DELETE','/object/'+encodeURIComponent(config.bucket),{prefixes:[filePath(bookId,name)]});
+}
+
+/** Confirmation is based on *server-side Storage metadata*, never a success claim by the browser. */
+export function checkStoredSource(file:FileInfo|undefined,expected:{name:string;size:number;type:string}):
+  'ok'|'not_found'|'size_mismatch'|'type_mismatch'|'invalid' {
+  const original=expected.name.slice(37); // UUID + separator is generated server-side.
+  const source=isStoredName(expected.name)?validateSource({name:original,size:expected.size,type:expected.type}):null;
+  if(!source)return 'invalid';
+  if(!file)return 'not_found';
+  if(file.name!==expected.name||!Number.isSafeInteger(file.size)||file.size<1||
+    file.size>MAX_SOURCE_BYTES||file.size!==expected.size)return 'size_mismatch';
+  // MIME here is Storage-reported metadata, not byte-level antivirus/magic verification.
+  if(!file.contentType||file.contentType!==source.contentType)return 'type_mismatch';
+  return 'ok';
+}
+export async function confirmStoredSource(bookId:string,expected:{name:string;size:number;type:string}){
+  return checkStoredSource((await listFiles(bookId)).find(f=>f.name===expected.name),expected);
 }
