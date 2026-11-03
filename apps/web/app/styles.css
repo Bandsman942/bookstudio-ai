@@ -228,3 +228,28 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 @media(max-width:760px){.route-loading-nav{display:none}.route-loading-body{padding:35px 18px}.route-loading-row{grid-template-columns:1fr 1fr}.route-loading-block{height:130px}}
 @media(max-width:420px){.route-loading-row{grid-template-columns:1fr}.route-loading-block{height:90px}}
 @media(prefers-reduced-motion:reduce){.shimmer{animation:none}}
+
+/* BS-028: overflow triggers blend into any surface at rest.
+   Visible emphasis returns on hover, keyboard focus and while the menu is open. */
+:is(.context-trigger,.book-card-overflow .context-trigger,.comment-card-tools .context-trigger,.chapter-item .context-trigger){
+  background:transparent;
+  border:1px solid transparent;
+  box-shadow:none;
+  color:var(--muted);
+  transition:background-color .14s,border-color .14s,color .14s;
+}
+:is(.context-trigger,.book-card-overflow .context-trigger,.comment-card-tools .context-trigger,.chapter-item .context-trigger):is(:hover,[aria-expanded="true"]){
+  background:var(--menu-hover,#e9f3ef);
+  border-color:var(--menu-hover-border,#94c5b2);
+  color:var(--menu-hover-ink,#1d7563);
+}
+:is(.context-trigger,.book-card-overflow .context-trigger,.comment-card-tools .context-trigger,.chapter-item .context-trigger):focus-visible{
+  background:var(--menu-hover,#e9f3ef);
+  border-color:var(--menu-hover-border,#94c5b2);
+  color:var(--menu-hover-ink,#1d7563);
+  outline:3px solid var(--menu-focus,#2e9580);
+  outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce){
+  .context-trigger{transition:none}
+}
