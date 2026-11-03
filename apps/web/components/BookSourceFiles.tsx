@@ -74,9 +74,10 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       });
       if(!confirmation.ok){
         const failure=await confirmation.json().catch(()=>({})) as ApiError;
+        await refresh();
         setError(failure.error==='SOURCE_SIZE_MISMATCH'||failure.error==='SOURCE_TYPE_MISMATCH'?
           t.mismatch:t.uploadFailed);
-        await refresh();return;
+        return;
       }
       await refresh();
       setNotice(t.uploaded);
