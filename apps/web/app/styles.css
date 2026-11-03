@@ -545,7 +545,7 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .source-note{font-size:12px;color:var(--muted);line-height:1.65;margin:12px 0}
 .source-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0}
 .source-controls input[type=file]{position:absolute;width:1px;height:1px;opacity:0;clip-path:inset(50%);overflow:hidden}
-.source-controls input[type=file]:focus-visible+label{outline:3px solid var(--green)}
+.source-controls label:has(+ input[type=file]:focus-visible){outline:3px solid var(--green);outline-offset:3px}
 .source-controls small{color:var(--muted);font-size:11px}
 .source-success{color:var(--green);font-size:13px;font-weight:700}
 .source-list{list-style:none;padding:0;margin:18px 0}
