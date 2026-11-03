@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.13.0] — alpha en validation, NON DÉPLOYÉE
+### BS-006c — DOCX multi-chapitres sous contrôle humain (#100)
+- Dans la prévisualisation privée DOCX, proposition de deux à dix chapitres selon les titres Word et section introductive éventuelle. Tous les blocs conservés dans leur ordre ; relecture et titres modifiables avant confirmation.
+- Action explicite « Créer plusieurs chapitres » et avertissements si segmentation approximative, document tronqué ou trop nombreuses parties. Aucun découpage silencieux ni promesse de fidélité Word.
+- Nouveau POST `/api/v1/books/:bookId/import/docx/bulk` : validation des droits OWNER/EDITOR, origine, contenu texte-only, présence du fichier Supabase privé, limites globales et consentement.
+- Transaction PostgreSQL unique pour tous les nouveaux chapitres, leurs premières révisions et preuves de provenance ; **tout ou rien**. UUID de lot et clés dérivées stables pour retries sans doublons, audit sans texte brut.
+- Réutilisation du schéma v0.12, **aucune migration SQL** ; tests découpage, idempotence et API négatifs, UI FR/EN mobile et thèmes.
+- Hors périmètre : tableaux/images/notes/styles Word complets, antivirus, sauvegarde-restauration des binaires, PDF/OCR.
+
+
 ## [0.12.0] — 2026-11-03 (production alpha privée)
 ### BS-006b — Reprise contrôlée d'un aperçu DOCX en nouveau chapitre (#96)
 - Dans l'aperçu privé DOCX v0.11, l'auteur OWNER/EDITOR peut relire, saisir le titre du chapitre, confirmer explicitement les omissions, puis créer **un nouveau chapitre** à partir des paragraphes/titres simples reconnus.

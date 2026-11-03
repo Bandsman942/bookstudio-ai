@@ -663,3 +663,21 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .docx-import-form input:focus-visible{outline:3px solid var(--menu-focus);outline-offset:2px}
 @media(max-width:640px){.docx-import-panel{padding:13px 11px}}
 @media(prefers-reduced-motion:reduce){.docx-import-panel{scroll-behavior:auto}}
+
+/* BS-006c: review all proposed chapters before a single atomic import. */
+.docx-bulk-panel{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);overflow:hidden}
+.docx-bulk-panel summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:700;padding:16px 18px;list-style:none;min-height:52px}
+.docx-bulk-panel summary::-webkit-details-marker{display:none}
+.docx-bulk-panel summary::after{content:'▾';margin-left:auto;color:var(--muted)}
+.docx-bulk-panel[open] summary::after{content:'▴'}
+.docx-bulk-panel summary>.app-icon{color:var(--green)}
+.docx-bulk-panel summary:focus-visible{outline:3px solid var(--menu-focus);outline-offset:-3px}
+.docx-bulk-count{margin-left:auto;background:var(--surface-muted);border:1px solid var(--line);border-radius:25px;padding:2px 9px;color:var(--ink);font-size:12px}
+.docx-bulk-panel>.docx-import-form{padding:6px 18px 20px;border-top:1px solid var(--line)}
+.docx-split-chapters{display:grid;gap:12px;list-style:none;margin:0;padding:0}
+.docx-split-chapters li{border:1px solid var(--line);border-radius:10px;padding:13px 14px;background:var(--surface-muted);min-width:0}
+.docx-split-chapters li>label{display:grid;gap:8px;font-size:13px}
+.docx-split-chapters li small{display:block;margin-top:8px;color:var(--muted)}
+.docx-chapter-excerpt{color:var(--muted);font-size:12px;line-height:1.55;margin:8px 0 0;max-height:4.7em;overflow:hidden;overflow-wrap:anywhere}
+.docx-bulk-panel input[type=text]{min-width:0}
+@media(max-width:640px){.docx-bulk-panel summary{padding:13px 11px}.docx-bulk-panel>.docx-import-form{padding:10px}}
