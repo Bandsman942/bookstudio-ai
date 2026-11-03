@@ -4,6 +4,17 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.12.0] — alpha candidate, NON DÉPLOYÉE
+### BS-006b — Reprise contrôlée d'un aperçu DOCX en nouveau chapitre (#96)
+- Dans l'aperçu privé DOCX v0.11, l'auteur OWNER/EDITOR peut relire, saisir le titre du chapitre, confirmer explicitement les omissions, puis créer **un nouveau chapitre** à partir des paragraphes/titres simples reconnus.
+- L'import d'un aperçu tronqué est bloqué ; jamais de conversion automatique silencieuse. Les fichiers sources restent privés sur Supabase et les chapitres existants ne sont pas modifiés.
+- API POST `/api/v1/books/:bookId/import/docx` : CSRF, membership write, validation source DOCX présente dans le bucket privé, limites 200 blocs/100 000 caractères, nœuds Tiptap sans HTML ni lien exécutif.
+- Transaction atomique Chapter + DocumentRevision(0) + ManuscriptSourceImport + audit **sans texte brut**, clé d'idempotence UUID par livre et protection contre les retries sur connexion faible.
+- Migration Prisma additive `20261103200000_reviewed_docx_source_imports`; les sources déjà utilisées ne sont plus supprimables via l'API ordinaire (409 SOURCE_IN_USE).
+- Tests `pnpm reviewed-docx:check`, HTTP E2E négatifs, recette propriétaire FR/EN et thème. **Aucune promesse de fidélité Word, antivirus ou backup prouvé**.
+- La structure multi-chapitre avancée, notes, tableaux, images, styles élaborés et OCR restent dans les travaux à venir.
+
+
 ## [0.11.0] — 2026-11-03 (production alpha privée)
 ### BS-006a — Aperçu de structure DOCX privé avant revue humaine (issue #90)
 - Bouton « Prévisualiser DOCX » dans les fichiers sources privés, disponible aux membres lecteurs autorisés ; URL signée temporaire, téléchargement direct navigateur → Supabase sans binaire sur Vercel.
