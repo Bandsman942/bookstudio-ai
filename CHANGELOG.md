@@ -5,6 +5,9 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 ## [Non publié]
 
 ## [0.2.0] — alpha privée, publication non encore déclenchée
+### Corrigé
+- Deux domaines HTTPS vérifiés sont acceptés pour les opérations protégées, exclusivement via la liste d'origines explicites; domaine canonique DTSC — issue #35.
+
 ### Ajouté
 - Export PDF de lecture A4 depuis un snapshot vérifié, contrôles d'accès et intégrité, traitement explicite des caractères non pris en charge — PR à venir (#29).
 
