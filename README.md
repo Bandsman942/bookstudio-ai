@@ -11,17 +11,19 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 
 ## État de livraison
 
-Lot 0 — fondations et éditeur initial. Code source et cahier des charges présents ; **application non déployée, ni validée E2E en production**. Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
+Socle éditorial et exports de base avec versions nommées. **Application non déployée : aucune recette navigateur n'a été effectuée sur une URL Vercel en production.** Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
 
 ### Inclus
 - Monorepo Next.js / TypeScript, Tiptap et Prisma sur Neon PostgreSQL dédié.
 - Authentification locale par sessions HTTP-only ; inscription publique désactivée par défaut.
 - Bibliothèque privée, manuscrits en chapitres, révisions historisées et contrôles de conflits.
-- Prototype de lecture DOCX sans accès réseau, migration initiale, tests métier et CI.
+- Points de restauration immuables et retour à une ancienne version sans écraser l'historique.
+- Export Word DOCX et Markdown depuis une version enregistrée ; préanalyse DOCX locale durcie (sans upload web).
+- Migrations initiales testées et appliquées uniquement sur Neon `development`, tests métier et CI.
 - Ports API pour l'intégration éventuelle à DTSC Platform sans couplage de base de données.
 
 ### Non inclus dans le MVP courant
-Import Word/PDF complet et sécurisé, OCR, exports finis, IA et bibliographie avancée, SSO, paiements, collaboration temps réel, déploiement production.
+Import Word/PDF complet et sécurisé sur le web, OCR, export PDF et gabarits d'édition finalisés, IA et bibliographie avancée, sauvegardes/restauration d'exploitation, SSO, paiements, collaboration temps réel et déploiement production.
 
 ## Mise en route
 
