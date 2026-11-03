@@ -3,6 +3,21 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+
+## [0.4.0] — alpha préparée, NON DÉPLOYÉE
+### Ajouté
+- Gestion des ouvrages : renommage, archivage réversible et restauration des archives, avec gestion des droits et des conflits de modification — PR #51 / issue #50.
+- Rubrique « Archives » dans la bibliothèque, permettant de restaurer un ouvrage sans effacer ses chapitres, révisions, commentaires ni snapshots.
+
+### Sécurité
+- Chaque modification vérifie le rôle, l'origine de la requête et la version de l'ouvrage ; les archives d'un autre espace ne sont pas visibles.
+- Historique d'audit des changements ; aucune suppression définitive n'est exécutée.
+
+### Livraison
+- À valider en E2E manuel : `docs/qa/E2E-BOOK-LIFECYCLE.md`.
+- Aucune migration PostgreSQL supplémentaire n'est nécessaire.
+- Publication uniquement après confirmation E2E v0.4.0, CI verte du commit, puis journal de déploiement et tag post-READY.
+
 ### Ajouté
 - Gestion non destructive des ouvrages : renommer, archiver et restaurer depuis la bibliothèque, avec audit et prévention des conflits de modification — issue #50.
 ### Sécurité

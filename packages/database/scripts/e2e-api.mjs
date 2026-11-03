@@ -24,8 +24,8 @@ assert.equal(healthResponse.status,200,'database readiness');
 assert.equal(healthResponse.data.database,'ready');
 const versionResponse=await request('/api/version');
 assert.equal(versionResponse.status,200,'version route');
-assert.equal(versionResponse.data.version,'0.3.0','semver traceability');
-assert.equal(versionResponse.data.tag,'v0.3.0');
+assert.equal(versionResponse.data.version,'0.4.0','semver traceability');
+assert.equal(versionResponse.data.tag,'v0.4.0');
 assert.equal(versionResponse.data.channel,'alpha');
 // A second explicitly configured origin must be accepted; arbitrary origins rejected.
 const alternate=await request('/api/v1/auth/login',{method:'POST',originOverride:'http://localhost:3001',body:{email:'nobody@example.invalid',password:'wrong'}});
