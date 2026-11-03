@@ -58,7 +58,7 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
 .modal{position:relative;width:min(100%,480px);background:white;border-radius:18px;padding:38px;display:grid;gap:19px;box-shadow:0 24px 80px #0e1e304d}
 .modal h2{font:26px Georgia,serif;margin:0}.modal p{color:var(--muted);line-height:1.6;margin:0}.modal .close{position:absolute;top:15px;right:19px;border:0;background:none;font-size:26px;color:#81909e}
 .chapter-list{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden}.chapter-item{padding:22px;display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--line)}
-.chapter-item:hover{background:#f6faf8}.chapter-num{font-family:Georgia,serif;color:#67928c;font-size:26px}.chapter-item>div{flex:1}
+.chapter-item:hover{background:#f6faf8}.chapter-num{font-family:Georgia,serif;color:#67928c;font-size:26px}.chapter-item-link>div{flex:1;min-width:0}
 .chapter-item strong{display:block}.chapter-item small{display:block;margin-top:8px;color:var(--muted);font-size:11px}.chapter-arrow{font-size:21px;color:var(--green)}
 .studio{height:100vh;display:flex;overflow:hidden;background:#f1f3f4}.studio-sidebar{width:248px}.studio-book-title{padding:0 14px 12px;font-family:Georgia,serif;font-size:18px}
 .back-link{padding:10px 14px;color:var(--green);font-weight:700;font-size:12px}.chapter-navigation{display:grid;gap:5px}.chapter-nav-link{padding:11px 14px;border-radius:8px;font-size:12px;color:var(--muted);display:flex;gap:11px}
@@ -186,3 +186,13 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px #328b792
   .context-menu{max-height:55vh}
 }
 @media(prefers-reduced-motion:reduce){.context-trigger,.context-menu-item{transition:none}}
+
+/* Chapters: full-width open target plus independent contextual commands. */
+.chapter-item{position:relative;gap:12px}
+.chapter-item-link{display:flex;flex:1;align-items:center;gap:22px;min-width:0}
+.chapter-item-link:hover strong{color:#276d60}
+.chapter-item .context-trigger{width:36px;height:36px;font-size:24px;background:#f8faf9;border-color:transparent;box-shadow:none}
+.chapter-item:has(.context-actions.is-open){z-index:75}
+.chapter-list{overflow:visible}
+.chapter-list .chapter-item:last-child{border-bottom:0}
+@media(max-width:650px){.chapter-item-link{gap:13px}.chapter-item{padding:14px 10px}.chapter-item .context-trigger{height:40px;width:40px}}
