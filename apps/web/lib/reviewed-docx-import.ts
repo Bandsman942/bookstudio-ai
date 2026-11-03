@@ -36,9 +36,9 @@ export function prepareReviewedDocxImport(value:unknown):ReviewedDocxImport{
     if(!b||typeof b!=='object'||Array.isArray(b))reject('DOCX_BLOCKS_INVALID');
     const item=b as Record<string,unknown>;
     const rawText=item.text;
+    if(typeof rawText!=='string')reject('DOCX_BLOCKS_INVALID');
     if(!['heading','paragraph'].includes(String(item.kind))||
-       typeof rawText!=='string'||rawText.length>10000||!rawText.trim())
-      reject('DOCX_BLOCKS_INVALID');
+       rawText.length>10000||!rawText.trim())reject('DOCX_BLOCKS_INVALID');
     chars+=rawText.length;
     if(chars>100000)reject('DOCX_TEXT_TOO_LARGE');
     const heading=item.kind==='heading';
