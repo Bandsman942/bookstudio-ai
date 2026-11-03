@@ -7,7 +7,7 @@ export default function LoginForm(){
     e.preventDefault();setBusy(true);setError('');
     try{
       const res=await fetch('/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-      if(!res.ok){setError('Adresse e-mail ou mot de passe incorrect.');return;}
+      if(!res.ok){setError(res.status===429?'Trop de tentatives. Réessayez dans environ 15 minutes.':res.status===503?'Connexion temporairement indisponible.':'Adresse e-mail ou mot de passe incorrect.');return;}
       router.push('/library');router.refresh();
     }catch{setError('Connexion temporairement indisponible.')}finally{setBusy(false);}
   }

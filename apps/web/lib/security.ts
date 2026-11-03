@@ -2,7 +2,7 @@ import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } fr
 const derive=(password:string,salt:string)=>new Promise<Buffer>((resolve,reject)=>{
   scryptCallback(password,salt,64,{N:16384,r:8,p:1,maxmem:32*1024*1024},(err,key)=>err?reject(err):resolve(key));
 });
-export const sessionCookieName = 'bookstudio_session';
+export const sessionCookieName = process.env.NODE_ENV === 'production' ? '__Host-bookstudio_session' : 'bookstudio_session';
 export function hashToken(token: string): string { return createHash('sha256').update(token).digest('hex'); }
 export function newSessionToken(): string { return randomBytes(32).toString('base64url'); }
 export async function hashPassword(password: string): Promise<string> {
