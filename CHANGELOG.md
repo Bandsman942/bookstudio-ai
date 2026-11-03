@@ -3,6 +3,9 @@
 Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et [Semantic Versioning](https://semver.org/lang/fr/). Le contenu est classé en **Ajouté / Modifié / Corrigé / Sécurité / Supprimé**. Les dates sont en UTC.
 
 ## [Non publié]
+### Interface (à publier)
+- Menus « ⋯ » sans fond, bordure ni ombre au repos, quel que soit leur composant parent. Surbrillance au survol/à l'ouverture ; contour de focus clavier maintenu, y compris à forte magnification — issue #65.
+
 
 ## [0.6.0] — 2026-11-03 (production alpha privée)
 ### Performance
