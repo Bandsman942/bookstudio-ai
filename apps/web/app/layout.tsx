@@ -3,6 +3,7 @@ import {cookies} from 'next/headers';
 import type {Metadata} from 'next';
 import type {ReactNode} from 'react';
 import {AppPreferencesProvider} from '@/components/AppPreferences';
+import {ToastProvider} from '@/components/ToastProvider';
 import {LOCALE_COOKIE,THEME_COOKIE,parseLocale,parseTheme} from '@/lib/i18n';
 
 export const metadata:Metadata={
@@ -17,7 +18,7 @@ export default async function RootLayout({children}:{children:ReactNode}){
   const theme=parseTheme(jar.get(THEME_COOKIE)?.value);
   return <html lang={locale} data-theme={theme} suppressHydrationWarning>
     <body><AppPreferencesProvider initialLocale={locale} initialTheme={theme}>
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </AppPreferencesProvider></body>
   </html>;
 }
