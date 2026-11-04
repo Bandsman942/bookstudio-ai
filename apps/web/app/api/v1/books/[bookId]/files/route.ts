@@ -93,6 +93,13 @@ export async function POST(request:Request,{params}:Ctx){
           id:bookId,workspaceId:auth.book.workspaceId,archivedAt:null
         },select:{id:true}});
         if(!member||!liveBook)return 'FORBIDDEN' as const;
+        // A rejected source cannot be re-confirmed to reset the rejection.
+        // A genuinely new upload must use a new server-generated storage name.
+        const previous=await tx.sourceSecurityRecord.findUnique({
+          where:{bookId_storageName:{bookId,storageName:payload.name}},
+          select:{status:true}
+        });
+        if(previous?.status==='REJECTED')return 'REJECTED_SOURCE' as const;
         const recent=requested?await tx.sourceScanJob.count({where:{
           bookId,createdAt:{gte:new Date(Date.now()-60*60*1000)}
         }}):0;
@@ -129,6 +136,7 @@ export async function POST(request:Request,{params}:Ctx){
         return {status,queueDeferred:requested&&!queued} as const;
       });
       if(outcome==='FORBIDDEN')return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
+      if(outcome==='REJECTED_SOURCE')return errorResponse('SOURCE_REJECTED_REUPLOAD_REQUIRED',423);
       return Response.json({ok:true,confirmed:true,scanStatus:outcome.status,
         queueDeferred:outcome.queueDeferred},
         {headers:{'Cache-Control':'no-store'}});
