@@ -4,14 +4,21 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.17.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.17.0] — 2026-11-04 (production alpha privée)
 ### BS-010a2 — Adaptateur ClamAV isolé, première tranche de #104 (#120)
 - Nouveau worker Python hors Vercel qui réalise une copie privée exclusive du fichier source, calcule son empreinte SHA-256 sur les octets réellement analysés et contrôle taille, symlinks et mutation pendant la copie.
 - Invocation du binaire ClamAV local à chemin absolu, sans shell ni sortie brute dans les logs ; identité du moteur, fraîcheur du fichier de signatures quotidien (48 h), délai maximal et traitement explicite des erreurs. Les archives chiffrées ou dépassant les limites d'inspection déclenchent une alerte plutôt qu'un faux succès.
 - Le fichier temporaire est supprimé après verdict. Réponses limitées au statut, code, empreinte, taille, version du scanner et date ; aucun texte ou chemin manuscrit.
 - Tests contractuels hors ligne et recette E2E opt-in avec moteur ClamAV **réel** et fichier EICAR dans un bac à sable ; CI simulée ne vaut pas attestation de sécurité réelle.
 - Correction du parcours HTTP E2E : la version attendue provient désormais du `release.json` de la branche testée, sans constante obsolète après chaque montée de version.
-- **Non livré :** worker déployé, accès Supabase, queue Neon, quarantaine physique, preuve de backup/restauration, signature de verdict et activation du mode strict. Production actuelle reste en v0.16.0-alpha et `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false`.
+- **Non livré :** worker déployé, accès Supabase, queue Neon, quarantaine physique, preuve de backup/restauration, signature de verdict et activation du mode strict. La production v0.17.0-alpha conserve `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false` ; ce code isolé ne modifie pas la sécurité effective des manuscrits.
+
+### Livraison en production
+- Propriétaire : **E2E v0.17.0-alpha BON** avant fusion de la PR #121. Commit de `main` : `1f8829a3b0217f76d48ac22eb047a9e36a6e05e9`. CI `test-and-build` SUCCESS sur le SHA `ca7dc3970e5a3c6d587ee94c6155f7f63e36f5f4` (run #154, ID `41799455869`). La CI simule ClamAV ; la validation propriétaire du banc réel ne produit pas d'attestation machine consultable dans ce dépôt.
+- Snapshot Neon préalable : `snap-spring-dust-bf779nwi` ; aucune migration SQL ajoutée.
+- Déploiement Vercel production `dpl_3N9Nwwz8qNiJmbow4pPAgovSvCVV` **READY le 2026-11-04T08:32:33.841Z**, alias `bookstudio-ai.dtsc-platform.com`. `/api/health` HTTP 200, base `ready`, `/api/version` HTTP 200, version `0.17.0`, commit `1f8829a3b021`. Aucune erreur runtime détectée dans la fenêtre de contrôle.
+- Déclenchement Git auto annulé par l'Ignored Build Step ; déploiement Git ciblé `main` uniquement. Verrou `exit 0` restauré, previews Vercel désactivées, SSO conservé. Journal : `docs/deployments/2026-11-04T08-32-33Z_v0.17.0.md`.
+- Aucun tag Git annoté `v0.17.0` n'a été créé ni vérifié ; `release.json.gitTag` reste une étiquette applicative.
 
 ## [0.16.0] — 2026-11-04 (production alpha privée)
 ### Correction P0 PDF — 13 chapitres (#115)
