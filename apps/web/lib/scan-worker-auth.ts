@@ -1,5 +1,5 @@
 import {createHash,createHmac,timingSafeEqual} from 'node:crypto';
-import {MAX_SOURCE_BYTES} from './supabase-storage';
+const MAX_SOURCE_BYTES=20*1024*1024; // same verified upload limit; no Node test import resolver assumptions
 
 export type ScanResult='SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
 export type ScanAttestation={
