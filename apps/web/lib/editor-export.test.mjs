@@ -77,5 +77,5 @@ test('PDF exports 13 chapters with the real snapshot Unicode character inventory
    throw new Error('Missing font glyph '+String(error?.codepoints||'unknown'),{cause:error});
  });
  assert.equal(Buffer.from(result.subarray(0,5)).toString('ascii'),'%PDF-');
- assert.ok((Buffer.from(result).toString('latin1').match(/\\/Type \\/Page\\b/g)||[]).length>=13);
+ assert.ok((Buffer.from(result).toString('latin1').match(/\/Type \/Page\b/g)||[]).length>=13);
 });
