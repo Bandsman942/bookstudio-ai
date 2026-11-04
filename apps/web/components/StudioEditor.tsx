@@ -9,12 +9,15 @@ import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
+import {useToast} from './ToastProvider';
 type Chapter={id:string;title:string};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
 type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const {t,locale}=useAppPreferences();
  const preferenceActions=usePreferenceActions();
+ const {notify}=useToast();
+ const previousSaveState=useRef<SaveState>('saved');
  const currentTRef=useRef(t);currentTRef.current=t;
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
@@ -24,6 +27,28 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
  const retryCountRef=useRef(0),retryAtRef=useRef(0),conflictRef=useRef(false);
 
+ useEffect(()=>{
+   // Autosave itself is silent; only transitions that require intervention
+   // and an eventual recovery trigger one contextual notification.
+   const previous=previousSaveState.current;previousSaveState.current=state;
+   if(!canEdit||state===previous)return;
+   if(state==='conflict'||state==='offline'||state==='error'){
+     const detail=errorDetail||(
+       locale==='fr'?'Les modifications du chapitre « '+chapterTitle+' » ne sont pas encore enregistrées sur le serveur.':
+         'Changes to “'+chapterTitle+'” have not yet been saved on the server.');
+     notify({tone:state==='conflict'?'warning':'error',
+       title:locale==='fr'?(state==='conflict'?'Conflit de révision du chapitre':
+         state==='offline'?'Chapitre hors connexion':'Enregistrement du chapitre à vérifier'):
+         (state==='conflict'?'Chapter revision conflict':
+         state==='offline'?'Chapter is offline':'Chapter save needs attention'),
+       detail,key:'editor-state|'+chapterId+'|'+state,durationMs:state==='offline'?9500:0});
+   }else if(state==='saved'&&['conflict','offline','error'].includes(previous)){
+     notify({tone:'success',title:locale==='fr'?'Enregistrement du chapitre rétabli':'Chapter save recovered',
+       detail:locale==='fr'?'« '+chapterTitle+' » est maintenant enregistré à la révision '+revisionRef.current+'.':
+         '“'+chapterTitle+'” is now saved at revision '+revisionRef.current+'.',
+       key:'editor-recovered|'+chapterId});
+   }
+ },[state,canEdit,chapterId,chapterTitle,errorDetail,locale,notify]);
  const draftKey='bookstudio:draft:'+chapterId;
  const drawerCloseRef=useRef<HTMLButtonElement>(null);
  useEffect(()=>{
