@@ -145,7 +145,8 @@ class ClamavWorkerTests(unittest.TestCase):
                 return {"accepted": True, "sourceStatus": "SCAN_PENDING_PROMOTION"}
             raise AssertionError("Unexpected request")
         clean = SimpleNamespace(status="SCANNED_CLEAN", sha256=sha,
-                                scannerVersion="ClamAV 1.4.3/28001")
+                                scannerVersion="ClamAV 1.4.3/28001",
+                                scannedAt=datetime.now(timezone.utc).isoformat())
         with patch.object(worker, "json_call", side_effect=api_call), \
              patch.object(worker, "download_source", return_value=sha), \
              patch.object(worker, "scan_source", return_value=clean):
