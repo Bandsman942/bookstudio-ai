@@ -5,6 +5,8 @@ import {useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError,type Operation} from '@/lib/notification-copy';
 
 type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string};
 type Chapter={id:string;revision:number};
@@ -33,6 +35,13 @@ const exportText={
 export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable:boolean}){
   const {t,locale}=useAppPreferences();
   const e=exportText[locale];
+  const {notify}=useToast();
+  function report(operation:Operation,title:string,status:number,body?:{error?:string;codepoints?:string;chapterNumber?:number|null}){
+    const detail=explainActionError({locale,operation,status,code:body?.error,
+      codepoints:body?.codepoints,chapterNumber:body?.chapterNumber});
+    setError(detail);setMessage('');
+    notify({tone:'error',title,detail,key:operation+'|'+title+'|'+status+'|'+String(body?.error)});
+  }
   const [versions,setVersions]=useState<Version[]>([]);
   const [name,setName]=useState('');
   const [busy,setBusy]=useState(false);
@@ -46,7 +55,7 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
     const payload=await response.json();
     setVersions(payload.snapshots);
   },[bookId]);
-  useEffect(()=>{refresh().catch(()=>setError(t('snapshot.loadError')));},[refresh]);
+  useEffect(()=>{refresh().catch(()=>report('snapshot-list',t('snapshot.loadError'),503));},[refresh]);
   useEffect(()=>{
     if(!pendingRestore||busy)return;
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setPendingRestore(null);};
@@ -65,10 +74,13 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
         body:JSON.stringify({name:name.trim()})
       });
       const payload=await response.json();
-      if(!response.ok){setError(payload.error||t('snapshot.createError'));return;}
+      if(!response.ok){report('snapshot-create',t('snapshot.createError'),response.status,payload);return;}
       setName('');setMessage(t('snapshot.created'));
+      notify({tone:'success',title:locale==='fr'?'Version enregistrée':'Version saved',
+        detail:locale==='fr'?'« '+name.trim()+' » est désormais disponible dans Versions & historique.':
+          '“'+name.trim()+'” is now available in Version history.'});
       await refresh();
-    }catch{setError(t('snapshot.connectionError'));}
+    }catch{report('snapshot-create',t('snapshot.createError'),0);}
     finally{setBusy(false);}
   }
 
@@ -79,19 +91,22 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
       const url='/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format='+format;
       const response=await fetch(url,{credentials:'same-origin',cache:'no-store'});
       if(!response.ok){
-        const payload=await response.json().catch(()=>({})) as {error?:string};
-        setError(payload.error==='EXPORT_UNSUPPORTED_GLYPHS'?e.unsupported:
-          payload.error==='EXPORT_TOO_LARGE'?e.large:
-          payload.error?.startsWith('SNAPSHOT_')?e.corrupt:e.error);
-        setMessage('');return;
+        const payload=await response.json().catch(()=>({})) as {error?:string;codepoints?:string;chapterNumber?:number|null};
+        report(format==='pdf'?'pdf':format==='docx'?'docx':'markdown',
+          (locale==='fr'?'Export ':'Export ')+format.toUpperCase()+
+            (locale==='fr'?' impossible : « ':' failed: “')+version.name+(locale==='fr'?' »':'”'),
+          response.status,payload);
+        return;
       }
       const expected=format==='pdf'?'application/pdf':format==='docx'?
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'text/markdown';
       if(!response.headers.get('content-type')?.startsWith(expected)){
-        setError(e.wrongFile);setMessage('');return;
+        report(format==='pdf'?'pdf':format==='docx'?'docx':'markdown',
+          locale==='fr'?'Fichier exporté invalide':'Invalid exported file',502);return;
       }
       const blob=await response.blob();
-      if(blob.size===0){setError(e.wrongFile);setMessage('');return;}
+      if(blob.size===0){report(format==='pdf'?'pdf':format==='docx'?'docx':'markdown',
+        locale==='fr'?'Document exporté vide':'Exported document is empty',502);return;}
       const objectUrl=URL.createObjectURL(blob);
       try{
         const anchor=document.createElement('a');
@@ -102,12 +117,17 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
         anchor.click();
         anchor.remove();
         setMessage(e.success);
+        notify({tone:'success',title:'Export '+format.toUpperCase()+
+          (locale==='fr'?' préparé':' ready'),
+          detail:locale==='fr'?'Le navigateur a reçu le téléchargement de « '+version.name+' ». Vérifiez le dossier Téléchargements.':
+            'Your browser received the download for “'+version.name+'”. Check Downloads.'});
       }finally{
         // Some mobile browsers read blob URLs shortly after the click.
         window.setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);
       }
     }catch{
-      setError(e.error);setMessage('');
+      report(format==='pdf'?'pdf':format==='docx'?'docx':'markdown',
+        locale==='fr'?'Téléchargement interrompu':'Download interrupted',0);
     }finally{setBusy(false);}
   }
 
@@ -116,7 +136,7 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
     setBusy(true);setError('');setMessage('');
     try{
       const current=await fetch('/api/v1/books/'+bookId+'/chapters',{cache:'no-store'});
-      if(!current.ok)throw new Error(t('snapshot.verifyError'));
+      if(!current.ok){report('snapshot-restore',t('snapshot.verifyError'),current.status);return;}
       const manifest=await current.json();
       const expectedRevisions:Record<string,number>={};
       for(const chapter of manifest.chapters as Chapter[])expectedRevisions[chapter.id]=chapter.revision;
@@ -125,14 +145,14 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
         body:JSON.stringify({confirm:'RESTORE',expectedRevisions})
       });
       const payload=await response.json();
-      if(!response.ok){
-        setError(response.status===409?t('snapshot.conflict'):(payload.error||t('snapshot.restoreError')));
-        return;
-      }
+      if(!response.ok){report('snapshot-restore',t('snapshot.restoreError'),response.status,payload);return;}
       setPendingRestore(null);
       setMessage(t('snapshot.restored',{count:payload.restored}));
+      notify({tone:'success',title:locale==='fr'?'Version restaurée':'Version restored',
+        detail:locale==='fr'?'« '+version.name+' » a restauré '+payload.restored+' chapitre(s). L’historique existant est conservé.':
+          '“'+version.name+'” restored '+payload.restored+' chapter(s); earlier versions remain available.'});
       router.refresh();
-    }catch(err){setError(err instanceof Error?err.message:t('snapshot.restoreInterrupted'));}
+    }catch{report('snapshot-restore',t('snapshot.restoreInterrupted'),0);}
     finally{setBusy(false);}
   }
 
