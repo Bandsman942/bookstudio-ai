@@ -18,6 +18,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const preferenceActions=usePreferenceActions();
  const {notify}=useToast();
  const previousSaveState=useRef<SaveState>('saved');
+ const hadSaveIssue=useRef(false);
  const currentTRef=useRef(t);currentTRef.current=t;
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
@@ -33,6 +34,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    const previous=previousSaveState.current;previousSaveState.current=state;
    if(!canEdit||state===previous)return;
    if(state==='conflict'||state==='offline'||state==='error'){
+     hadSaveIssue.current=true;
      const detail=errorDetail||(
        locale==='fr'?'Les modifications du chapitre « '+chapterTitle+' » ne sont pas encore enregistrées sur le serveur.':
          'Changes to “'+chapterTitle+'” have not yet been saved on the server.');
@@ -42,7 +44,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
          (state==='conflict'?'Chapter revision conflict':
          state==='offline'?'Chapter is offline':'Chapter save needs attention'),
        detail,key:'editor-state|'+chapterId+'|'+state,durationMs:state==='offline'?9500:0});
-   }else if(state==='saved'&&['conflict','offline','error'].includes(previous)){
+   }else if(state==='saved'&&hadSaveIssue.current){
+     hadSaveIssue.current=false;
      notify({tone:'success',title:locale==='fr'?'Enregistrement du chapitre rétabli':'Chapter save recovered',
        detail:locale==='fr'?'« '+chapterTitle+' » est maintenant enregistré à la révision '+revisionRef.current+'.':
          '“'+chapterTitle+'” is now saved at revision '+revisionRef.current+'.',

@@ -28,16 +28,18 @@ const iconName:Record<ToastTone,'check'|'shield'|'warning'|'info'>={
 export function ToastProvider({children}:{children:ReactNode}){
   const {locale}=useAppPreferences();
   const [items,setItems]=useState<ToastItem[]>([]);
+  const itemsRef=useRef<ToastItem[]>([]);
   const seq=useRef(0);
   const timers=useRef(new Map<number,ReturnType<typeof setTimeout>>());
   const dismiss=useCallback((id:number)=>{
     const timer=timers.current.get(id);
     if(timer){clearTimeout(timer);timers.current.delete(id);}
-    setItems(current=>current.filter(t=>t.id!==id));
+    const next=itemsRef.current.filter(item=>item.id!==id);
+    itemsRef.current=next;setItems(next);
   },[]);
   const clear=useCallback(()=>{
     for(const timer of timers.current.values())clearTimeout(timer);
-    timers.current.clear();setItems([]);
+    timers.current.clear();itemsRef.current=[];setItems([]);
   },[]);
   useEffect(()=>()=>{for(const timer of timers.current.values())clearTimeout(timer);timers.current.clear();},[]);
   const notify=useCallback((request:ToastRequest)=>{
@@ -48,22 +50,18 @@ export function ToastProvider({children}:{children:ReactNode}){
     const id=++seq.current;
     const key=request.key??request.tone+'|'+title+'|'+detail;
     const tone=request.tone;
-    setItems(current=>{
-      const prior=current.find(item=>item.key===key);
-      if(prior){
-        const old=timers.current.get(prior.id);
-        if(old){clearTimeout(old);timers.current.delete(prior.id);}
+    // Use a ref as the synchronous source of truth for rapid events, avoiding
+    // side effects inside React state updaters (which StrictMode may replay).
+    const previous=itemsRef.current;
+    const next=[...previous.filter(item=>item.key!==key),
+      {...request,id,title,detail,key}].slice(-MAX_VISIBLE);
+    for(const item of previous){
+      if(!next.some(visible=>visible.id===item.id)){
+        const timer=timers.current.get(item.id);
+        if(timer){clearTimeout(timer);timers.current.delete(item.id);}
       }
-      const pending=current.filter(item=>item.key!==key);
-      const next=[...pending,{...request,id,title,detail,key}].slice(-MAX_VISIBLE);
-      for(const item of current){
-        if(!next.some(nextItem=>nextItem.id===item.id)){
-          const timer=timers.current.get(item.id);
-          if(timer){clearTimeout(timer);timers.current.delete(item.id);}
-        }
-      }
-      return next;
-    });
+    }
+    itemsRef.current=next;setItems(next);
     const ms=request.durationMs===undefined?defaultDuration[tone]:
       Math.max(0,Math.min(30000,request.durationMs));
     if(ms>0)timers.current.set(id,setTimeout(()=>dismiss(id),ms));

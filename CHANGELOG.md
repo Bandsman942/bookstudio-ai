@@ -7,11 +7,11 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 ## [0.16.0] — alpha en validation (NON DÉPLOYÉE)
 ### Correction P0 PDF — 13 chapitres (#115)
 - La version 0.15.1 gérait les lettres françaises, mais pas certains symboles présents dans les manuscrits. Le snapshot de 13 chapitres contient notamment U+2192 (flèche droite), absent du test initial.
-- Police Noto Sans Symbols 2 (licence OFL) embarquée et figée, fallback FontKit et tests couvrant les codes Unicode observés sans enregistrer le texte privé.
+- Polices Noto Sans Symbols 2 et Noto Sans Symbols classique (licence OFL) embarquées et figées, fallback FontKit et tests couvrant les codes Unicode observés sans enregistrer le texte privé.
 - Si un glyphe demeure absent, réponse contrôlée mentionnant uniquement son code Unicode et son numéro de chapitre. Pas de contenu du manuscrit dans les erreurs, ni de PDF tronqué.
 ### UI/UX — Toasts globaux (#116)
 - ToastProvider global clair/sombre, FR/EN, types succès/échec/avertissement/information, déduplication, limite 3, fermeture clavier, aria-live et réduction des animations.
-- Messages contextualisés pour export, versions, livres, chapitres, transferts Supabase, imports DOCX, commentaires, authentification et alertes d’autosauvegarde.
+- Messages contextualisés pour export, versions, recherche, livres, chapitres, transferts Supabase, imports DOCX, commentaires, authentification et alertes d’autosauvegarde.
 - Aucune notification répétée à chaque frappe ; les erreurs de formulaire et les avertissements importants restent également visibles dans la page.
 ### Gouvernance
 - Tests PDF 13 chapitres et UI globale, CI complète, recette E2E propriétaire v0.16.0-alpha BON avant fusion.
