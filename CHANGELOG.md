@@ -10,6 +10,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Invocation du binaire ClamAV local à chemin absolu, sans shell ni sortie brute dans les logs ; identité du moteur, fraîcheur du fichier de signatures quotidien (48 h), délai maximal et traitement explicite des erreurs. Les archives chiffrées ou dépassant les limites d'inspection déclenchent une alerte plutôt qu'un faux succès.
 - Le fichier temporaire est supprimé après verdict. Réponses limitées au statut, code, empreinte, taille, version du scanner et date ; aucun texte ou chemin manuscrit.
 - Tests contractuels hors ligne et recette E2E opt-in avec moteur ClamAV **réel** et fichier EICAR dans un bac à sable ; CI simulée ne vaut pas attestation de sécurité réelle.
+- Correction du parcours HTTP E2E : la version attendue provient désormais du `release.json` de la branche testée, sans constante obsolète après chaque montée de version.
 - **Non livré :** worker déployé, accès Supabase, queue Neon, quarantaine physique, preuve de backup/restauration, signature de verdict et activation du mode strict. Production actuelle reste en v0.16.0-alpha et `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false`.
 
 ## [0.16.0] — 2026-11-04 (production alpha privée)
