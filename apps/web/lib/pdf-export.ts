@@ -1,8 +1,8 @@
 import PDFDocument from 'pdfkit';
 import {assertValidDocument,safeExternalHref} from '@bookstudio/domain';
 import type {ExportChapter} from './docx-export';
-import {registerUnicodeFonts,unicodeRuns,UnsupportedPdfGlyph,type FontStyle} from './pdf-unicode-fonts';
-export {UnsupportedPdfGlyph} from './pdf-unicode-fonts';
+import {registerUnicodeFonts,unicodeRuns,UnsupportedPdfGlyph,type FontStyle} from './pdf-unicode-fonts.ts';
+export {UnsupportedPdfGlyph} from './pdf-unicode-fonts.ts';
 
 type Node = {type?:string;text?:string;attrs?:{level?:number};
   marks?:Array<{type?:string;attrs?:{href?:string}}> ;content?:Node[]};
