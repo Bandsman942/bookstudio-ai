@@ -53,7 +53,10 @@ export async function GET(req:Request,{params}:Ctx) {
       }
     });
   }catch(error){
-    if(error instanceof UnsupportedPdfGlyph)return errorResponse('EXPORT_UNSUPPORTED_GLYPHS',422);
+    if(error instanceof UnsupportedPdfGlyph)return errorResponse('EXPORT_UNSUPPORTED_GLYPHS',422,{
+      // No manuscript excerpts/titles: only the Unicode point(s) and position.
+      codepoints:error.codepoints.slice(0,80),chapterNumber:error.chapterNumber??null
+    });
     if(error instanceof Error && error.message==='EXPORT_TOO_LARGE')return errorResponse('EXPORT_TOO_LARGE',413);
     return errorResponse('EXPORT_FAILED',503);
   }

@@ -103,8 +103,13 @@ export async function renderReadingPdf(bookTitle:string,chapters:ExportChapter[]
       const chapter=chapters[index];
       assertValidDocument(chapter.content);
       if(index>0)doc.addPage();
-      richLine(doc,{type:'text',text:chapter.title},{font:'bold',size:18,color:'#142C39',gap:16},fontCache);
-      for(const item of ((chapter.content as Node).content??[]))writeBlocks(doc,item,fontCache);
+      try{
+        richLine(doc,{type:'text',text:chapter.title},{font:'bold',size:18,color:'#142C39',gap:16},fontCache);
+        for(const item of ((chapter.content as Node).content??[]))writeBlocks(doc,item,fontCache);
+      }catch(error){
+        if(error instanceof UnsupportedPdfGlyph)error.chapterNumber=index+1;
+        throw error;
+      }
     }
     doc.end();
     return await done;

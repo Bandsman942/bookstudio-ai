@@ -28,21 +28,24 @@ const fontFiles={
   'cyrillic-ext-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-cyrillic-ext-400-normal.woff'},
   'vietnamese-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-vietnamese-400-normal.woff'},
   'noto-latin-400':{pkg:'noto-sans',file:'noto-sans-latin-400-normal.woff'},
-  'noto-latin-ext-400':{pkg:'noto-sans',file:'noto-sans-latin-ext-400-normal.woff'}
+  'noto-latin-ext-400':{pkg:'noto-sans',file:'noto-sans-latin-ext-400-normal.woff'},
+  'noto-symbols-400':{pkg:'noto-sans-symbols-2',file:'noto-sans-symbols-2-symbols-400-normal.woff'},
+  'noto-math-400':{pkg:'noto-sans-symbols-2',file:'noto-sans-symbols-2-math-400-normal.woff'}
 } as const;
 type FontName=keyof typeof fontFiles;
 export type FontStyle='regular'|'bold'|'italic'|'boldItalic';
 export type UnicodeRun={font:FontName;text:string};
 
 const fallbacks:Record<FontStyle,FontName[]>={
-  regular:['latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400'],
-  bold:['latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400'],
-  italic:['latin-400i','latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400'],
-  boldItalic:['latin-700i','latin-400i','latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400']
+  regular:['latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
+  bold:['latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
+  italic:['latin-400i','latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
+  boldItalic:['latin-700i','latin-400i','latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400']
 };
 
 export class UnsupportedPdfGlyph extends Error{
   readonly codepoints:string;
+  chapterNumber?:number;
   constructor(grapheme:string){super('EXPORT_UNSUPPORTED_GLYPHS');this.name='UnsupportedPdfGlyph';
     // Numeric codepoints only: do not log or expose manuscript excerpts.
     this.codepoints=[...grapheme].map(c=>'U+'+c.codePointAt(0)!.toString(16).toUpperCase()).join(',');
