@@ -1,22 +1,34 @@
-import {createRequire} from 'node:module';
+import {existsSync} from 'node:fs';
+import {join} from 'node:path';
 import type PDFKit from 'pdfkit';
 
-const nodeRequire=createRequire(import.meta.url);
+/** Resolve the installed font files as data, not as importable JS modules.
+ * Next/Turbopack cannot bundle .woff as a server module. Vercel includes these
+ * files via outputFileTracingIncludes in next.config.ts.
+ */
+function locateFont(packageName:string,fileName:string):string{
+  const roots=[process.cwd(),join(process.cwd(),'apps/web'),join(process.cwd(),'../../apps/web')];
+  for(const root of roots){
+    const candidate=join(root,'node_modules','@fontsource',packageName,'files',fileName);
+    if(existsSync(candidate))return candidate;
+  }
+  throw new Error('EXPORT_FONT_UNAVAILABLE');
+}
 
 /** Bundled OFL IBM Plex Sans font files: no runtime network font fetching. */
 const fontFiles={
-  'latin-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff'),
-  'latin-700':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-700-normal.woff'),
-  'latin-400i':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-italic.woff'),
-  'latin-700i':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-700-italic.woff'),
-  'latin-ext-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-ext-400-normal.woff'),
-  'latin-ext-700':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-ext-700-normal.woff'),
-  'greek-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-greek-400-normal.woff'),
-  'cyrillic-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-cyrillic-400-normal.woff'),
-  'cyrillic-ext-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-cyrillic-ext-400-normal.woff'),
-  'vietnamese-400':nodeRequire.resolve('@fontsource/ibm-plex-sans/files/ibm-plex-sans-vietnamese-400-normal.woff'),
-  'noto-latin-400':nodeRequire.resolve('@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff'),
-  'noto-latin-ext-400':nodeRequire.resolve('@fontsource/noto-sans/files/noto-sans-latin-ext-400-normal.woff')
+  'latin-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-400-normal.woff'},
+  'latin-700':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-700-normal.woff'},
+  'latin-400i':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-400-italic.woff'},
+  'latin-700i':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-700-italic.woff'},
+  'latin-ext-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-ext-400-normal.woff'},
+  'latin-ext-700':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-latin-ext-700-normal.woff'},
+  'greek-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-greek-400-normal.woff'},
+  'cyrillic-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-cyrillic-400-normal.woff'},
+  'cyrillic-ext-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-cyrillic-ext-400-normal.woff'},
+  'vietnamese-400':{pkg:'ibm-plex-sans',file:'ibm-plex-sans-vietnamese-400-normal.woff'},
+  'noto-latin-400':{pkg:'noto-sans',file:'noto-sans-latin-400-normal.woff'},
+  'noto-latin-ext-400':{pkg:'noto-sans',file:'noto-sans-latin-ext-400-normal.woff'}
 } as const;
 type FontName=keyof typeof fontFiles;
 export type FontStyle='regular'|'bold'|'italic'|'boldItalic';
@@ -43,7 +55,8 @@ const segmenter=new Intl.Segmenter('und',{granularity:'grapheme'});
 const allowedControls=new Set([9,10,13]);
 
 export function registerUnicodeFonts(doc:PDFKit.PDFDocument){
-  for(const [name,path] of Object.entries(fontFiles))doc.registerFont(name,path);
+  for(const [name,source] of Object.entries(fontFiles))
+    doc.registerFont(name,locateFont(source.pkg,source.file));
 }
 
 function canRender(doc:PDFKit.PDFDocument,fontName:FontName,grapheme:string){
