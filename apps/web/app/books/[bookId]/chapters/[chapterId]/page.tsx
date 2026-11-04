@@ -13,5 +13,5 @@ export default async function ChapterPage({params}:{params:Promise<{bookId:strin
   const canEdit=canWriteBook(book);
   return <StudioEditor key={chapterId} bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
     revision={chapter.revisionSeq} initialContent={revision.content as Record<string,unknown>}
-    chapters={chapters.map(c=>({id:c.id,title:c.title}))} canEdit={canEdit}/>;
+    chapters={chapters.map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} canEdit={canEdit}/>;
 }

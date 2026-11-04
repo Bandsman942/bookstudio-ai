@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import BookOverview from '@/components/BookOverview';
 import AppIcon from '@/components/AppIcon';
+import ChapterActionsMenu from '@/components/ChapterActionsMenu';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -25,8 +26,12 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
       <a className="nav-link" href="#book-structure"><AppIcon name="chapter"/><span>{t('book.structure')}</span></a>
       <a className="nav-link" href="#book-versions"><AppIcon name="history"/><span>{t('book.versions')}</span></a>
       <div className="nav-section">{t('editor.manuscript')}</div>
-      {chapters.map((c,i)=><Link className="nav-link" key={c.id} href={'/books/'+bookId+'/chapters/'+c.id}>
-        <AppIcon name="edit"/><span>{i+1}. {c.title}</span></Link>)}
+      <div className="nav-chapter-list">{chapters.map((c,i)=><div className="nav-chapter-row" key={c.id} data-context-surface>
+        <Link className="nav-link" href={'/books/'+bookId+'/chapters/'+c.id}>
+          <AppIcon name="edit"/><span>{i+1}. {c.title}</span></Link>
+        <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title}
+          revision={c.revisionSeq} updatedAt={c.updatedAt.toISOString()} editable={editable}/>
+      </div>)}</div>
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
     </aside>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">{t('common.library')}</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>

@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(p,'utf8');
+const ui=read('apps/web/components/StudioEditor.tsx');
+const page=read('apps/web/app/books/[bookId]/page.tsx');
+const actions=read('apps/web/components/ActionMenu.tsx');
+const chapter=read('apps/web/components/ChapterActionsMenu.tsx');
+const css=read('apps/web/app/styles.css');
+const schema=read('packages/database/prisma/schema.prisma');
+for(const text of ['chapter-navigation','studio-nav-toggle','studio-quick-overview','ChapterActionsMenu','ShortcutsHelp'])assert.ok(ui.includes(text),'missing manuscript UX '+text);
+for(const text of ['nav-chapter-list','ChapterActionsMenu'])assert.ok(page.includes(text));
+for(const text of ["createPortal","contextmenu","Shift","visibility:position"])assert.ok(actions.includes(text),'context menus '+text);
+for(const text of ["confirm:'DELETE'","chapter-delete","chapter-rename"])assert.ok(chapter.includes(text));
+for(const text of ['overflow-y:auto','studio-mobile-navigation-open','context-menu-portal','scrollbar-width:thin'])assert.ok(css.includes(text));
+assert.match(schema,/deletedAt DateTime\? @map\("deleted_at"\)/);
+console.log('BookStudio chapter navigation/UI contracts OK');

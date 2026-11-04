@@ -31,14 +31,14 @@ export async function PATCH(request:Request,{params}:Context){
       });
       if(!member)return {status:'NOT_FOUND'} as const;
       const fresh=await tx.chapter.findFirst({
-        where:{id:chapterId,manuscriptId},
+        where:{id:chapterId,manuscriptId,deletedAt:null},
         select:{title:true,updatedAt:true,revisionSeq:true}
       });
       if(!fresh)return {status:'NOT_FOUND'} as const;
       if(fresh.updatedAt.getTime()!==expected.getTime())return {status:'CONFLICT'} as const;
       if(fresh.title===title)return {status:'UNCHANGED',chapter:{title,updatedAt:fresh.updatedAt,revision:fresh.revisionSeq}} as const;
       const updated=await tx.chapter.updateMany({
-        where:{id:chapterId,manuscriptId,updatedAt:expected},
+        where:{id:chapterId,manuscriptId,deletedAt:null,updatedAt:expected},
         data:{title}
       });
       if(updated.count!==1)throw new Error('CHAPTER_CONFLICT');

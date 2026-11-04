@@ -1,12 +1,14 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import SnapshotsPanel from './SnapshotsPanel';
 import BookSourceFiles from './BookSourceFiles';
 import BookActionsMenu from './BookActionsMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
+import ChapterTrash from './ChapterTrash';
+import ShortcutsHelp from './ShortcutsHelp';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
@@ -24,6 +26,18 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
         [error,setError]=useState(''),[busy,setBusy]=useState(false);
   const router=useRouter();
+  useEffect(()=>{
+    const key=(event:KeyboardEvent)=>{
+      const target=event.target instanceof Element?event.target:null;
+      const typing=!!target?.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]');
+      if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='n'&&editable){
+        event.preventDefault();setShowForm(true);
+      }else if(event.key==='?'&&!typing&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
+        event.preventDefault();document.dispatchEvent(new Event('bookstudio-shortcuts-open'));
+      }
+    };
+    document.addEventListener('keydown',key);return ()=>document.removeEventListener('keydown',key);
+  },[editable]);
   async function add(event:React.FormEvent){
     event.preventDefault();setBusy(true);setError('');
     try{
@@ -67,9 +81,11 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
         <AppIcon name="chevronRight" className="chapter-arrow"/>
       </Link>
       <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}
-        updatedAt={chapter.updatedAt} editable={editable}/>
+        updatedAt={chapter.updatedAt} revision={chapter.revision} editable={editable}/>
     </div>)}</div>
+    {editable&&<ChapterTrash bookId={bookId}/>}
     <SnapshotsPanel bookId={bookId} editable={editable}/>
+    <ShortcutsHelp/>
     {showForm&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)setShowForm(false);}}>
       <form className="modal" onSubmit={add} role="dialog" aria-modal="true" aria-label={t('book.newChapter')}>
         <button className="close" type="button" aria-label={t('common.close')} onClick={()=>setShowForm(false)}>×</button>
