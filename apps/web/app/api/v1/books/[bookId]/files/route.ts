@@ -32,13 +32,11 @@ export async function GET(_req:Request,{params}:Ctx){
     const files=await listFiles(bookId);
     const records=await prisma.sourceSecurityRecord.findMany({
       where:{bookId,storageName:{in:files.map(f=>f.name)}},
-      select:{storageName:true,status:true}
+      select:{storageName:true,status:true,sha256:true,scannerVersion:true,scannedAt:true}
     });
-    const statuses=new Map(records.map(r=>[r.storageName,r.status]));
+    const statuses=new Map(records.map(r=>[r.storageName,r]));
     return Response.json({
-      files:files.map(f=>({...f,scanStatus:publicScanStatus(
-        statuses.has(f.name)?{status:statuses.get(f.name)!}:undefined
-      )})),
+      files:files.map(f=>({...f,scanStatus:publicScanStatus(statuses.get(f.name))})),
       maxBytes:MAX_SOURCE_BYTES,
       scanRequired:scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES)
     },{headers:{'Cache-Control':'private, no-store'}});

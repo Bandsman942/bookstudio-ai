@@ -23,6 +23,7 @@ export function canUseSource(required:boolean,record:ScanEvidence):boolean{
   return Number.isFinite(date.getTime())&&date.getTime()<=Date.now();
 }
 export function publicScanStatus(record:ScanEvidence):ScanStatus{
-  // Storage confirmation never upgrades a source to SCANNED_CLEAN.
+  // Avoid displaying a clean verdict without verifiable scanner identity/checksum.
+  if(record?.status==='SCANNED_CLEAN'&&!canUseSource(true,record))return 'SCAN_UNAVAILABLE';
   return record?.status??'UNSCANNED';
 }

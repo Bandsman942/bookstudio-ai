@@ -30,3 +30,9 @@ test('a recorded scanner identity and checksum are mandatory in strict mode',()=
  assert.equal(canUseSource(true,{...clean,scannedAt:'invalid'}),false);
  assert.equal(canUseSource(true,{...clean,scannedAt:new Date(Date.now()+86400000)}),false);
 });
+
+test('do not present SCANNED_CLEAN if attestation evidence is missing',()=>{
+ assert.equal(publicScanStatus({status:'SCANNED_CLEAN'}),'SCAN_UNAVAILABLE');
+ assert.equal(publicScanStatus({status:'SCANNED_CLEAN',sha256:'0'.repeat(64),
+  scannerVersion:'trusted-test',scannedAt:new Date('2025-01-01T00:00:00Z')}),'SCANNED_CLEAN');
+});
