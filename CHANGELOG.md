@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.19.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-UX — gestion et navigation des chapitres (#127)
+- Suppression **réversible** de chapitre, restauration depuis vue d’ensemble, RBAC OWNER/EDITOR, origine CSRF, audit et jetons de concurrence ; historique des révisions et commentaires intact.
+- Exclusion de la liste active et de la recherche, snapshots anciens conservés et restauration de versions refuse les chapitres retirés sans rétablissement préalable.
+- Menus ⋯ pour chaque chapitre dans les deux navigations et dans la vue d’ensemble, clic droit et Shift+F10 sur les objets éditoriaux, menu rendu hors zones scrollables avec placement dans le viewport.
+- Navigation Manuscrit scrollable et subtile, tiroir mobile des chapitres, accès Vue d’ensemble en une touche, actions tactiles et raccourcis clavier avec aide FR/EN.
+- Migration Prisma additive `20261104164000_chapter_soft_delete` ; nouvelles API `DELETE chapter`, `POST restore`, `GET trash` ; tests ACL / CSRF / conflit et conservation.
+
+
 ## [0.18.0] — alpha candidate (NON DÉPLOYÉE)
 ### BS-010a3 — source backups isolés (#124, #104)
 - Versions binaires append-only par UUID avec SHA-256, manifeste HMAC signé et restauration vérifiée vers un nouveau chemin privé exclusivement.
