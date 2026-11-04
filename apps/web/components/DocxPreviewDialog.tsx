@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import AppIcon from './AppIcon';
 import DocxCompleteImportPanel from './DocxCompleteImportPanel';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
 import {previewDocx,type DocxPreview,DocxPreviewError} from '@/lib/docx-preview';
 
 const MAX_BYTES=20*1024*1024;
@@ -64,6 +65,7 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
  bookId:string;name:string;onClose:()=>void;editable:boolean
 }){
  const {locale}=useAppPreferences(),t=copy[locale];
+ const {notify}=useToast();
  const [stage,setStage]=useState<'reading'|'analysing'>('reading');
  const [preview,setPreview]=useState<DocxPreview|null>(null),[error,setError]=useState('');
  const [page,setPage]=useState(0),[importBusy,setImportBusy]=useState(false);
@@ -105,14 +107,19 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
        if(!controller.signal.aborted){setPreview(report);setPage(0);}
      }catch(e){
        if(controller.signal.aborted)return;
-       setError(e instanceof DocxPreviewError?
+       const msg=e instanceof DocxPreviewError?
          ['DOCX_CORRUPTED','DOCX_INVALID_XML'].includes(e.code)?t.corrupted:t.invalid:
-         e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:t.network);
+         e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:t.network;
+       setError(msg);
+       notify({tone:e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?'warning':'error',
+         title:locale==='fr'?'Prévisualisation DOCX impossible':'DOCX preview failed',
+         detail:(locale==='fr'?'Pour « ':'For “')+name.slice(37)+(locale==='fr'?' » : ':'”: ')+msg,
+         key:'docx-preview|'+bookId+'|'+name+'|'+msg});
      }
    }
    void inspect();
    return ()=>controller.abort();
- },[bookId,name,t.corrupted,t.invalid,t.network]);
+ },[bookId,name,t.corrupted,t.invalid,t.network,locale,notify]);
  const pages=Math.max(1,Math.ceil((preview?.blocks.length??0)/PREVIEW_PAGE_SIZE));
  const visible=preview?.blocks.slice(page*PREVIEW_PAGE_SIZE,(page+1)*PREVIEW_PAGE_SIZE)??[];
  function jump(to:number){setPage(Math.max(0,Math.min(pages-1,to)));articleRef.current?.scrollTo({top:0});}

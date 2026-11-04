@@ -3,6 +3,8 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 import {planCompleteDocxImport,type ImportPlan,DocxPlanError} from '@/lib/docx-full-plan';
 import type {DocxPreview} from '@/lib/docx-preview';
 
@@ -63,6 +65,7 @@ export default function DocxCompleteImportPanel({bookId,name,preview,onBusyChang
  bookId:string;name:string;preview:DocxPreview;onBusyChange?:(busy:boolean)=>void
 }){
  const {locale}=useAppPreferences(),t=labels[locale],router=useRouter();
+ const {notify}=useToast();
  const [mode,setMode]=useState<Mode>('sections');
  const [singleTitle,setSingleTitle]=useState(name.slice(37).replace(/\.docx$/i,'').replace(/[-_]+/g,' ').slice(0,180)||'Manuscrit');
  const [titles,setTitles]=useState<string[]>([]);
@@ -113,10 +116,12 @@ export default function DocxCompleteImportPanel({bookId,name,preview,onBusyChang
        const data=await response.json().catch(()=>({})) as {chapter?:{id:string};chapters?:{id:string}[];error?:string};
        const saved=single?(data.chapter?[data.chapter]:[]):data.chapters??[];
        if(!response.ok||saved.length!==chapters.length||!saved[0]?.id){
-         setError(data.error==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:
-           ['DOCX_OPERATION_CONFLICT','DOCX_BATCH_CONFLICT','DOCX_IMPORT_CONFLICT'].includes(data.error??'')?
-           t.conflict:['NOT_FOUND_OR_FORBIDDEN','DOCX_SOURCE_NOT_FOUND','DOCX_SOURCE_INVALID'].includes(data.error??'')?
-           t.forbidden:t.failed);
+         const msg=explainActionError({locale,operation:'docx-import',status:response.status,code:data.error});
+         setError(msg);
+         notify({tone:response.status===409?'warning':'error',title:locale==='fr'?
+           'Importation du lot '+(index+1)+'/'+plan.batches.length+' interrompue':
+           'Import batch '+(index+1)+'/'+plan.batches.length+' interrupted',
+           detail:msg+' '+fmt(t.progress,{done:cursor.current,chapters:startByBatch[index],total:plan.batches.length})});
          return;
        }
        if(!firstChapterId.current)firstChapterId.current=saved[0].id;
@@ -125,11 +130,16 @@ export default function DocxCompleteImportPanel({bookId,name,preview,onBusyChang
        setChapterCount(startByBatch[index]+saved.length);
      }
      setCompleted(true);
+     notify({tone:'success',title:locale==='fr'?'Manuscrit converti en chapitres':'Manuscript converted into chapters',
+       detail:locale==='fr'?count+' chapitres créés à partir de « '+name.slice(37)+' » en '+plan.batches.length+' lot(s). Le DOCX original reste conservé.':
+         count+' chapters created from “'+name.slice(37)+'” in '+plan.batches.length+' batch(es). The source DOCX is kept.'});
      if(firstChapterId.current){
        router.push('/books/'+bookId+'/chapters/'+firstChapterId.current);
        router.refresh();
      }
-   }catch{setError(t.failed);}
+   }catch{const msg=explainActionError({locale,operation:'docx-import',status:0});setError(msg);
+     notify({tone:'error',title:locale==='fr'?'Connexion perdue pendant la conversion':'Connection lost during import',
+       detail:msg+' '+fmt(t.progress,{done:cursor.current,chapters:chapterCount,total:plan.batches.length})});}
    finally{setBusy(false);onBusyChange?.(false);}
  }
  return <section className="docx-complete-import" aria-labelledby="docx-complete-title">

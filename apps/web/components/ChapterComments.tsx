@@ -3,6 +3,8 @@ import {useCallback,useEffect,useState} from 'react';
 import ActionMenu from './ActionMenu';
 import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 
 type CommentView={
  id:string;body:string;quote:string|null;status:'OPEN'|'RESOLVED';
@@ -15,6 +17,7 @@ type Props={
 };
 export default function ChapterComments({bookId,chapterId,revision,saveState,canEdit}:Props){
  const {t,locale}=useAppPreferences();
+ const {notify}=useToast();
  const [items,setItems]=useState<CommentView[]>([]);
  const [body,setBody]=useState(''),[loading,setLoading]=useState(false),
        [saving,setSaving]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState('');
@@ -31,7 +34,9 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
    let active=true;
    setLoading(true);
    refresh().catch(()=>{
-     if(active)setError(t('comments.loadError'));
+     if(active){setError(t('comments.loadError'));
+       notify({tone:'error',title:locale==='fr'?'Commentaires non chargés':'Comments not loaded',
+         detail:explainActionError({locale,operation:'comment-list',status:503}),key:'comments-list|'+chapterId});}
    }).finally(()=>{if(active)setLoading(false)});
    return ()=>{active=false};
  },[refresh]);
@@ -44,12 +49,17 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
        body:JSON.stringify({body:body.trim(),baseRevision:revision})});
      const payload=await res.json();
      if(!res.ok){
-       setError(res.status===409?t('comments.conflict'):(payload.error||t('comments.createError')));
-       return;
+       const msg=explainActionError({locale,operation:'comment-add',status:res.status,code:payload.error});
+       setError(msg);notify({tone:res.status===409?'warning':'error',
+         title:locale==='fr'?'Commentaire non enregistré':'Comment not saved',detail:msg});return;
      }
      setBody('');setSuccess(t('comments.created'));
+     notify({tone:'success',title:locale==='fr'?'Commentaire ajouté':'Comment added',
+       detail:locale==='fr'?'Votre remarque est liée à la révision '+revision+' de ce chapitre.':
+         'Your note is linked to chapter revision '+revision+'.'});
      await refresh();
-   }catch{setError(t('comments.networkError'));}
+   }catch{const msg=explainActionError({locale,operation:'comment-add',status:0});setError(msg);
+     notify({tone:'error',title:locale==='fr'?'Envoi du commentaire interrompu':'Comment submission interrupted',detail:msg});}
    finally{setSaving(false);}
  }
  async function change(id:string,status:'OPEN'|'RESOLVED'){
@@ -57,9 +67,15 @@ export default function ChapterComments({bookId,chapterId,revision,saveState,can
    setSaving(true);setError('');setSuccess('');
    try{
      const res=await fetch(endpoint+'/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
-     if(!res.ok){setError(t('comments.updateError'));return;}
+     if(!res.ok){const msg=explainActionError({locale,operation:'comment-change',status:res.status});
+       setError(msg);notify({tone:'error',title:locale==='fr'?'Statut du commentaire inchangé':'Comment status unchanged',detail:msg});return;}
      await refresh();
-   }catch{setError(t('comments.retry'));}
+     notify({tone:'success',title:locale==='fr'?(status==='RESOLVED'?'Commentaire résolu':'Commentaire rouvert'):
+       (status==='RESOLVED'?'Comment resolved':'Comment reopened'),
+       detail:locale==='fr'?'Le statut du commentaire a été enregistré dans ce chapitre.':
+         'The comment status was updated in this chapter.'});
+   }catch{const msg=explainActionError({locale,operation:'comment-change',status:0});setError(msg);
+     notify({tone:'error',title:locale==='fr'?'Mise à jour du commentaire interrompue':'Comment update interrupted',detail:msg});}
    finally{setSaving(false);}
  }
 

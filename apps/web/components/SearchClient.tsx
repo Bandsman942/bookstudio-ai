@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
 import AppIcon from './AppIcon';
 
 type Hit = {
@@ -9,7 +10,8 @@ type Hit = {
   chapterTitle:string; revision:number; snippet:string; updatedAt:string;
 };
 export default function SearchClient() {
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [query,setQuery]=useState('');
   const [hits,setHits]=useState<Hit[]>([]);
   const [searched,setSearched]=useState(false);
@@ -20,14 +22,26 @@ export default function SearchClient() {
   async function search(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q=query.trim();
-    if(q.length<2||q.length>80){setError(t('search.invalidLength'));return;}
+    if(q.length<2||q.length>80){const msg=t('search.invalidLength');setError(msg);
+      notify({tone:'warning',title:locale==='fr'?'Recherche non lancée':'Search not started',detail:msg});return;}
     setBusy(true);setError('');
     try {
       const response=await fetch('/api/v1/search?q='+encodeURIComponent(q),{cache:'no-store'});
       const body=await response.json();
-      if(!response.ok){setError(body.error==='SEARCH_QUERY_INVALID'?t('search.invalidQuery'):t('search.unavailable'));return;}
+      if(!response.ok){
+        const msg=body.error==='SEARCH_QUERY_INVALID'?t('search.invalidQuery'):
+          response.status===401?(locale==='fr'?'Reconnectez-vous pour rechercher dans vos manuscrits.':
+            'Sign in again to search your manuscripts.'):t('search.unavailable');
+        setError(msg);
+        notify({tone:'error',title:locale==='fr'?'Recherche impossible':'Search unavailable',
+          detail:msg});return;
+      }
       setHits(body.hits);setLastQuery(q);setSearched(true);
-    } catch {setError(t('search.networkError'));}
+      notify({tone:'info',title:locale==='fr'?'Recherche terminée':'Search finished',
+        detail:locale==='fr'?'« '+q+' » : '+body.hits.length+' résultat(s) dans vos manuscrits.':
+          '“'+q+'”: '+body.hits.length+' result(s) in your manuscripts.'});
+    } catch {const msg=t('search.networkError');setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Recherche interrompue':'Search interrupted',detail:msg});}
     finally {setBusy(false);}
   }
 

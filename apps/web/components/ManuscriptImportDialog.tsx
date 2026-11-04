@@ -2,12 +2,14 @@
 import {useEffect,useRef,useState} from 'react';
 import AppIcon from './AppIcon';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
 import {MANUSCRIPT_ACCEPT,MANUSCRIPT_MAX_BYTES,uploadErrorCode,uploadSourceToBook,type UploadStage} from '@/lib/source-upload-client';
 
 type BookChoice={id:string;title:string};
 type Props={books:BookChoice[];onClose:()=>void;onCreateBook:()=>void;onUploaded:(bookId:string)=>void};
 export default function ManuscriptImportDialog({books,onClose,onCreateBook,onUploaded}:Props){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [bookId,setBookId]=useState(books[0]?.id??'');
   const [file,setFile]=useState<File|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),
         [stage,setStage]=useState<UploadStage|null>(null);
@@ -24,14 +26,20 @@ export default function ManuscriptImportDialog({books,onClose,onCreateBook,onUpl
     setBusy(true);setError('');
     try{
       await uploadSourceToBook(currentId,file,setStage);
+      notify({tone:'success',title:locale==='fr'?'Manuscrit transféré':'Manuscript uploaded',
+        detail:locale==='fr'?'« '+file.name+' » est enregistré dans l’ouvrage choisi. Vous pouvez maintenant l’ouvrir et le réviser.':
+          '“'+file.name+'” was saved to the selected book. You can now open and review it.'});
       onUploaded(currentId);
     }catch(e){
       const code=uploadErrorCode(e);
-      setError(code==='STORAGE_NOT_CONFIGURED'?t('import.notReady'):
+      const msg=code==='STORAGE_NOT_CONFIGURED'?t('import.notReady'):
         code==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t('import.invalid'):
         code==='SOURCE_SIZE_MISMATCH'||code==='SOURCE_TYPE_MISMATCH'?t('import.mismatch'):
         code==='NOT_FOUND_OR_FORBIDDEN'||code==='UNAUTHENTICATED'?t('import.forbidden'):
-        t('import.failed'));
+        t('import.failed');
+      setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Importation du manuscrit interrompue':'Manuscript upload interrupted',
+        detail:(file.name?file.name+' : ':'')+msg});
     }finally{setBusy(false);setStage(null);}
   }
   const stageLabel=stage==='authorizing'?t('import.authorizing'):

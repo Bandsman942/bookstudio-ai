@@ -2,8 +2,10 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
 export default function LoginForm(){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),
     [error,setError]=useState(''),[busy,setBusy]=useState(false);
   const router=useRouter();
@@ -15,12 +17,18 @@ export default function LoginForm(){
         body:JSON.stringify({email,password})
       });
       if(!response.ok){
-        setError(t(response.status===429?'login.tooMany':
-          response.status===503?'login.temporarily':'login.invalid'));
-        return;
+        const msg=t(response.status===429?'login.tooMany':
+          response.status===503?'login.temporarily':'login.invalid');
+        setError(msg);
+        notify({tone:response.status===429?'warning':'error',
+          title:locale==='fr'?'Connexion refusée':'Sign-in rejected',detail:msg});return;
       }
+      notify({tone:'success',title:locale==='fr'?'Connexion établie':'Signed in',
+        detail:locale==='fr'?'Votre bibliothèque privée BookStudio est accessible.':
+          'Your private BookStudio library is now available.'});
       router.push('/library');router.refresh();
-    }catch{setError(t('login.temporarily'));}
+    }catch{const msg=t('login.temporarily');setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Connexion interrompue':'Sign-in interrupted',detail:msg});}
     finally{setBusy(false);}
   }
   return <form className="form" onSubmit={submit}>

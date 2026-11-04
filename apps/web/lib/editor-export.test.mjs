@@ -63,3 +63,39 @@ test('PDF supports 13 French chapters with typographic spaces and Greek Unicode'
   const pageCount=(Buffer.from(pdf).toString('latin1').match(/\/Type \/Page\b/g)||[]).length;
   assert.ok(pageCount>=13,'each chapter must begin on a new page');
 });
+
+test('PDF exports 13 chapters with the real snapshot Unicode character inventory, including arrows',async()=>{
+ const unicodePoints=[233,8217,224,232,234,238,244,249,8212,226,8220,8221,231,192,251,339,8211,
+   239,171,187,246,8230,8594,215,176,181,201,202,235,8216];
+ // This is only a list of numeric code points: no text from the private manuscript.
+ const inventory=unicodePoints.map(cp=>String.fromCodePoint(cp)).join(' ');
+ const chapters=Array.from({length:13},(_,i)=>({
+   title:'Chapitre '+(i+1)+' — Démonstration →',
+   content:{type:'doc',content:[{type:'paragraph',content:[{type:'text',text:inventory+' → suite '+(i+1)}]}]}
+ }));
+ const result=await renderReadingPdf('Livre avec symboles →',chapters).catch(error=>{
+   throw new Error('Missing font glyph '+String(error?.codepoints||'unknown'),{cause:error});
+ });
+ assert.equal(Buffer.from(result.subarray(0,5)).toString('ascii'),'%PDF-');
+ assert.ok((Buffer.from(result).toString('latin1').match(/\/Type \/Page\b/g)||[]).length>=13);
+});
+
+test('Noto bundled symbol subset fontkit coverage of U+2192 is discoverable',async()=>{
+ const {default:PDFDocument}=await import('pdfkit');
+ const {registerUnicodeFonts}=await import('./pdf-unicode-fonts.ts');
+ const doc=new PDFDocument({autoFirstPage:false});
+ registerUnicodeFonts(doc);
+ const faces=['noto-symbols-400','noto-math-400','noto-classic-symbols-400','latin-400'];
+ const checked=Object.fromEntries(faces.map(name=>{
+   doc.font(name);
+   const face=doc._font?.font;
+   return [name,{
+     advertised:Boolean(face?.hasGlyphForCodePoint?.(0x2192)),
+     glyphId:face?.glyphForCodePoint?.(0x2192)?.id??-1,
+     characterSet:Boolean(face?.characterSet?.includes?.(0x2192))
+   }];
+ }));
+ doc.destroy();
+ assert.ok(Object.values(checked).some(v=>v.advertised),
+   'Fontkit must find U+2192 in a bundled font subset: '+JSON.stringify(checked));
+});
