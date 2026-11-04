@@ -25,6 +25,7 @@ test('machine identity requires explicit flags, 2 distinct 32-byte secrets and c
 });
 test('valid HMAC and timestamp binds scan job, source generation, lease, nonce and bytes',()=>{
  const signed={...proof,signature:signTestAttestation(proof,key)};
+ assert.equal(signed.signature,'8772be58f3340a9a57e6ce552a2f88f472780c3b431b4d722d4e8c998d6253d3','Python/Node shared canonical HMAC vector');
  assert.deepEqual(verifyWorkerAttestation(signed,now,env),proof);
  for(const field of ['bookId','sourceGeneration','leaseToken','sha256','jobId','nonce','status']){
    const forged={...signed,[field]:field==='status'?'REJECTED':field==='sha256'?'55'.repeat(32):field==='leaseToken'?'66'.repeat(32):'d1f2ffae-9454-40bf-aeb6-743391110e02'};

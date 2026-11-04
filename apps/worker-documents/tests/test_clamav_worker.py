@@ -104,13 +104,14 @@ class ClamavWorkerTests(unittest.TestCase):
         with patch.object(worker.uuid, "uuid4",return_value="c664d053-ab09-4bea-94bb-93c811ee3552"),\
              patch.object(worker, "datetime") as stamp:
             stamp.now.return_value = datetime(2026, 11, 4, 17, 0, 0, tzinfo=timezone.utc)
-            p = worker.sign_attestation(self.ticket, ev, key)
+            p = worker.sign_attestation({**self.ticket, "declaredByteSize": 1024}, ev, key)
         wanted = dict(p)
         signature = wanted.pop("signature")
         calculated = hmac.new(key, json.dumps(wanted, sort_keys=True,
                               separators=(",", ":"),ensure_ascii=True).encode("ascii"),
                               hashlib.sha256).hexdigest()
         self.assertEqual(signature,calculated)
+        self.assertEqual(signature,"8772be58f3340a9a57e6ce552a2f88f472780c3b431b4d722d4e8c998d6253d3")
         self.assertEqual(set(p), {"bookId","byteSize","jobId","leaseToken","nonce","scannedAt",
                                  "scannerVersion","sha256","sourceGeneration","status","signature"})
         self.assertEqual(p["status"], "SCANNED_CLEAN")
