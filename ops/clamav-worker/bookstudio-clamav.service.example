@@ -1,0 +1,34 @@
+# Exemple uniquement : adapter les chemins, utilisateur et comptes de service.
+# Ne pas committer /etc/bookstudio/scan-worker.env.
+[Unit]
+Description=BookStudio AI — isolated antivirus queue worker
+After=network-online.target clamav-freshclam.service
+Wants=network-online.target
+[Service]
+Type=simple
+User=bookstudio-scan
+Group=bookstudio-scan
+WorkingDirectory=/opt/bookstudio-ai/apps/worker-documents
+EnvironmentFile=/etc/bookstudio/scan-worker.env
+ExecStart=/usr/bin/python3 /opt/bookstudio-ai/apps/worker-documents/clamav_worker.py --interval 15
+Restart=on-failure
+RestartSec=20
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=4G
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+# Le proxy/pare-feu sortant doit autoriser UNIQUEMENT BookStudio API et Supabase.
+# Ne pas ouvrir de port entrant à ClamAV ; clamscan est exécuté localement.
+[Install]
+WantedBy=multi-user.target

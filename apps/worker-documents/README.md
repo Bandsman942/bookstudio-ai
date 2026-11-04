@@ -72,3 +72,53 @@ python apps/worker-documents/source_backup.py restore --vault /private/vault --b
 ```
 
 Réplication indépendante, chiffrement au repos, preuve de restauration et contrôle ACL restent à réaliser avant tout usage sur les manuscrits utilisateurs. Voir `docs/qa/E2E-SOURCE-BACKUP-0.18.0.md`.
+
+## Worker ClamAV M2M connecté — candidat v0.21.0-alpha (#131, #126)
+
+`clamav_worker.py` est le composant **hôte Linux isolé** qui interroge exclusivement
+`POST /api/internal/source-scans/claim` et soumet une attestation à
+`POST /api/internal/source-scans/report`. Il ne possède **ni clé Supabase
+service-role**, **ni chaîne de connexion Neon**, **ni session utilisateur**.
+L'API émet un lien signé de 90 s uniquement pour la source et la génération
+réservées ; le worker refuse les domaines inattendus, redirections, liens non
+HTTPS, contenus tronqués ou >20 Mio, puis analyse les octets avec
+`source_guard.py` et retourne une preuve HMAC-SHA256. Le serveur fait les
+contrôles de bail, nonce, taille, HMAC, génération et provenance avant
+l'enregistrement en base.
+
+**Important :** un verdict ClamAV sans détection donne le statut
+`SCAN_PENDING_PROMOTION`, **pas `SCANNED_CLEAN`**. La promotion vers un
+bucket propre et immuable, la quarantaine physique, l'analyse historique et la
+restauration indépendante font encore partie de #126/#104.
+
+Variables d'hôte isolé, dans son gestionnaire de secrets (ne jamais committer
+les valeurs) :
+
+```text
+BOOKSTUDIO_SCAN_API_ORIGIN=https://bookstudio-ai.dtsc-platform.com
+BOOKSTUDIO_SCAN_STORAGE_ORIGIN=https://<identifiant-supabase>.supabase.co
+BOOKSTUDIO_SCAN_WORKER_TOKEN=<64 caractères hexadécimaux aléatoires>
+BOOKSTUDIO_SCAN_ATTESTATION_HMAC_KEY=<64 caractères hexadécimaux indépendants>
+```
+
+Les **deux dernières valeurs**, différentes, doivent être également présentes
+comme variables chiffrées **serveur Vercel uniquement**, jamais `NEXT_PUBLIC_`.
+Les deux flags `BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED` et
+`BOOKSTUDIO_SCAN_WORKER_ENABLED` restent **OFF en production** jusqu'à la
+preuve d'un vrai worker installé et des tests EICAR. Garder
+`BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false` jusqu'au bucket validé,
+à la stratégie d'objets immuables et à la migration des sources historiques.
+
+Lancement manuel sur hôte **isolé**, ClamAV + signatures à jour, droit d'écriture
+au répertoire temporaire privé :
+
+```sh
+python3 apps/worker-documents/clamav_worker.py --once
+python3 apps/worker-documents/clamav_worker.py --interval 15
+python3 -m unittest discover -s apps/worker-documents/tests -v
+```
+
+Exemple d'unité systemd durcie : `ops/clamav-worker/bookstudio-clamav.service.example`.
+Les archives hostiles et les fichiers EICAR doivent être testés en environnement
+isolé selon `docs/qa/E2E-ISOLATED-WORKER-0.21.0.md`. Aucun de ces tests
+n'est réalisé en production lors de cette PR.
