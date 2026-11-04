@@ -5,7 +5,7 @@
 ## Conditions de sécurité
 
 - Dossier source, répertoire de restauration et coffre `vault` : chemins absolus, propriétaire unique, droits 0700 ; fichiers 0600. Refuser les symlinks, les chemins externes et les fichiers >20 Mio.
-- Stockage du coffre **chiffré au repos**, sur un volume indépendant, avec réplication hors machine et rétention immuable au niveau du fournisseur. Le programme local seul ne fournit **ni chiffrement ni sauvegarde hors site**.
+- Utiliser un coffre **privé par source** (l’inventaire exige un seul couple livre/source), distinct des dossiers source/restauration. Stockage du coffre **chiffré au repos**, sur un volume indépendant, avec réplication hors machine et rétention immuable au niveau du fournisseur. Le programme local seul ne fournit **ni chiffrement ni sauvegarde hors site**.
 - Variable secrète `BOOKSTUDIO_BACKUP_HMAC_KEY` : 32 octets aléatoires hexadécimaux, configurée uniquement sur le worker isolé, dans un coffre de secrets, jamais dans Vercel, GitHub, les logs ou le navigateur.
 - Le livre est identifié par son UUID ; l'ID de source est l'UUID généré devant le nom de stockage. Ne jamais passer le nom ni le contenu dans les manifestes de sauvegarde.
 

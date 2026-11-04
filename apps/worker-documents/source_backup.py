@@ -200,6 +200,8 @@ def _folder(vault: Path, backup_id: str) -> Path:
 def create_backup(source: Path, vault: Path, book_id: str, source_id: str,
                   *, expected_size: int, expected_sha256: str, key: bytes) -> dict:
     _private_dir(vault)
+    if vault == source or vault in source.parents:
+        _fail("SOURCE_INVALID")
     book_id, source_id = _identity(book_id), _identity(source_id)
     if (type(expected_size) is not int or not 1 <= expected_size <= MAX_BYTES or
             not isinstance(expected_sha256, str) or not SHA_RE.fullmatch(expected_sha256)):
@@ -252,6 +254,8 @@ def restore_backup(vault: Path, backup_id: str, book_id: str, source_id: str,
     if not destination.is_absolute():
         _fail("DESTINATION_INVALID")
     _private_dir(destination.parent)
+    if vault == destination or vault in destination.parents:
+        _fail("DESTINATION_INVALID")
     if destination == destination.parent:
         _fail("DESTINATION_INVALID")
     # The destination must not exist; copying must never alter an existing source.

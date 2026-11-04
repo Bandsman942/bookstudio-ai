@@ -90,6 +90,12 @@ class SourceBackupTests(unittest.TestCase):
             backup.restore_backup(self.vault, row["backupId"], self.book_id,
                                   self.source_id, destination, confirm="RESTORE_NEW_COPY", key=self.key)
         self.assertEqual(destination.read_bytes(), b"original remains unchanged")
+        empty = self.root / "empty-existing"
+        empty.touch(mode=0o600)
+        with self.assertRaisesRegex(backup.BackupError, "DESTINATION_EXISTS_OR_INVALID"):
+            backup.restore_backup(self.vault, row["backupId"], self.book_id,
+                                  self.source_id, empty, confirm="RESTORE_NEW_COPY", key=self.key)
+        self.assertTrue(empty.exists(), "must not delete preexisting empty file")
 
     def test_rejects_symlinks_oversized_and_invalid_evidence(self):
         alias = self.root / "alias.bin"
