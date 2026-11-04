@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.16.0] — alpha en validation (NON DÉPLOYÉE)
+## [0.16.0] — 2026-11-04 (production alpha privée)
 ### Correction P0 PDF — 13 chapitres (#115)
 - La version 0.15.1 gérait les lettres françaises, mais pas certains symboles présents dans les manuscrits. Le snapshot de 13 chapitres contient notamment U+2192 (flèche droite), absent du test initial.
 - Polices Noto Sans Symbols 2 et Noto Sans Symbols classique (licence OFL) embarquées et figées, fallback FontKit et tests couvrant les codes Unicode observés sans enregistrer le texte privé.
@@ -16,6 +16,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 ### Gouvernance
 - Tests PDF 13 chapitres et UI globale, CI complète, recette E2E propriétaire v0.16.0-alpha BON avant fusion.
 - Aucun changement SQL. Antivirus/quarantaine et restauration binaire sécurisée restent non livrés (#104).
+
+### Livraison en production
+- Propriétaire : **E2E v0.16.0-alpha BON** avant la fusion de la PR #117. Commit de `main` : `96ec229b83ffe9b5dc7d3aefaee1a387d72d6871`. CI `test-and-build` SUCCESS pour le SHA de PR `0235f1178d0d6699446ad42303db7c0ecdaffc43` (run `41792553979`).
+- Snapshot Neon préalable : `snap-muddy-brook-bfk11jxs` ; aucune nouvelle migration SQL.
+- Vercel production READY le **2026-11-04T08:07:06.965Z** : `dpl_8NQ7xaAr9cqgqvaD3tMBb5BvnZcv` sur `bookstudio-ai.dtsc-platform.com`. `/api/health` HTTP 200, base `ready`, `/api/version` HTTP 200, version `0.16.0`, commit `96ec229b83ff`.
+- Le déclenchement automatique a d'abord été annulé par l'Ignored Build Step. Un déploiement Git ciblé sur le même SHA `main` a été réalisé, puis le verrou `exit 0` rétabli et les previews maintenues désactivées. Journal : `docs/deployments/2026-11-04T08-07-06Z_v0.16.0.md`.
+- Aucun tag Git annoté `v0.16.0` n'est attesté dans cette livraison ; le champ de version ne prouve pas l'existence d'un tag.
 
 
 ## [0.15.1] — 2026-11-04 (production alpha privée)
