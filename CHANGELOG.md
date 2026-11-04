@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.15.1] — alpha candidate, NON DÉPLOYÉE
+### P0 — PDF Unicode et export mobile contrôlé (#111)
+- Cause racine `EXPORT_UNSUPPORTED_GLYPHS` : les polices PDFKit intégrées Times/Helvetica/Courier limitaient tous les titres et les chapitres au codage WinAnsi ; **un seul caractère hors liste** entraînait l'échec de tout le PDF. La limite n'était pas liée aux 13 chapitres.
+- Remplacement du garde-fou WinAnsi par une sélection des glyphes disponibles dans des polices IBM Plex Sans OFL embarquées localement, épinglées `@fontsource/ibm-plex-sans@5.2.8`. Gestion des espaces typographiques et lettres/ponctuation françaises, ainsi que des alphabets complémentaires couverts ; les glyphes absents continuent à être refusés explicitement au lieu d'une substitution silencieuse.
+- Régression PDF sur **13 chapitres**, U+202F, accents/ponctuation française, caractères grecs ; tests DOCX/Markdown conservés. Le PDF est généré depuis le snapshot immuable, sans nouvelle limite arbitraire liée au nombre de chapitres.
+- Le menu export ne navigue plus vers une URL d'erreur JSON brute : la réponse est vérifiée puis le fichier est téléchargé via blob, avec messages FR/EN contextualisés et conseil d'utiliser DOCX si le caractère rare reste non couvert.
+- Aucune transmission à une IA ; polices embarquées hors réseau, jamais transmises via un appel externe. Titre et contenu préservés ; les styles éditoriaux pris en charge restent limités.
+- Ne pas fusionner ni déployer avant recette propriétaire E2E v0.15.1-alpha BON.
+
+
 ## [0.15.0] — alpha candidate, NON DÉPLOYÉE
 ### BS-010a1 — Traçabilité du contrôle de sécurité des manuscrits (#109)
 - Après confirmation réelle du stockage Supabase, chaque source reçoit un **statut de sécurité UNSCANNED** dans Neon. Ce statut signifie **non analysé par antivirus** ; confirmer le transfert ou reconnaître le type MIME n'est jamais une preuve d'absence de malware.

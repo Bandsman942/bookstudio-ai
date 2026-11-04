@@ -46,3 +46,18 @@ test('PDF reading export keeps a valid non-empty PDF with inline style and link'
   assert.ok(bytes.byteLength>600);
   assert.equal(Buffer.from(bytes.subarray(0,5)).toString('ascii'),'%PDF-');
 });
+
+test('PDF supports 13 French chapters with typographic spaces and Greek Unicode',async()=>{
+  const chapters=Array.from({length:13},(_,i)=>({
+    title:'Chapitre '+(i+1)+' — L’intelligence et la santé',
+    content:{type:'doc',content:[{type:'paragraph',content:[
+      {type:'text',text:'Depuis l’enfance, j’aime l’informatique\u202f: «\u00a0médecine\u00a0» et α, β, π.'},
+      {type:'text',text:' — analyse approfondie.',marks:[{type:'bold'}]}
+    ]}]}
+  }));
+  const pdf=await renderReadingPdf('L’avenir de la santé — réflexion française',chapters);
+  assert.equal(Buffer.from(pdf.subarray(0,5)).toString('ascii'),'%PDF-');
+  assert.ok(pdf.byteLength>5000,'all chapters render into a non-trivial PDF');
+  const pageCount=(Buffer.from(pdf).toString('latin1').match(/\/Type \/Page\b/g)||[]).length;
+  assert.ok(pageCount>=13,'each chapter must begin on a new page');
+});
