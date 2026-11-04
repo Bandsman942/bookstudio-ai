@@ -17,5 +17,45 @@ exigent une revue humaine et ne sont pas encore transformés fidèlement dans l'
 
 Recette : `docs/qa/E2E-DOCX-INSPECTION.md`.
 
+## Adaptateur antivirus hors Vercel — candidat v0.17.0-alpha (BS-010a2)
+
+`source_guard.py` est un **composant hors ligne pour worker isolé**, pas encore un
+service branché sur l'application. Il copie un fichier privé local en mode exclusif
+`0600`, contrôle les octets et SHA-256 (maximum 20 Mio), exécute **le vrai ClamAV**
+en chemin absolu `/usr/bin/clamscan`, puis vérifie que les octets analysés n'ont
+pas changé. Un binaire absent, une erreur, un dépassement de temps ou une
+altération échouent explicitement ; aucune sortie brute du moteur ni aucun
+contenu du manuscrit n'est renvoyé.
+
+ClamAV charge les signatures préparées par `freshclam`. Les options de scan
+signalent les archives chiffrées ou dépassant ses plafonds au lieu de les
+considérer silencieusement comme sûres. Un fichier positif n'est jamais supprimé
+de Supabase par cet adaptateur : il reste soumis au workflow de quarantaine.
+
+Exécution **uniquement dans un environnement isolé et privé** :
+
+```sh
+python apps/worker-documents/source_guard.py --source /private/input/manuscrit.docx \
+  --expected-size 12345 --expected-sha256 <sha256_64_caracteres>
+```
+
+Sorties JSON sans nom ni texte, avec `SCANNED_CLEAN`, `REJECTED` ou
+`SCAN_UNAVAILABLE` ; codes processus 0, 2, 3 respectivement. Le verdict de ce
+module **ne doit pas encore être écrit dans `source_security_records`** : la
+chaîne d'identité/autorisation du worker, l'intégrité de l'objet Supabase, les
+attestations signées, la quarantaine physique et la reprise sont à construire.
+La configuration production `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES` reste `false`.
+
+Tests du contrat :
+
+```sh
+python -m unittest discover -s apps/worker-documents/tests -v
+```
+
+Recette **réelle facultative**, après installation supervisée de ClamAV et de
+ses signatures dans un bac à sable (jamais Vercel) : voir
+`docs/qa/E2E-ISOLATED-SOURCE-GUARD-0.17.0.md`. Ni les mocks ni une CI verte
+ne constituent une preuve d'analyse antivirus réelle.
+
 ## Prévisualisation Web v0.11.0-alpha (BS-006a)
 Une inspection consultative complémentaire peut être effectuée **localement dans le navigateur** depuis des sources DOCX Supabase privées, avec quotas ZIP et avertissements. Cela ne rend pas le worker Python utilisable comme service de production. Les chapitres ne sont pas créés automatiquement ; aucun antivirus/restauration n'est déclaré disponible. Voir `docs/qa/E2E-DOCX-PRIVATE-PREVIEW.md`.

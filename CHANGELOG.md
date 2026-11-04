@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.17.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-010a2 — Adaptateur ClamAV isolé, première tranche de #104 (#120)
+- Nouveau worker Python hors Vercel qui réalise une copie privée exclusive du fichier source, calcule son empreinte SHA-256 sur les octets réellement analysés et contrôle taille, symlinks et mutation pendant la copie.
+- Invocation du binaire ClamAV local à chemin absolu, sans shell ni sortie brute dans les logs ; identité du moteur, fraîcheur du fichier de signatures quotidien (48 h), délai maximal et traitement explicite des erreurs. Les archives chiffrées ou dépassant les limites d'inspection déclenchent une alerte plutôt qu'un faux succès.
+- Le fichier temporaire est supprimé après verdict. Réponses limitées au statut, code, empreinte, taille, version du scanner et date ; aucun texte ou chemin manuscrit.
+- Tests contractuels hors ligne et recette E2E opt-in avec moteur ClamAV **réel** et fichier EICAR dans un bac à sable ; CI simulée ne vaut pas attestation de sécurité réelle.
+- **Non livré :** worker déployé, accès Supabase, queue Neon, quarantaine physique, preuve de backup/restauration, signature de verdict et activation du mode strict. Production actuelle reste en v0.16.0-alpha et `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false`.
+
 ## [0.16.0] — 2026-11-04 (production alpha privée)
 ### Correction P0 PDF — 13 chapitres (#115)
 - La version 0.15.1 gérait les lettres françaises, mais pas certains symboles présents dans les manuscrits. Le snapshot de 13 chapitres contient notamment U+2192 (flèche droite), absent du test initial.
