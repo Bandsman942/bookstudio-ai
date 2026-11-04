@@ -4,13 +4,16 @@ import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 
 type Props={
   bookId:string;chapterId:string;title:string;updatedAt:string;editable:boolean;
 };
 
 export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,editable}:Props){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [renaming,setRenaming]=useState(false);
   const [desired,setDesired]=useState(title);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -33,12 +36,17 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,edi
       });
       const result=await response.json().catch(()=>({}));
       if(!response.ok){
-        setError(response.status===409?t('chapter.renameConflict'):
-          result.error||t('chapter.renameError'));
-        return;
+        const msg=explainActionError({locale,operation:'chapter-create',status:response.status,code:result.error});
+        setError(msg);notify({tone:response.status===409?'warning':'error',
+          title:locale==='fr'?'Renommage du chapitre refusé':'Chapter rename refused',detail:msg});return;
       }
-      setRenaming(false);router.refresh();
-    }catch{setError(t('chapter.connectionFailure'));}
+      setRenaming(false);
+      notify({tone:'success',title:locale==='fr'?'Chapitre renommé':'Chapter renamed',
+        detail:locale==='fr'?'« '+title+' » porte désormais le titre « '+desired+' ».':
+          '“'+title+'” is now named “'+desired+'”.'});
+      router.refresh();
+    }catch{const msg=explainActionError({locale,operation:'chapter-create',status:0});setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Renommage interrompu':'Rename interrupted',detail:msg});}
     finally{setBusy(false);}
   }
   return <>

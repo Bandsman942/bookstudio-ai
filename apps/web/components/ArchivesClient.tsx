@@ -4,11 +4,14 @@ import Link from 'next/link';
 import {useState} from 'react';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
 
 type Archived={id:string;title:string;bookType:string;updatedAt:string;canRestore:boolean};
 export default function ArchivesClient({books,displayName}:{books:Archived[];displayName:string}){
  const {t,locale}=useAppPreferences();
+ const {notify}=useToast();
  const [busyId,setBusyId]=useState<string|null>(null),[error,setError]=useState('');
  const router=useRouter();
  async function restore(book:Archived){
@@ -19,11 +22,16 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
      body:JSON.stringify({action:'restore',expectedUpdatedAt:book.updatedAt})});
    const data=await result.json();
    if(!result.ok){
-     setError(result.status===409?t('archives.conflict'):data.error||t('archives.restoreError'));
-     return;
+     const msg=explainActionError({locale,operation:'snapshot-restore',status:result.status,code:data.error});
+     setError(msg);notify({tone:result.status===409?'warning':'error',
+       title:locale==='fr'?'Restauration du livre refusée':'Book restore refused',detail:msg});return;
    }
+   notify({tone:'success',title:locale==='fr'?'Livre sorti des archives':'Book restored from archives',
+     detail:locale==='fr'?'« '+book.title+' » est de nouveau disponible dans votre bibliothèque.':
+       '“'+book.title+'” is available in your library again.'});
    router.refresh();
-  }catch{setError(t('archives.networkError'));}
+  }catch{const msg=explainActionError({locale,operation:'snapshot-restore',status:0});setError(msg);
+    notify({tone:'error',title:locale==='fr'?'Restauration interrompue':'Restore interrupted',detail:msg});}
   finally{setBusyId(null);}
  }
  return <div className="workspace">

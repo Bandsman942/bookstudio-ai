@@ -4,6 +4,8 @@ import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 
 type Props={
   bookId:string;
@@ -16,7 +18,8 @@ type Props={
 
 /** Shared book commands. The same confirm dialogs serve book cards and detail. */
 export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpen=false,onArchive='library'}:Props){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [mode,setMode]=useState<'rename'|'archive'|null>(null);
   const [desired,setDesired]=useState(title);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -44,16 +47,23 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
       });
       const payload=await response.json().catch(()=>({}));
       if(!response.ok){
-        setError(response.status===409
-          ?t('book.renameConflict')
-          :payload.error||t('book.changeFailed'));
-        return;
+        const msg=explainActionError({locale,operation:action==='rename'?'book-create':'snapshot-restore',status:response.status,code:payload.error});
+        setError(msg);
+        notify({tone:response.status===409?'warning':'error',
+          title:locale==='fr'?(action==='rename'?'Renommage du livre refusé':'Archivage refusé'):
+            (action==='rename'?'Book rename refused':'Archive request refused'),
+          detail:msg});return;
       }
       setMode(null);
+      notify({tone:'success',title:locale==='fr'?(action==='rename'?'Livre renommé':'Livre archivé'):
+        (action==='rename'?'Book renamed':'Book archived'),
+        detail:locale==='fr'?'« '+title+' » : '+(action==='rename'?'le nouveau titre « '+desired+' » est enregistré.':'le livre reste disponible dans les archives.'):
+          '“'+title+'”: '+(action==='rename'?'renamed to “'+desired+'”.':'the book remains accessible in Archives.')});
       if(action==='archive'&&onArchive==='library')router.push('/library');
       router.refresh();
     }catch{
-      setError(t('book.connectionFailure'));
+      const msg=explainActionError({locale,operation:'book-create',status:0});setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Modification du livre interrompue':'Book update interrupted',detail:msg});
     }finally{setBusy(false);}
   }
 
