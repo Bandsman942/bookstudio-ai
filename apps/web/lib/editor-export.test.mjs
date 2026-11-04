@@ -79,3 +79,18 @@ test('PDF exports 13 chapters with the real snapshot Unicode character inventory
  assert.equal(Buffer.from(result.subarray(0,5)).toString('ascii'),'%PDF-');
  assert.ok((Buffer.from(result).toString('latin1').match(/\/Type \/Page\b/g)||[]).length>=13);
 });
+
+test('Noto bundled symbol subset fontkit coverage of U+2192 is discoverable',async()=>{
+ const {default:PDFDocument}=await import('pdfkit');
+ const {registerUnicodeFonts}=await import('./pdf-unicode-fonts.ts');
+ const doc=new PDFDocument({autoFirstPage:false});
+ registerUnicodeFonts(doc);
+ const faces=['noto-symbols-400','noto-math-400','latin-400'];
+ const checked=Object.fromEntries(faces.map(name=>{
+   doc.font(name);
+   return [name,Boolean(doc._font?.font?.hasGlyphForCodePoint?.(0x2192))];
+ }));
+ doc.destroy();
+ assert.ok(checked['noto-symbols-400']||checked['noto-math-400'],
+   'Fontkit must find U+2192 in a bundled font subset: '+JSON.stringify(checked));
+});
