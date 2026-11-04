@@ -3,6 +3,7 @@ import hmac
 import importlib.util
 import json
 import os
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from urllib.request import Request
 
 MODULE = Path(__file__).resolve().parents[1] / "clamav_worker.py"
+sys.path.insert(0, str(MODULE.parent))
 spec = importlib.util.spec_from_file_location("clamav_worker", MODULE)
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
