@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.14.0] — alpha candidate, NON DÉPLOYÉE
+## [0.14.0] — 2026-11-04 (production alpha privée)
 ### P0 — Importation DOCX complète, sans limite artificielle de 200 paragraphes (#105)
 - **Cause corrigée** : l'ancienne prévisualisation s'arrêtait silencieusement après 200 paragraphes ou 100 000 caractères, bloquant ensuite l'import. Le texte simple du fichier Supabase existant est désormais lu dans son intégralité **à l'intérieur des plafonds de sécurité ZIP/XML**, sans réupload ni découpe silencieuse.
 - Fenêtre de lecture paginée (**24 blocs visibles par page**) pour conserver la fluidité mobile ; le nombre de blocs et caractères indique **tout** le texte analysé, pas seulement la page courante.
@@ -17,6 +17,12 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Limites **de sécurité** maintenues (20 Mio fichier, 24 Mio XML principal, archive 64 Mio décompressés, ZIP suspect refusé) : un document qui les dépasse est refusé explicitement, jamais considéré comme prévisualisé intégralement.
 - Restent non pris en charge fidèlement : tableaux, images, notes et certains objets Word, antivirus et restauration des sources, PDF/OCR. Ne pas assimiler « texte principal entier » à une conversion Word totalement fidèle.
 
+
+### Livraison de production
+- **READY le 2026-11-04T00:13:16.049Z** : Vercel `dpl_Y4GVurcNMiz583se2h5WQ8DgAtiQ`, SHA `90e49efdb5eaeb4286519ab0c7e3ca8974d231c8`, PR #106 fusionnée et CI main SUCCESS, E2E propriétaire « v0.14.0-alpha BON ».
+- Snapshot Neon `snap-raspy-moon-bfr60kdq`, aucune migration SQL supplémentaire. Build Vercel `prisma migrate deploy → prisma generate → next build`, quatre migrations déjà appliquées.
+- `/api/health` et `/api/version` HTTP 200 ; DB ready, version 0.14.0, commit `90e49efdb5ea`. Ignored-build-step `exit 0` restauré, previews désactivées.
+- Journal `docs/deployments/2026-11-04T00-13-16Z_v0.14.0.md`. Tag Git annoté `v0.14.0` non créé.
 
 ## [0.13.0] — 2026-11-03 (production alpha privée)
 ### BS-006c — DOCX multi-chapitres sous contrôle humain (#100)
