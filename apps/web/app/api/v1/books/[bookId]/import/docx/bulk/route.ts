@@ -74,6 +74,7 @@ export async function POST(request:Request,{params}:Ctx){
     const record=await prisma.sourceSecurityRecord.findUnique({
       where:{bookId_storageName:{bookId,storageName:sourceName}}
     });
+    if(record?.status==='REJECTED')return errorResponse('SOURCE_REJECTED',423);
     if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
   }catch{return errorResponse('STORAGE_UNAVAILABLE',503);}
 
