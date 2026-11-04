@@ -64,20 +64,24 @@ export function unicodeRuns(doc:PDFKit.PDFDocument,text:string,style:FontStyle,
   cache:Map<string,FontName>):UnicodeRun[]{
   const runs:UnicodeRun[]=[];
   for(const {segment} of segmenter.segment(text)){
+    // Typography normalization: U+202F (French narrow no-break space) is
+    // commonly absent from font subsets. Keep a non-breaking space visually;
+    // never drop the separator or abort the entire book.
+    const shaped=segment==='\u202F'?'\u00A0':segment;
     let chosen:FontName|undefined;
-    if([...segment].every(c=>allowedControls.has(c.codePointAt(0)!))){
+    if([...shaped].every(c=>allowedControls.has(c.codePointAt(0)!))){
       chosen=runs.at(-1)?.font??fallbacks[style][0];
     }else{
-      const key=style+'|'+segment;
+      const key=style+'|'+shaped;
       chosen=cache.get(key);
       if(!chosen){
-        chosen=fallbacks[style].find(name=>canRender(doc,name,segment));
-        if(!chosen)throw new UnsupportedPdfGlyph(segment);
+        chosen=fallbacks[style].find(name=>canRender(doc,name,shaped));
+        if(!chosen)throw new UnsupportedPdfGlyph(shaped);
         cache.set(key,chosen);
       }
     }
-    if(runs.at(-1)?.font===chosen)runs[runs.length-1].text+=segment;
-    else runs.push({font:chosen!,text:segment});
+    if(runs.at(-1)?.font===chosen)runs[runs.length-1].text+=shaped;
+    else runs.push({font:chosen!,text:shaped});
   }
   return runs;
 }
