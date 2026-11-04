@@ -8,9 +8,31 @@ import {useAppPreferences} from './AppPreferences';
 
 type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string};
 type Chapter={id:string;revision:number};
+type ExportFormat='pdf'|'docx'|'md';
+const exportText={
+  fr:{
+    sending:'Préparation et téléchargement du fichier…',
+    error:'Exportation interrompue. Réessayez ou utilisez le format Word.',
+    unsupported:'Un caractère rare n’est pas couvert par les polices PDF disponibles. Le fichier Word conserve ce texte.',
+    large:'Ce livre dépasse la taille maximale de ce format.',
+    corrupt:'Cette version du livre est incomplète ou son intégrité ne peut pas être vérifiée.',
+    wrongFile:'Le serveur n’a pas retourné le document demandé.',
+    success:'Fichier préparé. Vérifiez le dossier Téléchargements.'
+  },
+  en:{
+    sending:'Preparing and downloading the file…',
+    error:'Export failed. Please retry or use Word format.',
+    unsupported:'A rare character is not covered by the available PDF fonts. The Word file preserves it.',
+    large:'This book exceeds the file size limit.',
+    corrupt:'This saved version is incomplete or its integrity cannot be verified.',
+    wrongFile:'The server returned an unexpected file.',
+    success:'Your file is ready. Check Downloads.'
+  }
+} as const;
 
 export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable:boolean}){
   const {t,locale}=useAppPreferences();
+  const e=exportText[locale];
   const [versions,setVersions]=useState<Version[]>([]);
   const [name,setName]=useState('');
   const [busy,setBusy]=useState(false);
@@ -48,6 +70,45 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
       await refresh();
     }catch{setError(t('snapshot.connectionError'));}
     finally{setBusy(false);}
+  }
+
+  async function download(version:Version,format:ExportFormat){
+    if(busy)return;
+    setBusy(true);setError('');setMessage(e.sending);
+    try{
+      const url='/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format='+format;
+      const response=await fetch(url,{credentials:'same-origin',cache:'no-store'});
+      if(!response.ok){
+        const payload=await response.json().catch(()=>({})) as {error?:string};
+        setError(payload.error==='EXPORT_UNSUPPORTED_GLYPHS'?e.unsupported:
+          payload.error==='EXPORT_TOO_LARGE'?e.large:
+          payload.error?.startsWith('SNAPSHOT_')?e.corrupt:e.error);
+        setMessage('');return;
+      }
+      const expected=format==='pdf'?'application/pdf':format==='docx'?
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'text/markdown';
+      if(!response.headers.get('content-type')?.startsWith(expected)){
+        setError(e.wrongFile);setMessage('');return;
+      }
+      const blob=await response.blob();
+      if(blob.size===0){setError(e.wrongFile);setMessage('');return;}
+      const objectUrl=URL.createObjectURL(blob);
+      try{
+        const anchor=document.createElement('a');
+        anchor.href=objectUrl;
+        anchor.download='bookstudio-'+version.id+'.'+format;
+        anchor.hidden=true;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setMessage(e.success);
+      }finally{
+        // Some mobile browsers read blob URLs shortly after the click.
+        window.setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);
+      }
+    }catch{
+      setError(e.error);setMessage('');
+    }finally{setBusy(false);}
   }
 
   async function restore(version:Version){
@@ -96,9 +157,9 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
             <small>{new Date(version.createdAt).toLocaleString(locale==='fr'?'fr-FR':'en-US')} · {t('snapshot.details',{count:version.chapterCount,hash:version.integrityHash.slice(0,10)})}</small>
           </div>
           <ActionMenu label={t('snapshot.for',{name:version.name})} disabled={busy} actions={[
-            {label:t('snapshot.exportPdf'),href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=pdf',group:t('snapshot.export')},
-            {label:t('snapshot.exportDocx'),href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=docx'},
-            {label:t('snapshot.exportMarkdown'),href:'/api/v1/books/'+bookId+'/snapshots/'+version.id+'/export?format=md'},
+            {label:t('snapshot.exportPdf'),onSelect:()=>{void download(version,'pdf');},group:t('snapshot.export')},
+            {label:t('snapshot.exportDocx'),onSelect:()=>{void download(version,'docx');}},
+            {label:t('snapshot.exportMarkdown'),onSelect:()=>{void download(version,'md');}},
             ...(editable?[{label:t('snapshot.restore'),separatorBefore:true,
               onSelect:()=>{setError('');setPendingRestore(version);}}]:[])
           ]}/>

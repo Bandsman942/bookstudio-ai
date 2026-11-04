@@ -10,6 +10,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@fontsource/ibm-plex-sans':
+        specifier: 5.2.8
+        version: 5.2.8
+      '@fontsource/noto-sans':
+        specifier: 5.2.10
+        version: 5.2.10
       '@bookstudio/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -75,6 +81,12 @@ importers:
   packages/integrations: {}
 
 packages:
+
+  '@fontsource/ibm-plex-sans@5.2.8':
+    resolution: {integrity: sha512-eztSXjDhPhcpxNIiGTgMebdLP9qS4rWkysuE1V7c+DjOR0qiezaiDaTwQE7bTnG5HxAY/8M43XKDvs3cYq6ZYQ==}
+
+  '@fontsource/noto-sans@5.2.10':
+    resolution: {integrity: sha512-J58RVfS/C0Z2VBF+PoU260Tx8cdRGYuS+e3yQe4hYaIYDl0sEVn5CzlLo5zVRvQD0HaIUTV8AZMfqR7rtdEpqQ==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -823,6 +835,10 @@ packages:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
 
 snapshots:
+
+  '@fontsource/ibm-plex-sans@5.2.8': {}
+
+  '@fontsource/noto-sans@5.2.10': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:
