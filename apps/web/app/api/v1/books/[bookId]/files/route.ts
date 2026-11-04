@@ -1,9 +1,11 @@
 import {prisma} from '@bookstudio/database';
+import {randomUUID} from 'node:crypto';
 import {activeUser} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {MAX_SOURCE_BYTES,isBookId,isStoredName,validateSource,makeStoredName,
   signUpload,signDownload,deleteFile,listFiles,confirmStoredSource} from '@/lib/supabase-storage';
 import {canUseSource,publicScanStatus,scanStrictModeEnabled} from '@/lib/source-security-policy';
+import {scanQueueEnabled,MAX_QUEUE_PER_BOOK_HOUR,queueStatus} from '@/lib/source-scan-queue';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -81,23 +83,54 @@ export async function POST(request:Request,{params}:Ctx){
       // Confirmed storage metadata is NOT a malware scan. Reset on each re-confirmation.
       const normalized=validateSource({name:payload.name.slice(37),size:payload.size,type:payload.type});
       if(!normalized)return errorResponse('SOURCE_TYPE_MISMATCH',409);
-      await prisma.sourceSecurityRecord.upsert({
-        where:{bookId_storageName:{bookId,storageName:payload.name}},
-        create:{
-          bookId,storageName:payload.name,byteSize:payload.size,
-          mediaType:normalized.contentType,confirmedById:auth.user.id,status:'UNSCANNED'
-        },
-        update:{
-          byteSize:payload.size,mediaType:normalized.contentType,
-          confirmedById:auth.user.id,status:'UNSCANNED',
-          sha256:null,scannerVersion:null,scannedAt:null
+      // No worker is connected at this stage: opt-in queuing is OFF by default.
+      // A re-confirmation always rotates sourceGeneration and invalidates older jobs.
+      const queued=scanQueueEnabled(process.env.BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED);
+      const generation=randomUUID(),status=queueStatus(queued);
+      const outcome=await prisma.$transaction(async tx=>{
+        const member=await tx.membership.findFirst({where:{
+          userId:auth.user.id,workspaceId:auth.book.workspaceId,role:{in:['OWNER','EDITOR']}
+        },select:{id:true}});
+        const liveBook=await tx.book.findFirst({where:{
+          id:bookId,workspaceId:auth.book.workspaceId,archivedAt:null
+        },select:{id:true}});
+        if(!member||!liveBook)return 'FORBIDDEN' as const;
+        if(queued){
+          const recent=await tx.sourceScanJob.count({where:{
+            bookId,createdAt:{gte:new Date(Date.now()-60*60*1000)}
+          }});
+          if(recent>=MAX_QUEUE_PER_BOOK_HOUR)return 'RATE_LIMIT' as const;
         }
+        await tx.sourceScanJob.updateMany({where:{
+          bookId,storageName:payload.name,status:{in:['QUEUED','LEASED']}
+        },data:{status:'CANCELLED',leaseExpiresAt:null}});
+        await tx.sourceSecurityRecord.upsert({
+          where:{bookId_storageName:{bookId,storageName:payload.name}},
+          create:{
+            bookId,storageName:payload.name,byteSize:payload.size,
+            mediaType:normalized.contentType,confirmedById:auth.user.id,
+            status,sourceGeneration:generation
+          },
+          update:{
+            byteSize:payload.size,mediaType:normalized.contentType,
+            confirmedById:auth.user.id,status,sourceGeneration:generation,
+            sha256:null,scannerVersion:null,scannedAt:null
+          }
+        });
+        if(queued)await tx.sourceScanJob.create({data:{
+          bookId,storageName:payload.name,sourceGeneration:generation,
+          declaredByteSize:payload.size,declaredMediaType:normalized.contentType,status:'QUEUED'
+        }});
+        await tx.auditEvent.create({data:{
+          actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
+          action:'BOOK_SOURCE_UPLOAD_CONFIRMED',
+          metadata:{name:payload.name,size:payload.size,scanStatus:status,queueRequested:queued}
+        }});
+        return 'OK' as const;
       });
-      await prisma.auditEvent.create({data:{
-        actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
-        action:'BOOK_SOURCE_UPLOAD_CONFIRMED',metadata:{name:payload.name,size:payload.size,scanStatus:'UNSCANNED'}
-      }});
-      return Response.json({ok:true,confirmed:true,scanStatus:'UNSCANNED'},
+      if(outcome==='FORBIDDEN')return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
+      if(outcome==='RATE_LIMIT')return errorResponse('SOURCE_SCAN_QUEUE_LIMIT',429);
+      return Response.json({ok:true,confirmed:true,scanStatus:status},
         {headers:{'Cache-Control':'no-store'}});
     }
     if(payload.action!==undefined)return errorResponse('VALIDATION_ERROR');
@@ -126,7 +159,14 @@ export async function DELETE(request:Request,{params}:Ctx){
     const used=await prisma.manuscriptSourceImport.count({where:{bookId,sourceName:body.name}});
     if(used>0)return errorResponse('SOURCE_IN_USE',409);
     await deleteFile(bookId,body.name);
-    await prisma.sourceSecurityRecord.deleteMany({where:{bookId,storageName:body.name}});
+    // Cancellation is durable and keeps the job audit trail. A leased worker
+    // must reject generations with a missing SourceSecurityRecord.
+    await prisma.$transaction(async tx=>{
+      await tx.sourceScanJob.updateMany({where:{
+        bookId,storageName:body.name,status:{in:['QUEUED','LEASED']}
+      },data:{status:'CANCELLED',leaseExpiresAt:null}});
+      await tx.sourceSecurityRecord.deleteMany({where:{bookId,storageName:body.name}});
+    });
     await prisma.auditEvent.create({data:{
       actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
       action:'BOOK_SOURCE_DELETED',metadata:{name:body.name}
