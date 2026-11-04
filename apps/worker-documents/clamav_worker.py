@@ -203,7 +203,7 @@ def sign_attestation(claim: dict, result: dict, hmac_key: bytes) -> dict:
         "leaseToken": claim["leaseToken"], "nonce": str(uuid.uuid4()),
         "status": status, "byteSize": claim["declaredByteSize"],
         "sha256": result.get("sha256"), "scannerVersion": result.get("scannerVersion"),
-        "scannedAt": datetime.now(timezone.utc).isoformat()
+        "scannedAt": result.get("scannedAt") or datetime.now(timezone.utc).isoformat()
     }
     if status == "SCANNED_CLEAN" and (
             not isinstance(packet["sha256"], str) or
@@ -232,7 +232,7 @@ def process_once(api: str, storage: str, token: bytes, hmac_key: bytes) -> str:
             verdict = scan_source(source, expected_size=claim["declaredByteSize"],
                                   expected_sha256=sha)
             evidence = {"status": verdict.status, "sha256": verdict.sha256,
-                        "scannerVersion": verdict.scannerVersion}
+                        "scannerVersion": verdict.scannerVersion, "scannedAt": verdict.scannedAt}
     except (WorkerFailure, OSError):
         evidence = {"status": "SCAN_UNAVAILABLE", "sha256": None, "scannerVersion": None}
     report = sign_attestation(claim, evidence, hmac_key)
