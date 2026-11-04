@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",

@@ -10,7 +10,7 @@ import {
   type UploadStage
 } from '@/lib/source-upload-client';
 
-type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
+type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCAN_PENDING_PROMOTION'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
 type Item={name:string;size:number;createdAt:string|null;scanStatus?:ScanStatus};
 const text={
   fr:{heading:'Fichiers sources',action:'Importer un manuscrit',
@@ -31,7 +31,7 @@ const text={
     scanRequired:'Mode strict : les sources non analysées ne peuvent pas être utilisées tant qu’un moteur antivirus isolé n’est pas opérationnel.',
     scanBlocked:'Téléchargement ou importation interdits tant que la source ne dispose pas d’un contrôle antivirus fiable.',
     scanStatus:{UNSCANNED:'Analyse antivirus non effectuée',QUEUED:'Analyse demandée — non terminée',
-      SCANNING:'Analyse en cours — non vérifiée',SCANNED_CLEAN:'Analyse terminée sans détection',
+      SCANNING:'Analyse en cours — non vérifiée',SCAN_PENDING_PROMOTION:'Analyse sans détection — stockage sécurisé en attente',SCANNED_CLEAN:'Analyse terminée sans détection',
       REJECTED:'Fichier rejeté par l’analyse',SCAN_UNAVAILABLE:'Service d’analyse indisponible'},
     deleted:'Fichier supprimé.'},
   en:{heading:'Source files',action:'Import a manuscript',
@@ -52,7 +52,7 @@ const text={
     scanRequired:'Strict mode: unscanned sources cannot be used until an isolated antivirus service is available.',
     scanBlocked:'Downloading or importing requires reliable antivirus clearance.',
     scanStatus:{UNSCANNED:'Antivirus scan not performed',QUEUED:'Scan queued — not complete',
-      SCANNING:'Scanning — not verified',SCANNED_CLEAN:'Scan finished with no detection',
+      SCANNING:'Scanning — not verified',SCAN_PENDING_PROMOTION:'Scan clean — secure storage pending',SCANNED_CLEAN:'Scan finished with no detection',
       REJECTED:'File rejected by scanner',SCAN_UNAVAILABLE:'Scan service unavailable'},
     deleted:'File deleted.'}
 };

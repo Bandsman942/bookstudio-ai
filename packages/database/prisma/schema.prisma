@@ -25,6 +25,7 @@ enum SourceScanStatus {
   UNSCANNED
   QUEUED
   SCANNING
+  SCAN_PENDING_PROMOTION
   SCANNED_CLEAN
   REJECTED
   SCAN_UNAVAILABLE
@@ -284,6 +285,14 @@ model SourceScanJob {
   status SourceScanJobStatus @default(QUEUED)
   attempts Int @default(0)
   leaseExpiresAt DateTime? @map("lease_expires_at")
+  leaseTokenHash String? @map("lease_token_hash") @db.Char(64)
+  attestationNonceHash String? @map("attestation_nonce_hash") @db.Char(64)
+  attestationHash String? @map("attestation_hash") @db.Char(64)
+  resultStatus String? @map("result_status") @db.VarChar(35)
+  resultSha256 String? @map("result_sha256") @db.Char(64)
+  scannerVersion String? @map("scanner_version") @db.VarChar(100)
+  scannedAt DateTime? @map("scanned_at")
+  finishedAt DateTime? @map("finished_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
