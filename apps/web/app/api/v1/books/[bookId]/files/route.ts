@@ -85,8 +85,8 @@ export async function POST(request:Request,{params}:Ctx){
       if(!normalized)return errorResponse('SOURCE_TYPE_MISMATCH',409);
       // No worker is connected at this stage: opt-in queuing is OFF by default.
       // A re-confirmation always rotates sourceGeneration and invalidates older jobs.
-      const queued=scanQueueEnabled(process.env.BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED);
-      const generation=randomUUID(),status=queueStatus(queued);
+      const requested=scanQueueEnabled(process.env.BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED);
+      const generation=randomUUID();
       const outcome=await prisma.$transaction(async tx=>{
         const member=await tx.membership.findFirst({where:{
           userId:auth.user.id,workspaceId:auth.book.workspaceId,role:{in:['OWNER','EDITOR']}
@@ -95,12 +95,13 @@ export async function POST(request:Request,{params}:Ctx){
           id:bookId,workspaceId:auth.book.workspaceId,archivedAt:null
         },select:{id:true}});
         if(!member||!liveBook)return 'FORBIDDEN' as const;
-        if(queued){
-          const recent=await tx.sourceScanJob.count({where:{
-            bookId,createdAt:{gte:new Date(Date.now()-60*60*1000)}
-          }});
-          if(recent>=MAX_QUEUE_PER_BOOK_HOUR)return 'RATE_LIMIT' as const;
-        }
+        const recent=requested?await tx.sourceScanJob.count({where:{
+          bookId,createdAt:{gte:new Date(Date.now()-60*60*1000)}
+        }}):0;
+        // Always invalidate any old clearance even when queue is at capacity.
+        // A rate limit must never leave an earlier SCANNED_CLEAN verdict in place.
+        const queued=requested&&recent<MAX_QUEUE_PER_BOOK_HOUR;
+        const status=queueStatus(queued);
         await tx.sourceScanJob.updateMany({where:{
           bookId,storageName:payload.name,status:{in:['QUEUED','LEASED']}
         },data:{status:'CANCELLED',leaseExpiresAt:null}});
@@ -124,13 +125,14 @@ export async function POST(request:Request,{params}:Ctx){
         await tx.auditEvent.create({data:{
           actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
           action:'BOOK_SOURCE_UPLOAD_CONFIRMED',
-          metadata:{name:payload.name,size:payload.size,scanStatus:status,queueRequested:queued}
+          metadata:{name:payload.name,size:payload.size,scanStatus:status,
+            queueRequested:requested,queueDeferred:requested&&!queued}
         }});
-        return 'OK' as const;
+        return {status,queueDeferred:requested&&!queued} as const;
       });
       if(outcome==='FORBIDDEN')return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
-      if(outcome==='RATE_LIMIT')return errorResponse('SOURCE_SCAN_QUEUE_LIMIT',429);
-      return Response.json({ok:true,confirmed:true,scanStatus:status},
+      return Response.json({ok:true,confirmed:true,scanStatus:outcome.status,
+        queueDeferred:outcome.queueDeferred},
         {headers:{'Cache-Control':'no-store'}});
     }
     if(payload.action!==undefined)return errorResponse('VALIDATION_ERROR');
