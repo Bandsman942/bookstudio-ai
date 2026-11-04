@@ -51,6 +51,7 @@ export async function POST(req:Request,{params}:Ctx) {
       for(const item of manifest.chapters){
         const chapter=chaptersById.get(item.chapterId);
         if(!chapter)throw new Error('CHAPTER_MISSING');
+        if(chapter.deletedAt)throw new Error('CHAPTER_DELETED');
         if(!Number.isSafeInteger(body.expectedRevisions[item.chapterId]) ||
             body.expectedRevisions[item.chapterId]!==chapter.revisionSeq)throw new Error('REVISION_CONFLICT');
         const source=sourceById.get(item.chapterId+':'+item.revisionSeq);
@@ -80,7 +81,7 @@ export async function POST(req:Request,{params}:Ctx) {
   }catch(err){
     const reason=err instanceof Error?err.message:'RESTORE_FAILED';
     if(reason==='NOT_FOUND')return errorResponse(reason,404);
-    if(['SNAPSHOT_CORRUPT','SNAPSHOT_EDITION_CHANGED','CHAPTER_MISSING','REVISION_CONFLICT'].includes(reason) ||
+    if(['SNAPSHOT_CORRUPT','SNAPSHOT_EDITION_CHANGED','CHAPTER_MISSING','CHAPTER_DELETED','REVISION_CONFLICT'].includes(reason) ||
         (err as {code?:string})?.code==='P2034')return errorResponse(reason==='RESTORE_FAILED'?'REVISION_CONFLICT':reason,409);
     if(reason==='SNAPSHOT_INVALID'||reason==='SNAPSHOT_DUPLICATE_CHAPTER')return errorResponse(reason,422);
     return errorResponse('RESTORE_FAILED',503);

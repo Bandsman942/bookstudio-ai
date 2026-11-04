@@ -54,7 +54,7 @@ export async function POST(req: Request, {params}: Ctx) {
 
       const edition = await tx.edition.findFirst({
         where:{bookId},orderBy:{number:'desc'},
-        include:{manuscript:{include:{chapters:{orderBy:{position:'asc'}}}}}
+        include:{manuscript:{include:{chapters:{where:{deletedAt:null},orderBy:{position:'asc'}}}}}
       });
       const chapters = edition?.manuscript?.chapters ?? [];
       if (!edition || !chapters.length || chapters.length > 500) throw new Error('CHAPTER_COUNT_INVALID');

@@ -134,12 +134,14 @@ model Chapter {
   position Int @default(0)
   revisionSeq Int @default(0) @map("revision_seq")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
   manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
   revisions DocumentRevision[]
   editorialComments EditorialComment[]
   sourceImport ManuscriptSourceImport?
   @@unique([manuscriptId,position])
   @@index([manuscriptId,position])
+  @@index([manuscriptId,deletedAt,position])
   @@map("chapters")
 }
 model DocumentRevision {

@@ -137,6 +137,8 @@ const docxBadPayload=await request(docxImportPath,{method:'POST',cookie:author,
   body:{...exampleDocx,blocks:[{kind:'html',text:'<img onerror=alert(1)>'}]}});
 assert.equal(docxBadPayload.status,422,'untrusted active markup rejected by DOCX import');
 
+// Reversible deletion must retain chapter contents, block outsiders and preserve numbering.
+// More lifecycle checks run after the secondary book has been restored.
 // Safe archive/restore lifecycle: no deletion of source, revisions or snapshots.
 const archival=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ouvrage à archiver',bookType:'ESSAY',language:'fr'}});
 assert.equal(archival.status,201,'create secondary book for lifecycle testing');
@@ -214,6 +216,38 @@ const chapterInvalid=await request(chapterMetaPath,{method:'PATCH',cookie:author
   title:'a',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt
 }});
 assert.equal(chapterInvalid.status,400,'chapter title validation');
+// BS-CRUD: deletion is reversible, concurrency-safe, and excluded from active navigation.
+const deleteChapterPath=archivePath+'/chapters/'+archiveChapterId;
+const staleDelete=await request(deleteChapterPath,{method:'DELETE',cookie:author,body:{
+  confirm:'DELETE',expectedUpdatedAt:archiveChapterIndex.updatedAt,expectedRevision:0}});
+assert.equal(staleDelete.status,409,'stale metadata cannot delete a chapter');
+const outsideDelete=await request(deleteChapterPath,{method:'DELETE',cookie:outsider,body:{
+  confirm:'DELETE',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt,expectedRevision:0}});
+assert.equal(outsideDelete.status,404,'outsider cannot delete a chapter');
+const csrfDelete=await request(deleteChapterPath,{method:'DELETE',cookie:author,omitOrigin:true,body:{
+  confirm:'DELETE',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt,expectedRevision:0}});
+assert.equal(csrfDelete.status,403,'chapter deletion requires origin');
+const noConsentDelete=await request(deleteChapterPath,{method:'DELETE',cookie:author,body:{
+  expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt,expectedRevision:0}});
+assert.equal(noConsentDelete.status,400,'chapter deletion requires explicit confirmation');
+const deletedChapter=await request(deleteChapterPath,{method:'DELETE',cookie:author,body:{
+  confirm:'DELETE',expectedUpdatedAt:chapterRenamed.data.chapter.updatedAt,expectedRevision:0}});
+assert.equal(deletedChapter.status,200,'authorized owner/editor can soft delete');
+assert.equal((await request(deleteChapterPath,{cookie:author})).status,404,'soft-deleted chapter hidden');
+const afterDeleteList=await request(archivePath+'/chapters',{cookie:author});
+assert.equal(afterDeleteList.data.chapters.some(c=>c.id===archiveChapterId),false,'soft-deleted chapter hidden from index');
+const sourceTrash=await request(archivePath+'/chapters/trash',{cookie:author});
+assert.equal(sourceTrash.status,200);
+const trashRow=sourceTrash.data.chapters.find(c=>c.id===archiveChapterId);
+assert.ok(trashRow?.updatedAt);
+assert.equal((await request(archivePath+'/chapters/trash',{cookie:outsider})).status,404,'trash is private');
+const subsequentChapter=await request(archivePath+'/chapters',{method:'POST',cookie:author,body:{title:'Nouveau chapitre après suppression'}});
+assert.equal(subsequentChapter.status,201,'positions of deleted chapters must not collide');
+const restoreDeleted=await request(deleteChapterPath+'/restore',{method:'POST',cookie:author,body:{
+  confirm:'RESTORE_CHAPTER',expectedUpdatedAt:trashRow.updatedAt}});
+assert.equal(restoreDeleted.status,200,'restore deleted chapter');
+assert.equal((await request(deleteChapterPath,{cookie:author})).status,200,'chapter content retained');
+assert.equal((await request(archivePath+'/chapters',{cookie:author})).data.chapters.length,2,'restored chapter plus new chapter');
 const chapterAfterRename=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
 assert.equal(chapterAfterRename.status,200);
 assert.equal(chapterAfterRename.data.chapter.title,'Chapitre renommé sans toucher le texte');

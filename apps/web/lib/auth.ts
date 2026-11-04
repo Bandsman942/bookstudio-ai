@@ -34,7 +34,7 @@ export async function accessToBook(bookId: string, userId: string, write = false
       // Reuse this relation in RSC pages instead of a second full accessToBook query.
       workspace:{select:{memberships:{where:{userId},select:{role:true}}}},
       editions:{orderBy:{number:'desc'},take:1,
-        include:{manuscript:{include:{chapters:{orderBy:{position:'asc'}}}}}}
+        include:{manuscript:{include:{chapters:{where:{deletedAt:null},orderBy:{position:'asc'}}}}}}
     }
   });
 }

@@ -48,6 +48,7 @@ export async function GET(request: Request) {
         WHERE membership.workspace_id = b.workspace_id
           AND membership.user_id = ${user.id}::uuid
       )
+      AND c.deleted_at IS NULL
       AND e.number = (SELECT max(e2.number) FROM editions AS e2 WHERE e2.book_id = b.id)
       AND r.text ILIKE ${pattern}
       ORDER BY b.updated_at DESC, c.position ASC

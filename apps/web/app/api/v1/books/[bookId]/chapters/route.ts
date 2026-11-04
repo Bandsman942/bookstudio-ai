@@ -24,7 +24,8 @@ export async function POST(req:Request,{params}:{params:Promise<{bookId:string}>
   try{title=normalizeTitle(data?.title);}catch{return errorResponse('TITLE_INVALID');}
   try{
     const chapter=await prisma.$transaction(async tx=>{
-      const position=await tx.chapter.count({where:{manuscriptId}});
+      const highest=await tx.chapter.aggregate({where:{manuscriptId},_max:{position:true}});
+      const position=(highest._max.position??-1)+1;
       const created=await tx.chapter.create({data:{manuscriptId,title,position}});
       const content=emptyDocument();
       await tx.documentRevision.create({data:{chapterId:created.id,sequence:0,content,text:'',contentHash:createHash('sha256').update(JSON.stringify(content)).digest('hex'),authorId:user.id}});
