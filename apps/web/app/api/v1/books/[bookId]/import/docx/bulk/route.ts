@@ -71,12 +71,10 @@ export async function POST(request:Request,{params}:Ctx){
        source.size<1||source.size>20*1024*1024)
       return errorResponse('DOCX_SOURCE_INVALID',422);
     const required=scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES);
-    if(required){
-      const record=await prisma.sourceSecurityRecord.findUnique({
-        where:{bookId_storageName:{bookId,storageName:sourceName}}
-      });
-      if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
-    }
+    const record=await prisma.sourceSecurityRecord.findUnique({
+      where:{bookId_storageName:{bookId,storageName:sourceName}}
+    });
+    if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
   }catch{return errorResponse('STORAGE_UNAVAILABLE',503);}
 
   try{

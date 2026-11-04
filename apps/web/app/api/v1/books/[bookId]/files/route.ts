@@ -63,12 +63,10 @@ export async function POST(request:Request,{params}:Ctx){
       const listed=await listFiles(bookId);
       if(!listed.some(file=>file.name===payload.name))return errorResponse('NOT_FOUND',404);
       const required=scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES);
-      if(required){
-        const record=await prisma.sourceSecurityRecord.findUnique({
-          where:{bookId_storageName:{bookId,storageName:payload.name}}
-        });
-        if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
-      }
+      const record=await prisma.sourceSecurityRecord.findUnique({
+        where:{bookId_storageName:{bookId,storageName:payload.name}}
+      });
+      if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
       return Response.json({url:await signDownload(bookId,payload.name)},
         {headers:{'Cache-Control':'no-store'}});
     }
