@@ -22,7 +22,7 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
      body:JSON.stringify({action:'restore',expectedUpdatedAt:book.updatedAt})});
    const data=await result.json();
    if(!result.ok){
-     const msg=explainActionError({locale,operation:'snapshot-restore',status:result.status,code:data.error});
+     const msg=explainActionError({locale,operation:'book-restore',status:result.status,code:data.error});
      setError(msg);notify({tone:result.status===409?'warning':'error',
        title:locale==='fr'?'Restauration du livre refusée':'Book restore refused',detail:msg});return;
    }

@@ -17,3 +17,12 @@ test('action- and status-specific remedies cover permissions, conflicts, offline
  assert.match(explainActionError({locale:'en',operation:'editor-save',status:0}),/connection/i);
  assert.match(explainActionError({locale:'en',operation:'comment-change',status:429}),/Too many/);
 });
+
+test('book and chapter operations use the exact action in a failed request',()=>{
+ const fr=explainActionError({locale:'fr',operation:'book-archive',status:404});
+ assert.match(fr,/archivage du livre/);assert.match(fr,/bibliothèque/);
+ const en=explainActionError({locale:'en',operation:'chapter-rename',status:409});
+ assert.match(en,/renaming this chapter/);
+ const restored=explainActionError({locale:'fr',operation:'book-restore',status:0});
+ assert.match(restored,/restauration du livre/);
+});

@@ -47,7 +47,7 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
       });
       const payload=await response.json().catch(()=>({}));
       if(!response.ok){
-        const msg=explainActionError({locale,operation:action==='rename'?'book-create':'snapshot-restore',status:response.status,code:payload.error});
+        const msg=explainActionError({locale,operation:action==='rename'?'book-rename':'book-archive',status:response.status,code:payload.error});
         setError(msg);
         notify({tone:response.status===409?'warning':'error',
           title:locale==='fr'?(action==='rename'?'Renommage du livre refusé':'Archivage refusé'):
@@ -62,7 +62,7 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
       if(action==='archive'&&onArchive==='library')router.push('/library');
       router.refresh();
     }catch{
-      const msg=explainActionError({locale,operation:'book-create',status:0});setError(msg);
+      const msg=explainActionError({locale,operation:'book-rename',status:0});setError(msg);
       notify({tone:'error',title:locale==='fr'?'Modification du livre interrompue':'Book update interrupted',detail:msg});
     }finally{setBusy(false);}
   }

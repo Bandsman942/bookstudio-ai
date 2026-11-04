@@ -36,7 +36,7 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,edi
       });
       const result=await response.json().catch(()=>({}));
       if(!response.ok){
-        const msg=explainActionError({locale,operation:'chapter-create',status:response.status,code:result.error});
+        const msg=explainActionError({locale,operation:'chapter-rename',status:response.status,code:result.error});
         setError(msg);notify({tone:response.status===409?'warning':'error',
           title:locale==='fr'?'Renommage du chapitre refusé':'Chapter rename refused',detail:msg});return;
       }

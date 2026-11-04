@@ -1,7 +1,7 @@
 /** Localized action/error copy. Never pass raw API response text or manuscript contents. */
 export type Operation=
   'pdf'|'docx'|'markdown'|'snapshot-create'|'snapshot-restore'|'snapshot-list'|
-  'book-create'|'chapter-create'|'source-upload'|'source-list'|'source-download'|'source-delete'|
+  'book-create'|'book-rename'|'book-archive'|'book-restore'|'chapter-create'|'chapter-rename'|'source-upload'|'source-list'|'source-download'|'source-delete'|
   'docx-import'|'comment-add'|'comment-change'|'comment-list'|'editor-save'|'authentication';
 export type Issue={locale:'fr'|'en';operation:Operation;status?:number;code?:string;
   codepoints?:string;chapterNumber?:number|null};
@@ -10,6 +10,8 @@ const actions={
   pdf:'l’export PDF',docx:'l’export Word',markdown:'l’export Markdown',
   'snapshot-create':'l’enregistrement de la version','snapshot-restore':'la restauration de la version',
   'snapshot-list':'le chargement de l’historique','book-create':'la création du livre',
+  'book-rename':'le renommage du livre','book-archive':'l’archivage du livre','book-restore':'la restauration du livre',
+  'chapter-rename':'le renommage du chapitre',
   'chapter-create':'la création du chapitre','source-upload':'l’importation du manuscrit',
   'source-list':'le chargement des fichiers sources','source-download':'le téléchargement du manuscrit',
   'source-delete':'la suppression du fichier source','docx-import':'la conversion du manuscrit en chapitres',
@@ -21,6 +23,8 @@ const actions={
   pdf:'PDF export',docx:'Word export',markdown:'Markdown export',
   'snapshot-create':'saving this version','snapshot-restore':'restoring this version',
   'snapshot-list':'loading version history','book-create':'creating this book',
+  'book-rename':'renaming this book','book-archive':'archiving this book','book-restore':'restoring this book',
+  'chapter-rename':'renaming this chapter',
   'chapter-create':'creating this chapter','source-upload':'uploading the manuscript',
   'source-list':'loading source files','source-download':'downloading the manuscript',
   'source-delete':'deleting the source file','docx-import':'turning the manuscript into chapters',
@@ -53,9 +57,14 @@ export function explainActionError(issue:Issue):string{
  if(status===403||code==='NOT_FOUND_OR_FORBIDDEN')return locale==='fr'?
    `Vous n’avez pas les autorisations nécessaires pour ${label}. Vérifiez votre rôle dans cet ouvrage.`:
    `You do not have permission for ${label}. Check your role on this book.`;
- if(status===404||code==='DOCX_SOURCE_NOT_FOUND')return locale==='fr'?
-   `La ressource nécessaire à ${label} n’est plus disponible. Actualisez le livre et vérifiez son fichier ou sa version.`:
-   `The item required for ${label} is no longer available. Refresh the book and check its file or version.`;
+ if(status===404||code==='DOCX_SOURCE_NOT_FOUND'){
+   const bookAction=['book-create','book-rename','book-archive','book-restore','chapter-create','chapter-rename'].includes(operation);
+   return locale==='fr'?(bookAction?
+     `Le livre ou chapitre concerné par ${label} n’est plus disponible. Actualisez la bibliothèque avant de réessayer.`:
+     `La source ou version nécessaire à ${label} n’est plus disponible. Actualisez l’ouvrage avant de réessayer.`):
+     (bookAction?`The book or chapter needed for ${label} is no longer available. Refresh the library and retry.`:
+     `The source or version required for ${label} is unavailable. Refresh the book and retry.`);
+ }
  if(status===409||code?.includes('CONFLICT')||code==='SNAPSHOT_CORRUPT')return locale==='fr'?
    `Un changement concurrent ou une différence d’intégrité empêche ${label}. Actualisez l’historique et vérifiez la version avant de réessayer.`:
    `A concurrent change or integrity mismatch blocks ${label}. Refresh the history and verify the version before retrying.`;
