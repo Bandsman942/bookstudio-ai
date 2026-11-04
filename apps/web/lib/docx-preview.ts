@@ -4,11 +4,12 @@ import {unzipSync} from 'fflate';
 const WORD_NS='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const MAX_ZIP_BYTES=20*1024*1024;
 const MAX_UNCOMPRESSED_BYTES=64*1024*1024;
-const MAX_DOC_XML_BYTES=8*1024*1024;
+// Resource guard, not a text-preview limit. Oversized XML is rejected explicitly.
+const MAX_DOC_XML_BYTES=24*1024*1024;
 const MAX_REL_XML_BYTES=1024*1024;
 const MAX_ENTRIES=1500;
-const MAX_PREVIEW_PARAGRAPHS=200;
-const MAX_PREVIEW_CHARS=100000;
+const MAX_SAFE_BLOCKS=40000;
+const MAX_PART_CHARS=9000;
 const MAX_RATIO=400;
 
 export type PreviewBlock={kind:'heading'|'paragraph';text:string;style:string};
@@ -94,7 +95,20 @@ function getWordChildren(element:Element,tag:string){
   return Array.from(element.getElementsByTagNameNS(WORD_NS,tag));
 }
 function paragraphText(p:Element):string{
-  return getWordChildren(p,'t').map(n=>n.textContent||'').join('').slice(0,10000);
+  // Never silently cut source text. Long paragraphs are split into complete contiguous parts.
+  return getWordChildren(p,'t').map(n=>n.textContent||'').join('');
+}
+/** Keep all source characters, splitting only for safe individual chapter-block budgets. */
+export function paragraphPieces(text:string):string[]{
+  const pieces:string[]=[];
+  for(let start=0;start<text.length;){
+    let end=Math.min(text.length,start+MAX_PART_CHARS);
+    // Keep UTF-16 surrogate pairs together for emoji and rare scripts.
+    if(end<text.length&&end>start&&/^[\uDC00-\uDFFF]$/.test(text[end]))end--;
+    if(end===start)end=Math.min(text.length,start+2);
+    pieces.push(text.slice(start,end));start=end;
+  }
+  return pieces;
 }
 /** This is a readable advisory preview, NOT a fidelity-verified Word conversion. */
 export function previewDocx(data:Uint8Array):DocxPreview{
@@ -129,21 +143,24 @@ export function previewDocx(data:Uint8Array):DocxPreview{
     if(Array.from(rels.getElementsByTagName('*')).some(el=>
       el.getAttribute('TargetMode')?.toLowerCase()==='external'))warnings.add('EXTERNAL_LINKS_PRESENT');
   }
-  const blocks:PreviewBlock[]=[];let totalChars=0,truncated=false;
+  const blocks:PreviewBlock[]=[];
   for(const child of Array.from(body.children)){
     if(child.namespaceURI!==WORD_NS||child.localName!=='p')continue;
-    if(blocks.length>=MAX_PREVIEW_PARAGRAPHS||totalChars>=MAX_PREVIEW_CHARS){
-      truncated=true;break;
-    }
-    const text=paragraphText(child);
-    if(!text.trim())continue;
-    totalChars+=text.length;
+    const fullText=paragraphText(child);
+    if(!fullText.trim())continue;
     const style=getWordChildren(child,'pStyle')[0]?.getAttributeNS(WORD_NS,'val')||'';
     const kind=/^(heading|titre)[\s_-]*[1-9]/i.test(style)?'heading':'paragraph';
-    blocks.push({kind,text,style:style.slice(0,70)});
+    const pieces=paragraphPieces(fullText);
+    if(pieces.length>1)warnings.add('LONG_PARAGRAPH_SEGMENTED');
+    for(const piece of pieces){
+      if(blocks.length>=MAX_SAFE_BLOCKS)fail('DOCX_ARCHIVE_LIMIT');
+      blocks.push({kind:kind==='heading'&&pieces.length===1?'heading':'paragraph',
+        text:piece,style:style.slice(0,70)});
+    }
   }
-  if(truncated)warnings.add('PREVIEW_TRUNCATED');
+  // No arbitrary "200 paragraphs / 100k chars" truncation: all supported body
+  // paragraphs are included or the entire preview fails explicitly.
   if(!blocks.length)warnings.add('NO_SIMPLE_TEXT_FOUND');
   return {status:'PREVIEW_REVIEW_REQUIRED',blocks,warnings:[...warnings].sort(),
-    truncated,verifiedFidelity:false,readyForPublication:false};
+    truncated:false,verifiedFidelity:false,readyForPublication:false};
 }

@@ -4,6 +4,20 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.14.0] — alpha candidate, NON DÉPLOYÉE
+### P0 — Importation DOCX complète, sans limite artificielle de 200 paragraphes (#105)
+- **Cause corrigée** : l'ancienne prévisualisation s'arrêtait silencieusement après 200 paragraphes ou 100 000 caractères, bloquant ensuite l'import. Le texte simple du fichier Supabase existant est désormais lu dans son intégralité **à l'intérieur des plafonds de sécurité ZIP/XML**, sans réupload ni découpe silencieuse.
+- Fenêtre de lecture paginée (**24 blocs visibles par page**) pour conserver la fluidité mobile ; le nombre de blocs et caractères indique **tout** le texte analysé, pas seulement la page courante.
+- Les paragraphes Word de plus de 9 000 caractères sont conservés en segments consécutifs, sans suppression de caractères ; messages de revue humaine explicites.
+- Détection des chapitres sur tout le texte simple, y compris documents > 200 paragraphes, > 100 000 caractères et plus de dix titres ; titres éditables et mode « manuscrit continu ».
+- Les chapitres volumineux sont présentés en **parties successives** (suite 2, suite 3…) plutôt que tronqués ; tous les blocs sont conservés dans l'ordre. Bouton de création avec consentement explicite.
+- Importation progressive avec les endpoints transactionnels déjà sécurisés, **lots indépendants bornés** (jusqu'à 10 chapitres et 124 blocs/65k caractères par lot). Reprise idempotente tant que le dialogue reste ouvert en cas de connexion faible. La transaction couvre **chaque lot**, pas tout un manuscrit volumineux ; le progrès et les créations partielles sont affichés.
+- Les sources Supabase restent privées, l'original inchangé, les droits OWNER/EDITOR appliqués et aucun binaire envoyé aux fonctions Vercel.
+- Pas de nouvelle migration SQL ; tests de non-perte >200 blocs/>100k caractères, détection 14+ chapitres, pagination et recette E2E longue.
+- Limites **de sécurité** maintenues (20 Mio fichier, 24 Mio XML principal, archive 64 Mio décompressés, ZIP suspect refusé) : un document qui les dépasse est refusé explicitement, jamais considéré comme prévisualisé intégralement.
+- Restent non pris en charge fidèlement : tableaux, images, notes et certains objets Word, antivirus et restauration des sources, PDF/OCR. Ne pas assimiler « texte principal entier » à une conversion Word totalement fidèle.
+
+
 ## [0.13.0] — 2026-11-03 (production alpha privée)
 ### BS-006c — DOCX multi-chapitres sous contrôle humain (#100)
 - Dans la prévisualisation privée DOCX, proposition de deux à dix chapitres selon les titres Word et section introductive éventuelle. Tous les blocs conservés dans leur ordre ; relecture et titres modifiables avant confirmation.
