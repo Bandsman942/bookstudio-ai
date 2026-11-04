@@ -145,8 +145,8 @@ class ClamavWorkerTests(unittest.TestCase):
             raise AssertionError("Unexpected request")
         clean = SimpleNamespace(status="SCANNED_CLEAN", sha256=sha,
                                 scannerVersion="ClamAV 1.4.3/28001")
-        with patch.object(worker, "json_call", side_effect=api_call), \\
-             patch.object(worker, "download_source", return_value=sha), \\
+        with patch.object(worker, "json_call", side_effect=api_call), \
+             patch.object(worker, "download_source", return_value=sha), \
              patch.object(worker, "scan_source", return_value=clean):
             output = worker.process_once(self.api, self.storage, bytes.fromhex("ab"*32),
                                           bytes.fromhex("cd"*32))
@@ -161,7 +161,7 @@ class ClamavWorkerTests(unittest.TestCase):
         def api_call(_api, endpoint, payload, _token):
             calls.append((endpoint,payload))
             return {"job":dict(self.ticket)} if endpoint.endswith("/claim") else {"accepted":True}
-        with patch.object(worker, "json_call", side_effect=api_call), \\
+        with patch.object(worker, "json_call", side_effect=api_call), \
              patch.object(worker, "download_source", side_effect=worker.WorkerFailure("DOWNLOAD_UNAVAILABLE")):
             result = worker.process_once(self.api, self.storage, bytes.fromhex("ab"*32),
                                          bytes.fromhex("cd"*32))
