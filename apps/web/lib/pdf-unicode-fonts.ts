@@ -28,7 +28,11 @@ const fallbacks:Record<FontStyle,FontName[]>={
 };
 
 export class UnsupportedPdfGlyph extends Error{
-  constructor(){super('EXPORT_UNSUPPORTED_GLYPHS');this.name='UnsupportedPdfGlyph';}
+  readonly codepoints:string;
+  constructor(grapheme:string){super('EXPORT_UNSUPPORTED_GLYPHS');this.name='UnsupportedPdfGlyph';
+    // Numeric codepoints only: do not log or expose manuscript excerpts.
+    this.codepoints=[...grapheme].map(c=>'U+'+c.codePointAt(0)!.toString(16).toUpperCase()).join(',');
+  }
 }
 
 type FontKitFace={hasGlyphForCodePoint?:(codepoint:number)=>boolean};
@@ -66,7 +70,7 @@ export function unicodeRuns(doc:PDFKit.PDFDocument,text:string,style:FontStyle,
       chosen=cache.get(key);
       if(!chosen){
         chosen=fallbacks[style].find(name=>canRender(doc,name,segment));
-        if(!chosen)throw new UnsupportedPdfGlyph();
+        if(!chosen)throw new UnsupportedPdfGlyph(segment);
         cache.set(key,chosen);
       }
     }

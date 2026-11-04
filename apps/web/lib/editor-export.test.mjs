@@ -55,7 +55,9 @@ test('PDF supports 13 French chapters with typographic spaces and Greek Unicode'
       {type:'text',text:' — analyse approfondie.',marks:[{type:'bold'}]}
     ]}]}
   }));
-  const pdf=await renderReadingPdf('L’avenir de la santé — réflexion française',chapters);
+  const pdf=await renderReadingPdf('L’avenir de la santé — réflexion française',chapters).catch(error=>{
+    throw new Error('13-chapter test uncovered unsupported '+String(error?.codepoints||'unknown'),{cause:error});
+  });
   assert.equal(Buffer.from(pdf.subarray(0,5)).toString('ascii'),'%PDF-');
   assert.ok(pdf.byteLength>5000,'all chapters render into a non-trivial PDF');
   const pageCount=(Buffer.from(pdf).toString('latin1').match(/\/Type \/Page\b/g)||[]).length;
