@@ -4,7 +4,7 @@ const config: NextConfig = {
   transpilePackages: ['@bookstudio/domain', '@bookstudio/database'],
   poweredByHeader: false,
   // Keep offline OFL WOFF files available inside the Vercel serverless exporter.
-  outputFileTracingIncludes: {'/api/v1/books/**': ['./node_modules/@fontsource/ibm-plex-sans/files/*.woff','./node_modules/@fontsource/noto-sans/files/*.woff','./node_modules/@fontsource/noto-sans-symbols-2/files/*.woff']},
+  outputFileTracingIncludes: {'/api/v1/books/**': ['./node_modules/@fontsource/ibm-plex-sans/files/*.woff','./node_modules/@fontsource/noto-sans/files/*.woff','./node_modules/@fontsource/noto-sans-symbols-2/files/*.woff','./node_modules/@fontsource/noto-sans-symbols/files/*.woff']},
   async headers() {
     return [{source:'/:path*', headers:[
       {key:'X-Content-Type-Options',value:'nosniff'},

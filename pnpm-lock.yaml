@@ -19,6 +19,9 @@ importers:
       '@fontsource/noto-sans-symbols-2':
         specifier: 5.2.8
         version: 5.2.8
+      '@fontsource/noto-sans-symbols':
+        specifier: 5.2.11
+        version: 5.2.11
       '@bookstudio/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -93,6 +96,9 @@ packages:
 
   '@fontsource/noto-sans-symbols-2@5.2.8':
     resolution: {integrity: sha512-OGKq1CaSIszlSBc4Ie2XPBS8yFfF1fMfzjjoRRfpijjgjk1Xg/WSo/3Bg0cJdoxxIdQ0a2XENzJHhfpWLNv5Lw==}
+
+  '@fontsource/noto-sans-symbols@5.2.11':
+    resolution: {integrity: sha512-/PKE+LTNizVcXnTBCREqWta9u+pBdA4QdJIdNguume9J09HHdqUYFr6hijY/GnYTuxxDht6woOClzjp8PYl+SQ==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -847,6 +853,8 @@ snapshots:
   '@fontsource/noto-sans@5.2.10': {}
 
   '@fontsource/noto-sans-symbols-2@5.2.8': {}
+
+  '@fontsource/noto-sans-symbols@5.2.11': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:

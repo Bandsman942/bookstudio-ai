@@ -85,12 +85,17 @@ test('Noto bundled symbol subset fontkit coverage of U+2192 is discoverable',asy
  const {registerUnicodeFonts}=await import('./pdf-unicode-fonts.ts');
  const doc=new PDFDocument({autoFirstPage:false});
  registerUnicodeFonts(doc);
- const faces=['noto-symbols-400','noto-math-400','latin-400'];
+ const faces=['noto-symbols-400','noto-math-400','noto-classic-symbols-400','latin-400'];
  const checked=Object.fromEntries(faces.map(name=>{
    doc.font(name);
-   return [name,Boolean(doc._font?.font?.hasGlyphForCodePoint?.(0x2192))];
+   const face=doc._font?.font;
+   return [name,{
+     advertised:Boolean(face?.hasGlyphForCodePoint?.(0x2192)),
+     glyphId:face?.glyphForCodePoint?.(0x2192)?.id??-1,
+     characterSet:Boolean(face?.characterSet?.includes?.(0x2192))
+   }];
  }));
  doc.destroy();
- assert.ok(checked['noto-symbols-400']||checked['noto-math-400'],
+ assert.ok(Object.values(checked).some(v=>v.advertised),
    'Fontkit must find U+2192 in a bundled font subset: '+JSON.stringify(checked));
 });

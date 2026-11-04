@@ -30,17 +30,18 @@ const fontFiles={
   'noto-latin-400':{pkg:'noto-sans',file:'noto-sans-latin-400-normal.woff'},
   'noto-latin-ext-400':{pkg:'noto-sans',file:'noto-sans-latin-ext-400-normal.woff'},
   'noto-symbols-400':{pkg:'noto-sans-symbols-2',file:'noto-sans-symbols-2-symbols-400-normal.woff'},
-  'noto-math-400':{pkg:'noto-sans-symbols-2',file:'noto-sans-symbols-2-math-400-normal.woff'}
+  'noto-math-400':{pkg:'noto-sans-symbols-2',file:'noto-sans-symbols-2-math-400-normal.woff'},
+  'noto-classic-symbols-400':{pkg:'noto-sans-symbols',file:'noto-sans-symbols-symbols-400-normal.woff'}
 } as const;
 type FontName=keyof typeof fontFiles;
 export type FontStyle='regular'|'bold'|'italic'|'boldItalic';
 export type UnicodeRun={font:FontName;text:string};
 
 const fallbacks:Record<FontStyle,FontName[]>={
-  regular:['latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
-  bold:['latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
-  italic:['latin-400i','latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400'],
-  boldItalic:['latin-700i','latin-400i','latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400']
+  regular:['latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400','noto-classic-symbols-400'],
+  bold:['latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400','noto-classic-symbols-400'],
+  italic:['latin-400i','latin-400','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400','noto-classic-symbols-400'],
+  boldItalic:['latin-700i','latin-400i','latin-700','latin-ext-700','latin-ext-400','greek-400','cyrillic-400','cyrillic-ext-400','vietnamese-400','noto-latin-400','noto-latin-ext-400','noto-symbols-400','noto-math-400','noto-classic-symbols-400']
 };
 
 export class UnsupportedPdfGlyph extends Error{
