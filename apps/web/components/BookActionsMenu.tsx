@@ -62,7 +62,7 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
       if(action==='archive'&&onArchive==='library')router.push('/library');
       router.refresh();
     }catch{
-      const msg=explainActionError({locale,operation:'book-rename',status:0});setError(msg);
+      const msg=explainActionError({locale,operation:action==='rename'?'book-rename':'book-archive',status:0});setError(msg);
       notify({tone:'error',title:locale==='fr'?'Modification du livre interrompue':'Book update interrupted',detail:msg});
     }finally{setBusy(false);}
   }
