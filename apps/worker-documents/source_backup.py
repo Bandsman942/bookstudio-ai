@@ -255,8 +255,10 @@ def restore_backup(vault: Path, backup_id: str, book_id: str, source_id: str,
     if destination == destination.parent:
         _fail("DESTINATION_INVALID")
     # The destination must not exist; copying must never alter an existing source.
+    created = False
     try:
         size, sha = _copy(vault / backup_id / "content.bin", destination)
+        created = True
         if size != verified["byteSize"] or sha != verified["sha256"]:
             _fail("RESTORE_CHECKSUM_FAILED")
         actual_size, actual_sha = _digest(destination)
@@ -266,8 +268,8 @@ def restore_backup(vault: Path, backup_id: str, book_id: str, source_id: str,
                 "bookId": book_id, "sourceId": source_id,
                 "byteSize": size, "sha256": sha}
     except BaseException:
-        # Never delete an already present user file on exclusive-open failure.
-        if destination.is_file() and destination.stat().st_size == 0:
+        # Only remove a file created by this invocation. Never touch an existing file.
+        if created:
             destination.unlink(missing_ok=True)
         raise
 
