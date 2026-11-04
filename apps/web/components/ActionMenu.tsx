@@ -2,7 +2,7 @@
 import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {KeyboardEvent as ReactKeyEvent} from 'react';
-export type ActionMenuItem={label:string;href?:string;onSelect?:()=>void|boolean;disabled?:boolean;destructive?:boolean;separatorBefore?:boolean;group?:string};
+export type ActionMenuItem={label:string;href?:string;onSelect?:()=>void|boolean|Promise<void>;disabled?:boolean;destructive?:boolean;separatorBefore?:boolean;group?:string};
 type Props={label:string;actions:ActionMenuItem[];disabled?:boolean;className?:string};
 type Point={x:number;y:number}|null;
 /** Shared accessible ⋯, desktop right-click and Shift+F10 menu. Portal prevents overflow clipping. */
