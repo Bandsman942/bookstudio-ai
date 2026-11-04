@@ -8,9 +8,9 @@ type Point={x:number;y:number}|null;
 /** Shared accessible ⋯, desktop right-click and Shift+F10 menu. Portal prevents overflow clipping. */
 export default function ActionMenu({label,actions,disabled=false,className=''}:Props){
  const [open,setOpen]=useState(false),[point,setPoint]=useState<Point>(null),[position,setPosition]=useState<Point>(null);
- const id=useId(),root=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),menu=useRef<HTMLDivElement>(null);
+ const id=useId(),root=useRef<HTMLDivElement>(null),triggerRef=useRef<HTMLButtonElement>(null),menu=useRef<HTMLDivElement>(null);
  const focusLast=useRef(false),available=actions.some(a=>!a.disabled);
- function close(restore=false){setOpen(false);setPosition(null);if(restore)trigger.current?.focus();}
+ function close(restore=false){setOpen(false);setPosition(null);if(restore)triggerRef.current?.focus();}
  function show(at:Point=null,last=false){
    if(disabled||!available)return;
    document.dispatchEvent(new Event('bookstudio-context-close'));
@@ -40,7 +40,7 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
  },[disabled,available]);
  useLayoutEffect(()=>{
    if(!open||!menu.current)return;
-   const box=menu.current.getBoundingClientRect(),button=trigger.current?.getBoundingClientRect();
+   const box=menu.current.getBoundingClientRect(),button=triggerRef.current?.getBoundingClientRect();
    const vv=window.visualViewport,l=vv?.offsetLeft??0,t=vv?.offsetTop??0;
    const w=vv?.width??window.innerWidth,h=vv?.height??window.innerHeight;
    const desiredX=point?point.x:(button?button.right-box.width:0);
@@ -80,7 +80,7 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
  }
  return <>
    <div className={'context-actions '+(open?'is-open ':'')+className} ref={root}>
-     <button ref={trigger} type="button" className="context-trigger"
+     <button ref={triggerRef} type="button" className="context-trigger"
        title={label} aria-label={label} aria-haspopup="menu" aria-controls={open?id:undefined}
        aria-expanded={open} disabled={disabled||!available}
        onClick={()=>open?close(true):show()}
