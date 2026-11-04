@@ -130,6 +130,45 @@ class ClamavWorkerTests(unittest.TestCase):
             with self.assertRaises(worker.WorkerFailure):
                 worker.config()
 
+    def test_process_once_links_lease_download_scan_and_signed_report(self):
+        from types import SimpleNamespace
+        calls = []
+        sha = hashlib.sha256(b"synthetic private bytes").hexdigest()
+        def api_call(_api, endpoint, payload, _token):
+            calls.append((endpoint, payload))
+            if endpoint.endswith("/claim"):
+                return {"job": dict(self.ticket)}
+            if endpoint.endswith("/report"):
+                self.assertEqual(payload["status"], "SCANNED_CLEAN")
+                self.assertEqual(payload["sha256"], sha)
+                return {"accepted": True, "sourceStatus": "SCAN_PENDING_PROMOTION"}
+            raise AssertionError("Unexpected request")
+        clean = SimpleNamespace(status="SCANNED_CLEAN", sha256=sha,
+                                scannerVersion="ClamAV 1.4.3/28001")
+        with patch.object(worker, "json_call", side_effect=api_call), \\
+             patch.object(worker, "download_source", return_value=sha), \\
+             patch.object(worker, "scan_source", return_value=clean):
+            output = worker.process_once(self.api, self.storage, bytes.fromhex("ab"*32),
+                                          bytes.fromhex("cd"*32))
+        self.assertEqual(output, "ATTESTED_SCANNED_CLEAN")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0][1], {})
+        self.assertEqual(calls[1][1]["jobId"], self.ticket["jobId"])
+        self.assertEqual(len(calls[1][1]["signature"]), 64)
+
+    def test_failed_download_never_claims_source_clean(self):
+        calls = []
+        def api_call(_api, endpoint, payload, _token):
+            calls.append((endpoint,payload))
+            return {"job":dict(self.ticket)} if endpoint.endswith("/claim") else {"accepted":True}
+        with patch.object(worker, "json_call", side_effect=api_call), \\
+             patch.object(worker, "download_source", side_effect=worker.WorkerFailure("DOWNLOAD_UNAVAILABLE")):
+            result = worker.process_once(self.api, self.storage, bytes.fromhex("ab"*32),
+                                         bytes.fromhex("cd"*32))
+        self.assertEqual(result, "ATTESTED_SCAN_UNAVAILABLE")
+        self.assertEqual(calls[1][1]["status"], "SCAN_UNAVAILABLE")
+        self.assertIsNone(calls[1][1]["sha256"])
+
 
 if __name__ == "__main__":
     unittest.main()
