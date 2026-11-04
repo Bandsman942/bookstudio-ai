@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import {createPortal} from 'react-dom';
 import {usePathname,useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
@@ -68,7 +69,7 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
        {label:locale==='fr'?'Retirer le chapitre…':'Remove chapter…',destructive:true,
          onSelect:()=>start('delete')}]:[])
    ]}/>
-   {mode&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
+   {mode&&typeof document!=='undefined'&&createPortal(<div className="modal-backdrop" style={{zIndex:2200}} onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
      <form className="modal" role="dialog" aria-modal="true"
        aria-label={mode==='create'?t('book.newChapterTitle'):
          locale==='fr'?(mode==='delete'?'Retirer un chapitre':t('chapter.renameHeading')):
@@ -94,6 +95,6 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
        </button>
        <button className="text-button" type="button" onClick={close} disabled={busy}>{t('common.cancel')}</button>
      </form>
-   </div>}
+   </div>,document.body)}
  </>;
 }

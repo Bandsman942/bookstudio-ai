@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import {createPortal} from 'react-dom';
 import {useAppPreferences} from './AppPreferences';
 export default function ShortcutsHelp(){
  const {locale}=useAppPreferences(),[open,setOpen]=useState(false);
@@ -22,7 +23,7 @@ export default function ShortcutsHelp(){
    ['?',fr?'Afficher cette aide hors zone de saisie':'Show help outside text input'],
    ['Échap / Escape',fr?'Fermer un menu ou une fenêtre':'Close menu or dialog']
  ];
- return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setOpen(false);}}>
+ return typeof document==='undefined'?null:createPortal(<div className="modal-backdrop" style={{zIndex:2200}} onMouseDown={event=>{if(event.target===event.currentTarget)setOpen(false);}}>
    <div className="modal shortcuts-modal" role="dialog" aria-modal="true"
      aria-label={fr?'Raccourcis clavier':'Keyboard shortcuts'}>
      <button type="button" className="close" aria-label={fr?'Fermer':'Close'} onClick={()=>setOpen(false)}>×</button>
@@ -33,5 +34,5 @@ export default function ShortcutsHelp(){
      <dl className="shortcuts-list">{shortcuts.map(([key,label])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{label}</dd></div>)}</dl>
      <button className="button small" onClick={()=>setOpen(false)}>{fr?'Compris':'Got it'}</button>
    </div>
- </div>;
+ </div>,document.body);
 }
