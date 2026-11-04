@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
+import {useRouter} from 'next/navigation';
 import {EditorContent,useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {safeExternalHref} from '@bookstudio/domain';
@@ -8,13 +9,16 @@ import AppIcon from './AppIcon';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
 import ActionMenu from './ActionMenu';
+import ChapterActionsMenu from './ChapterActionsMenu';
+import ShortcutsHelp from './ShortcutsHelp';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import {useToast} from './ToastProvider';
-type Chapter={id:string;title:string};
+type Chapter={id:string;title:string;updatedAt:string;revision:number};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
 type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
 export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
  const {t,locale}=useAppPreferences();
+ const router=useRouter();
  const preferenceActions=usePreferenceActions();
  const {notify}=useToast();
  const previousSaveState=useRef<SaveState>('saved');
@@ -22,7 +26,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const currentTRef=useRef(t);currentTRef.current=t;
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
- const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
+ const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[mobileNav,setMobileNav]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
  const [recovery,setRecovery]=useState<string|null>(null);
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
  const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -54,9 +58,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  },[state,canEdit,chapterId,chapterTitle,errorDetail,locale,notify]);
  const draftKey='bookstudio:draft:'+chapterId;
  const drawerCloseRef=useRef<HTMLButtonElement>(null);
+ const navCloseRef=useRef<HTMLButtonElement>(null),navListRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{
    const query=window.matchMedia('(max-width: 1150px)');
-   const update=()=>{setCompact(query.matches);if(!query.matches)setMobilePanel(false);};
+   const update=()=>{setCompact(query.matches);if(!query.matches){setMobilePanel(false);setMobileNav(false);}};
    update();
    query.addEventListener('change',update);
    return ()=>query.removeEventListener('change',update);
@@ -68,6 +73,17 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    document.addEventListener('keydown',handler);
    return ()=>document.removeEventListener('keydown',handler);
  },[mobilePanel]);
+
+ useEffect(()=>{
+   if(!mobileNav)return;
+   navCloseRef.current?.focus();
+   const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setMobileNav(false);};
+   document.addEventListener('keydown',key);return ()=>document.removeEventListener('keydown',key);
+ },[mobileNav]);
+ useEffect(()=>{
+   const selected=navListRef.current?.querySelector<HTMLElement>('.chapter-nav-row.selected');
+   if(selected)selected.scrollIntoView({block:'nearest'});
+ },[chapterId,mobileNav]);
 
  const editor=useEditor({
    extensions:[StarterKit.configure({
@@ -194,19 +210,86 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    return ()=>{flush();window.removeEventListener('beforeunload',handler);};
  },[editor,draftKey,canEdit]);
 
+ useEffect(()=>{
+   const handle=(event:KeyboardEvent)=>{
+     const mod=event.ctrlKey||event.metaKey,letter=event.key.toLowerCase();
+     const target=event.target instanceof Element?event.target:null;
+     const typing=!!target?.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]');
+     if(mod&&letter==='s'&&!event.altKey){
+       event.preventDefault();
+       if(canEdit&&editor){
+         if(serializeTimerRef.current){clearTimeout(serializeTimerRef.current);serializeTimerRef.current=null;}
+         lastJson.current=JSON.stringify(editor.getJSON());
+         try{localStorage.setItem(draftKey,lastJson.current);}catch{}
+         pendingRef.current=lastJson.current!==savedContentRef.current;
+         retryAtRef.current=0;
+         if(pendingRef.current)setState('editing');
+       }
+       return;
+     }
+     if(mod&&event.shiftKey&&letter==='o'){
+       event.preventDefault();
+       if(!pendingRef.current&&!savingRef.current)router.push('/books/'+bookId);
+       else notify({tone:'warning',title:locale==='fr'?'Enregistrement en cours':'Save in progress',
+         detail:locale==='fr'?'Le chapitre doit être enregistré avant de changer de page.':'Save the chapter before navigating away.'});
+     }else if(mod&&event.shiftKey&&letter==='k'){
+       event.preventDefault();if(!pendingRef.current&&!savingRef.current)router.push('/search');
+     }else if(event.altKey&&event.shiftKey&&(event.key==='ArrowUp'||event.key==='ArrowDown')){
+       event.preventDefault();
+       const current=chapters.findIndex(c=>c.id===chapterId),next=current+(event.key==='ArrowUp'?-1:1);
+       if(next>=0&&next<chapters.length&&!pendingRef.current&&!savingRef.current)
+         router.push('/books/'+bookId+'/chapters/'+chapters[next].id);
+     }else if(event.altKey&&event.shiftKey&&letter==='m'){
+       event.preventDefault();setMobileNav(v=>!v);
+     }else if(event.key==='?'&&!typing&&!mod&&!event.altKey){
+       event.preventDefault();document.dispatchEvent(new Event('bookstudio-shortcuts-open'));
+     }
+   };
+   document.addEventListener('keydown',handle);
+   return ()=>document.removeEventListener('keydown',handle);
+ },[editor,bookId,chapterId,chapters,canEdit,draftKey,router,locale,notify]);
 
- return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open':'')}>
-  <aside className="studio-sidebar">
-    <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
-    <Link href={'/books/'+bookId} className="back-link"><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
+ function protectNavigation(event:React.MouseEvent){
+   if(pendingRef.current||savingRef.current){
+     event.preventDefault();notify({tone:'warning',title:locale==='fr'?'Sauvegarde du chapitre en attente':'Chapter has pending changes',
+       detail:locale==='fr'?'Attendez la confirmation « Enregistré » avant de naviguer.':
+         'Wait for the “Saved” confirmation before navigating.'});
+   }else setMobileNav(false);
+ }
+ return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open ':'')+
+     (mobileNav?'studio-mobile-navigation-open':'')}>
+  {mobileNav&&<button type="button" className="studio-nav-backdrop" aria-label={locale==='fr'?'Fermer la navigation':'Close navigation'} onClick={()=>setMobileNav(false)}/>}
+  <aside className="studio-sidebar" aria-label={t('editor.manuscript')}>
+    <button ref={navCloseRef} type="button" className="studio-nav-close" aria-label={locale==='fr'?'Fermer les chapitres':'Close chapters'} onClick={()=>setMobileNav(false)}>×</button>
+    <Link href="/library" className="brand" onClick={protectNavigation}><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
+    <Link href={'/books/'+bookId} className="back-link" onClick={protectNavigation}><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
     <div className="nav-section"><AppIcon name="manuscript"/>{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
-    <div className="chapter-navigation">{chapters.map((c,i)=><Link href={'/books/'+bookId+'/chapters/'+c.id} key={c.id} className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}><AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span></Link>)}</div>
-    <div className="nav-spacer"/><div className="sidebar-footer">{t('editor.sidebarNote')}</div>
+    <div ref={navListRef} className="chapter-navigation" aria-label={locale==='fr'?'Liste des chapitres':'Chapter list'}>{chapters.map((c,i)=>
+      <div key={c.id} className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
+        <Link href={'/books/'+bookId+'/chapters/'+c.id} onClick={protectNavigation}
+          className={'chapter-nav-link '+(c.id===chapterId?'selected':'')} aria-current={c.id===chapterId?'page':undefined}>
+          <AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span>
+        </Link>
+        <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title} revision={c.revision}
+          updatedAt={c.updatedAt} editable={canEdit}/>
+      </div>)}</div>
+    <div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>
   <main className="studio-center">
-    <div className="studio-topbar"><span className="breadcrumb"><Link href={'/books/'+bookId}>{bookTitle}</Link> / <strong>{chapterTitle}</strong></span>
+    <div className="studio-topbar">
+      <div className="studio-quick-nav">
+        <button type="button" className="studio-nav-toggle" onClick={()=>setMobileNav(true)}
+          aria-label={locale==='fr'?'Afficher les chapitres':'Show chapters'} aria-expanded={mobileNav}>☰</button>
+        <Link className="studio-quick-overview" href={'/books/'+bookId} onClick={protectNavigation}>
+          <AppIcon name="arrowLeft" size={15}/>{t('editor.bookOverview')}
+        </Link>
+        <span className="breadcrumb"><Link href={'/books/'+bookId} onClick={protectNavigation}>{bookTitle}</Link> / <strong>{chapterTitle}</strong></span>
+      </div>
       <div className="studio-actions">
         <span className={'save-state save-'+state}>{!canEdit?t('common.readOnly'):state==='saved'?'✓ '+t('editor.saved'):state==='editing'?'● '+t('editor.modified'):state==='saving'?'◌ '+t('editor.saving'):state==='conflict'?'⚠ '+t('editor.conflict'):state==='offline'?'◌ '+t('editor.offlineDraft'):'⚠ '+t('editor.unsaved')}</span>
+        <button type="button" className="studio-shortcuts-trigger" title={locale==='fr'?'Raccourcis clavier (?)':'Keyboard shortcuts (?)'}
+          aria-label={locale==='fr'?'Aide des raccourcis clavier':'Keyboard shortcuts help'}
+          onClick={()=>document.dispatchEvent(new Event('bookstudio-shortcuts-open'))}>?</button>
         <ActionMenu label={t('editor.display')} actions={[
           {label:t(focus?'editor.focusOff':'editor.focusOn'),
             onSelect:()=>setFocus(value=>!value)},
@@ -234,5 +317,6 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <div className="insight-card pale"><span className="eyebrow">{t('editor.next')}</span><p>✧ {t('editor.style')}</p><p>✧ {t('editor.suggestions')}</p><p>✧ {t('editor.bibliography')}</p></div>
     <div className="insights-footer">{t('editor.respects')}</div>
   </aside>}
+  <ShortcutsHelp/>
  </div>;
 }
