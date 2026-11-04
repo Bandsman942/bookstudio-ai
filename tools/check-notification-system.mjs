@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const get=path=>fs.readFileSync(path,'utf8');
+const root=get('apps/web/app/layout.tsx');
+const toast=get('apps/web/components/ToastProvider.tsx');
+const copy=get('apps/web/lib/notification-copy.ts');
+const css=get('apps/web/app/styles.css');
+assert.match(root,/<ToastProvider>/,'ToastProvider wraps the entire app');
+for(const token of ['success','error','warning','info','role=','aria-live=','MAX_VISIBLE=3','useToast','dismiss']) assert.ok(toast.includes(token),'missing toast contract '+token);
+for(const op of ['pdf','snapshot-create','source-upload','docx-import','comment-add','editor-save']) assert.ok(copy.includes(op),'missing operation '+op);
+assert.ok(css.includes('prefers-reduced-motion:reduce'),'respect reduced motion');
+assert.ok(css.includes('.app-toast-close:focus-visible'),'visible keyboard focus');
+for(const path of ['apps/web/components/SnapshotsPanel.tsx','apps/web/components/LibraryClient.tsx','apps/web/components/BookOverview.tsx','apps/web/components/BookSourceFiles.tsx','apps/web/components/DocxCompleteImportPanel.tsx','apps/web/components/ChapterComments.tsx','apps/web/components/StudioEditor.tsx','apps/web/components/LoginForm.tsx']) assert.ok(get(path).includes('useToast()'),'missing hook in '+path);
+assert.ok(get('apps/web/components/SnapshotsPanel.tsx').includes('chapterNumber:body?.chapterNumber'),'PDF export must report chapter position');
+console.log('Toasts global contract OK');

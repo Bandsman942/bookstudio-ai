@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",
@@ -11,7 +11,7 @@
     "dev": "pnpm --filter @bookstudio/web dev",
     "build": "pnpm --filter @bookstudio/web build",
     "typecheck": "pnpm --filter @bookstudio/web typecheck",
-    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check && pnpm manuscript-ui:check && pnpm docx:check && pnpm reviewed-docx:check && pnpm docx-split:check && pnpm docx-batch:check && pnpm docx-full:check && pnpm source-scan:check",
+    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check && pnpm manuscript-ui:check && pnpm docx:check && pnpm reviewed-docx:check && pnpm docx-split:check && pnpm docx-batch:check && pnpm docx-full:check && pnpm source-scan:check && pnpm toasts:check",
     "test:worker": "python -m unittest discover -s apps/worker-documents/tests -v",
     "db:generate": "pnpm --filter @bookstudio/database generate",
     "db:migrate": "pnpm --filter @bookstudio/database migrate",
@@ -30,6 +30,7 @@
     "docx-split:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/docx-chapter-split.test.mjs",
     "docx-batch:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/reviewed-docx-batch.test.mjs",
     "docx-full:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/docx-full-plan.test.mjs",
-    "source-scan:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/source-security-policy.test.mjs"
+    "source-scan:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/source-security-policy.test.mjs",
+    "toasts:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/notification-copy.test.mjs && node tools/check-notification-system.mjs"
   }
 }
