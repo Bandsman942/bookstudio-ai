@@ -21,6 +21,15 @@ enum EditorialCommentStatus {
   RESOLVED
 }
 
+enum SourceScanStatus {
+  UNSCANNED
+  QUEUED
+  SCANNING
+  SCANNED_CLEAN
+  REJECTED
+  SCAN_UNAVAILABLE
+}
+
 enum BookStatus {
   DRAFT
   WRITING
@@ -46,6 +55,7 @@ model User {
   snapshots BookSnapshot[] @relation("SnapshotAuthor")
   editorialComments EditorialComment[] @relation("CommentAuthor")
   sourceImports ManuscriptSourceImport[] @relation("SourceImportAuthor")
+  sourceSecurityConfirmations SourceSecurityRecord[] @relation("SourceSecurityConfirmer")
   @@map("users")
 }
 model Session {
@@ -96,6 +106,7 @@ model Book {
   editions Edition[]
   snapshots BookSnapshot[]
   sourceImports ManuscriptSourceImport[]
+  sourceSecurityRecords SourceSecurityRecord[]
   @@index([workspaceId,updatedAt])
   @@map("books")
 }
@@ -224,4 +235,28 @@ model ManuscriptSourceImport {
   @@unique([bookId,operationId])
   @@index([bookId,createdAt])
   @@map("manuscript_source_imports")
+}
+
+/**
+ * Source security provenance. Storage metadata confirmation is NOT antivirus scanning.
+ * Until an isolated, attested worker exists, records may only be UNSCANNED.
+ */
+model SourceSecurityRecord {
+  id String @id @default(uuid()) @db.Uuid
+  bookId String @map("book_id") @db.Uuid
+  storageName String @map("storage_name") @db.VarChar(140)
+  byteSize Int @map("byte_size")
+  mediaType String @map("media_type") @db.VarChar(160)
+  confirmedById String @map("confirmed_by_id") @db.Uuid
+  status SourceScanStatus @default(UNSCANNED)
+  sha256 String? @db.Char(64)
+  scannerVersion String? @map("scanner_version") @db.VarChar(100)
+  scannedAt DateTime? @map("scanned_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+  confirmedBy User @relation("SourceSecurityConfirmer",fields:[confirmedById],references:[id])
+  @@unique([bookId,storageName])
+  @@index([bookId,status])
+  @@map("source_security_records")
 }
