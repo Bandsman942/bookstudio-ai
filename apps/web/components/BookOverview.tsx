@@ -8,6 +8,8 @@ import BookSourceFiles from './BookSourceFiles';
 import BookActionsMenu from './BookActionsMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
@@ -17,7 +19,8 @@ type Props={
 };
 
 export default function BookOverview({bookId,title,status,kind,chapters,updatedAt,editable}:Props){
-  const {t}=useAppPreferences();
+  const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
         [error,setError]=useState(''),[busy,setBusy]=useState(false);
   const router=useRouter();
@@ -28,10 +31,15 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:newTitle})
       });
       const payload=await response.json();
-      if(!response.ok){setError(payload.error||t('book.chapterError'));return;}
+      if(!response.ok){const detail=explainActionError({locale,operation:'chapter-create',status:response.status,code:payload.error});
+        setError(detail);notify({tone:'error',title:locale==='fr'?'Chapitre non créé':'Chapter not created',detail});return;}
+      notify({tone:'success',title:locale==='fr'?'Chapitre créé':'Chapter created',
+        detail:locale==='fr'?'« '+newTitle+' » a été ajouté à l’ouvrage « '+title+' ».':
+          '“'+newTitle+'” was added to “'+title+'”.'});
       router.push('/books/'+bookId+'/chapters/'+payload.chapter.id);
       router.refresh();
-    }catch{setError(t('book.serviceUnavailable'));}
+    }catch{const detail=explainActionError({locale,operation:'chapter-create',status:0});setError(detail);
+      notify({tone:'error',title:locale==='fr'?'Création du chapitre interrompue':'Chapter creation interrupted',detail});}
     finally{setBusy(false);}
   }
   return <div className="content-inner">

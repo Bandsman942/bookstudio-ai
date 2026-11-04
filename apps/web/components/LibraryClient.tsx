@@ -7,6 +7,8 @@ import BookActionsMenu from './BookActionsMenu';
 import ManuscriptImportDialog from './ManuscriptImportDialog';
 import AppIcon from './AppIcon';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 import type {Locale,MessageKey} from '@/lib/i18n';
 
 type Book={id:string;title:string;bookType:string;status:string;updatedAt:string;editable:boolean};
@@ -21,6 +23,7 @@ const bookTypes:{value:string;key:MessageKey}[]=[
 
 export default function LibraryClient({books,displayName}:{books:Book[];displayName:string}){
   const {t,locale}=useAppPreferences();
+  const {notify}=useToast();
   const prefs=usePreferenceActions();
   const [creating,setCreating]=useState(false),[importing,setImporting]=useState(false),[title,setTitle]=useState(''),
     [kind,setKind]=useState('GENERAL'),[bookLanguage,setBookLanguage]=useState<Locale>(locale),
@@ -35,9 +38,14 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
       const response=await fetch('/api/v1/books',{method:'POST',
         headers:{'Content-Type':'application/json'},body:JSON.stringify({title,bookType:kind,language:bookLanguage})});
       const result=await response.json();
-      if(!response.ok){setError(result.error||t('library.createFailed'));return;}
+      if(!response.ok){const detail=explainActionError({locale,operation:'book-create',status:response.status,code:result.error});
+        setError(detail);notify({tone:'error',title:locale==='fr'?'Création du livre refusée':'Book creation refused',detail});return;}
+      notify({tone:'success',title:locale==='fr'?'Livre créé':'Book created',
+        detail:locale==='fr'?'« '+title+' » a été ajouté à votre bibliothèque privée.':
+          '“'+title+'” was added to your private library.'});
       router.push('/books/'+result.book.id);router.refresh();
-    }catch{setError(t('library.noConnection'));}
+    }catch{const detail=explainActionError({locale,operation:'book-create',status:0});setError(detail);
+      notify({tone:'error',title:locale==='fr'?'Création du livre interrompue':'Book creation interrupted',detail});}
     finally{setLoading(false);}
   }
 

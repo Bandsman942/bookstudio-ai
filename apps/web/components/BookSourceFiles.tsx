@@ -1,6 +1,8 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useAppPreferences} from './AppPreferences';
+import {useToast} from './ToastProvider';
+import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
 import DocxPreviewDialog from './DocxPreviewDialog';
 import {
@@ -59,6 +61,7 @@ function humanSize(size:number){return size<1024?size+' B':size<1048576?Math.rou
 
 export default function BookSourceFiles({bookId,editable}:{bookId:string;editable:boolean}){
   const {locale}=useAppPreferences(),t=text[locale];
+  const {notify}=useToast();
   const [files,setFiles]=useState<Item[]>([]),[scanRequired,setScanRequired]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),
         [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[dragging,setDragging]=useState(false),
         [stage,setStage]=useState<UploadStage|null>(null);
@@ -74,8 +77,10 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       setScanRequired(data.scanRequired===true);
       setError('');
     }catch(e){
-      setError(e instanceof Error&&e.message==='STORAGE_NOT_CONFIGURED'?
-        text[locale].notReady:text[locale].error);
+      const msg=e instanceof Error&&e.message==='STORAGE_NOT_CONFIGURED'?text[locale].notReady:text[locale].error;
+      setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Liste des manuscrits indisponible':'Manuscript list unavailable',
+        detail:msg,key:'source-list|'+bookId});
     }finally{setLoading(false);}
   },[base,locale]);
   useEffect(()=>{void refresh();},[refresh]);
@@ -86,14 +91,22 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       await uploadSourceToBook(bookId,file,setStage);
       await refresh();
       setNotice(t.uploaded);
+      notify({tone:'success',title:locale==='fr'?'Manuscrit enregistré':'Manuscript uploaded',
+        detail:locale==='fr'?'« '+file.name+' » a été confirmé dans l’espace privé. Attention : aucune analyse antivirus n’a encore été réalisée.':
+          '“'+file.name+'” is confirmed in private storage. Antivirus scanning has not yet been performed.'});
     }catch(e){
       const code=uploadErrorCode(e);
       await refresh();
-      setError(code==='STORAGE_NOT_CONFIGURED'?t.notReady:
+      const msg=code==='STORAGE_NOT_CONFIGURED'?t.notReady:
         code==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t.tooLarge:
         code==='SOURCE_TYPE_MISMATCH'||code==='SOURCE_SIZE_MISMATCH'?t.mismatch:
         code==='UNAUTHENTICATED'||code==='NOT_FOUND_OR_FORBIDDEN'?t.forbidden:
-        t.uploadFailed);
+        t.uploadFailed;
+      setError(msg);
+      notify({tone:'error',title:locale==='fr'?'Importation de « '+file.name+' » interrompue':'Upload of “'+file.name+'” failed',
+        detail:msg+' '+explainActionError({locale,operation:'source-upload',
+          code,status:code==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?413:
+            code==='NOT_FOUND_OR_FORBIDDEN'?403:code==='SOURCE_SIZE_MISMATCH'?409:0})});
     }finally{
       setBusy(false);setStage(null);
       if(input.current)input.current.value='';
@@ -109,12 +122,27 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         body:JSON.stringify(action==='delete'?{name}:{action:'download',name})
       });
       const data=await response.json() as {url?:string;error?:string};
-      if(!response.ok)throw Error(data.error);
+      if(!response.ok)throw Error(data.error+'|'+response.status);
       if(action==='download'){
         if(!data.url)throw Error('NO_URL');
+        notify({tone:'info',title:locale==='fr'?'Téléchargement du manuscrit demandé':'Manuscript download requested',
+          detail:locale==='fr'?'Le navigateur ouvre « '+shortName(name)+' » depuis le stockage privé.':'The browser is opening “'+shortName(name)+'” from private storage.'});
         window.location.assign(data.url);
-      }else{await refresh();setNotice(t.deleted);}
-    }catch(e){setError(e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:t.error);}
+      }else{await refresh();setNotice(t.deleted);
+        notify({tone:'success',title:locale==='fr'?'Fichier source supprimé':'Source file deleted',
+          detail:locale==='fr'?'« '+shortName(name)+' » a été retiré de l’ouvrage.':'“'+shortName(name)+'” was removed from the book.'});}
+    }catch(e){
+      const code=e instanceof Error?e.message.split('|')[0]:'';
+      const status=Number(e instanceof Error?e.message.split('|')[1]:0)||0;
+      const msg=code==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:
+        code==='SOURCE_IN_USE'?(locale==='fr'?'Ce fichier est déjà utilisé pour créer des chapitres : il doit être conservé.':
+          'This file is already referenced by chapters and must be retained.'):
+        explainActionError({locale,operation:action==='delete'?'source-delete':'source-download',code,status});
+      setError(msg);
+      notify({tone:code==='SOURCE_IN_USE'?'warning':'error',
+        title:locale==='fr'?(action==='delete'?'Suppression refusée':'Téléchargement impossible'):
+          (action==='delete'?'Delete refused':'Download failed'),detail:msg});
+    }
     finally{setBusy(false);}
   }
   const stageLabel=stage==='authorizing'?t.authorizing:
