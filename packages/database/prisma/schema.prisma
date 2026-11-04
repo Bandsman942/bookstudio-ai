@@ -30,6 +30,15 @@ enum SourceScanStatus {
   SCAN_UNAVAILABLE
 }
 
+/** Durable orchestration jobs; no job is proof of an antivirus scan. */
+enum SourceScanJobStatus {
+  QUEUED
+  LEASED
+  FINISHED
+  FAILED
+  CANCELLED
+}
+
 enum BookStatus {
   DRAFT
   WRITING
@@ -107,6 +116,7 @@ model Book {
   snapshots BookSnapshot[]
   sourceImports ManuscriptSourceImport[]
   sourceSecurityRecords SourceSecurityRecord[]
+  sourceScanJobs SourceScanJob[]
   @@index([workspaceId,updatedAt])
   @@map("books")
 }
@@ -251,6 +261,7 @@ model SourceSecurityRecord {
   mediaType String @map("media_type") @db.VarChar(160)
   confirmedById String @map("confirmed_by_id") @db.Uuid
   status SourceScanStatus @default(UNSCANNED)
+  sourceGeneration String @default(uuid()) @map("source_generation") @db.Uuid
   sha256 String? @db.Char(64)
   scannerVersion String? @map("scanner_version") @db.VarChar(100)
   scannedAt DateTime? @map("scanned_at")
@@ -261,4 +272,23 @@ model SourceSecurityRecord {
   @@unique([bookId,storageName])
   @@index([bookId,status])
   @@map("source_security_records")
+}
+/** One immutable job per confirmed source generation, never store manuscript bytes. */
+model SourceScanJob {
+  id String @id @default(uuid()) @db.Uuid
+  bookId String @map("book_id") @db.Uuid
+  storageName String @map("storage_name") @db.VarChar(140)
+  sourceGeneration String @map("source_generation") @db.Uuid
+  declaredByteSize Int @map("declared_byte_size")
+  declaredMediaType String @map("declared_media_type") @db.VarChar(160)
+  status SourceScanJobStatus @default(QUEUED)
+  attempts Int @default(0)
+  leaseExpiresAt DateTime? @map("lease_expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+  @@unique([bookId,storageName,sourceGeneration])
+  @@index([status,createdAt])
+  @@index([bookId,createdAt])
+  @@map("source_scan_jobs")
 }

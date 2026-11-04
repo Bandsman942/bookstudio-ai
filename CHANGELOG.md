@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.20.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-010a4a — intents antivirus durables (#129, #126)
+- Génération UUID renouvelée à chaque confirmation de source, invalidant les anciens jobs.
+- File de scan append-only Neon opt-in sous `BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED` désactivé par défaut, taux limité à 30 requêtes par heure/ouvrage.
+- Révocation des jobs précédents lors d'une nouvelle confirmation ou suppression source ; aucun verdict `SCANNED_CLEAN` fabriqué.
+- Invariants de concordance job/génération testés ; migration SQL additive sans lecture des manuscrits.
+- Le worker M2M réel, l'analyse ClamAV attestée, l'isolement et la quarantaine restent non livrés.
+
+
 ## [0.19.0] — alpha candidate (NON DÉPLOYÉE)
 ### BS-UX — gestion et navigation des chapitres (#127)
 - Suppression **réversible** de chapitre, restauration depuis vue d’ensemble, RBAC OWNER/EDITOR, origine CSRF, audit et jetons de concurrence ; historique des révisions et commentaires intact.
