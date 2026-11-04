@@ -2,7 +2,7 @@
 import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {KeyboardEvent as ReactKeyEvent} from 'react';
-export type ActionMenuItem={label:string;href?:string;onSelect?:()=>void;disabled?:boolean;destructive?:boolean;separatorBefore?:boolean;group?:string};
+export type ActionMenuItem={label:string;href?:string;onSelect?:()=>void|boolean;disabled?:boolean;destructive?:boolean;separatorBefore?:boolean;group?:string};
 type Props={label:string;actions:ActionMenuItem[];disabled?:boolean;className?:string};
 type Point={x:number;y:number}|null;
 /** Shared accessible ⋯, desktop right-click and Shift+F10 menu. Portal prevents overflow clipping. */
@@ -24,7 +24,7 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
  useEffect(()=>{
    if(disabled||!available)return;
    const surface=root.current?.closest<HTMLElement>(
-     '[data-context-surface],.chapter-item,.chapter-nav-row,.book-card,.version-row,.archive-item,.comment-card,.studio-topbar');
+     '[data-context-surface],.chapter-item,.chapter-nav-row,.book-card,.version-row,.archive-item,.comment-card,.studio-topbar,.book-title-actions');
    if(!surface)return;
    const valid=(target:EventTarget|null)=>{
      const element=target instanceof Element?target:null;
@@ -98,7 +98,7 @@ export default function ActionMenu({label,actions,disabled=false,className=''}:P
          {a.group&&<div className="context-menu-group" role="presentation">{a.group}</div>}
          {a.href&&!a.disabled?
            <a role="menuitem" className={'context-menu-item'+(a.destructive?' is-danger':'')}
-             href={a.href} onClick={()=>close()} tabIndex={-1}>{a.label}</a>:
+             href={a.href} onClick={event=>{if(a.onSelect?.()===false){event.preventDefault();return;}close();}} tabIndex={-1}>{a.label}</a>:
            <button role="menuitem" className={'context-menu-item'+(a.destructive?' is-danger':'')}
              type="button" disabled={a.disabled} aria-disabled={a.disabled||undefined}
              tabIndex={-1} onClick={()=>{if(a.disabled)return;close();a.onSelect?.();}}>{a.label}</button>}

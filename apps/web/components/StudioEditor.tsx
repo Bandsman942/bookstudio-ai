@@ -249,12 +249,17 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    return ()=>document.removeEventListener('keydown',handle);
  },[editor,bookId,chapterId,chapters,canEdit,draftKey,router,locale,notify]);
 
- function protectNavigation(event:React.MouseEvent){
+ function canLeaveEditor(){
    if(pendingRef.current||savingRef.current){
-     event.preventDefault();notify({tone:'warning',title:locale==='fr'?'Sauvegarde du chapitre en attente':'Chapter has pending changes',
+     notify({tone:'warning',title:locale==='fr'?'Sauvegarde du chapitre en attente':'Chapter has pending changes',
        detail:locale==='fr'?'Attendez la confirmation « Enregistré » avant de naviguer.':
          'Wait for the “Saved” confirmation before navigating.'});
-   }else setMobileNav(false);
+     return false;
+   }
+   return true;
+ }
+ function protectNavigation(event:React.MouseEvent){
+   if(!canLeaveEditor())event.preventDefault();else setMobileNav(false);
  }
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open ':'')+
      (mobileNav?'studio-mobile-navigation-open':'')}>
@@ -271,7 +276,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
           <AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span>
         </Link>
         <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title} revision={c.revision}
-          updatedAt={c.updatedAt} editable={canEdit}/>
+          updatedAt={c.updatedAt} editable={canEdit} beforeNavigate={canLeaveEditor}/>
       </div>)}</div>
     <div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>

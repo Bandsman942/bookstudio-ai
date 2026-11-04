@@ -7,9 +7,9 @@ import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 
-type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revision:number;editable:boolean};
+type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revision:number;editable:boolean;beforeNavigate?:()=>boolean};
 
-export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable}:Props){
+export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable,beforeNavigate}:Props){
  const {t,locale}=useAppPreferences(),{notify}=useToast();
  const [mode,setMode]=useState<'create'|'rename'|'delete'|null>(null);
  const [desired,setDesired]=useState(title),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -23,6 +23,7 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
  },[mode,busy]);
  async function submit(event:React.FormEvent){
    event.preventDefault();if(!editable||busy||!mode)return;
+   if((mode==='create'||mode==='delete')&&beforeNavigate?.()===false)return;
    setBusy(true);setError('');
    const deleting=mode==='delete',creating=mode==='create';
    const verb=deleting?'chapter-delete':creating?'chapter-create':'chapter-rename';
@@ -60,10 +61,10 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      notify({tone:'error',title:locale==='fr'?'Action sur le chapitre interrompue':'Chapter action interrupted',detail:msg});
    }finally{setBusy(false);}
  }
- const start=(next:'create'|'rename'|'delete')=>{setDesired(next==='create'?'':title);setError('');setMode(next);};
+ const start=(next:'create'|'rename'|'delete')=>{if((next==='create'||next==='delete')&&beforeNavigate?.()===false)return;setDesired(next==='create'?'':title);setError('');setMode(next);};
  return <>
    <ActionMenu label={t('chapter.actionsFor',{title})} disabled={busy} actions={[
-     {label:t('chapter.open'),href:endpoint.replace('/api/v1','')},
+     {label:t('chapter.open'),href:endpoint.replace('/api/v1',''),onSelect:()=>beforeNavigate?.()!==false},
      ...(editable?[{label:t('book.chapterAdd'),separatorBefore:true,onSelect:()=>start('create')},
        {label:t('chapter.rename'),onSelect:()=>start('rename')},
        {label:locale==='fr'?'Retirer le chapitre…':'Remove chapter…',destructive:true,
