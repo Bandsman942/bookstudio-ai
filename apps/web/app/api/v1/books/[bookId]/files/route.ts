@@ -3,6 +3,7 @@ import {activeUser} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {MAX_SOURCE_BYTES,isBookId,isStoredName,validateSource,makeStoredName,
   signUpload,signDownload,deleteFile,listFiles,confirmStoredSource} from '@/lib/supabase-storage';
+import {canUseSource,publicScanStatus,scanStrictModeEnabled} from '@/lib/source-security-policy';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -28,8 +29,17 @@ export async function GET(_req:Request,{params}:Ctx){
   const {bookId}=await params,auth=await authorize(bookId,false);
   if(!auth)return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
   try{
-    return Response.json({files:await listFiles(bookId),maxBytes:MAX_SOURCE_BYTES},
-      {headers:{'Cache-Control':'private, no-store'}});
+    const files=await listFiles(bookId);
+    const records=await prisma.sourceSecurityRecord.findMany({
+      where:{bookId,storageName:{in:files.map(f=>f.name)}},
+      select:{storageName:true,status:true,sha256:true,scannerVersion:true,scannedAt:true}
+    });
+    const statuses=new Map(records.map(r=>[r.storageName,r]));
+    return Response.json({
+      files:files.map(f=>({...f,scanStatus:publicScanStatus(statuses.get(f.name))})),
+      maxBytes:MAX_SOURCE_BYTES,
+      scanRequired:scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES)
+    },{headers:{'Cache-Control':'private, no-store'}});
   }catch(error){return storageError(error);}
 }
 export async function POST(request:Request,{params}:Ctx){
@@ -50,6 +60,13 @@ export async function POST(request:Request,{params}:Ctx){
       // Prevent signing a URL for a missing object.
       const listed=await listFiles(bookId);
       if(!listed.some(file=>file.name===payload.name))return errorResponse('NOT_FOUND',404);
+      const required=scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES);
+      if(required){
+        const record=await prisma.sourceSecurityRecord.findUnique({
+          where:{bookId_storageName:{bookId,storageName:payload.name}}
+        });
+        if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
+      }
       return Response.json({url:await signDownload(bookId,payload.name)},
         {headers:{'Cache-Control':'no-store'}});
     }
@@ -61,11 +78,27 @@ export async function POST(request:Request,{params}:Ctx){
       if(status==='not_found')return errorResponse('SOURCE_NOT_FOUND',404);
       if(status==='size_mismatch')return errorResponse('SOURCE_SIZE_MISMATCH',409);
       if(status==='type_mismatch')return errorResponse('SOURCE_TYPE_MISMATCH',409);
+      // Confirmed storage metadata is NOT a malware scan. Reset on each re-confirmation.
+      const normalized=validateSource({name:payload.name.slice(37),size:payload.size,type:payload.type});
+      if(!normalized)return errorResponse('SOURCE_TYPE_MISMATCH',409);
+      await prisma.sourceSecurityRecord.upsert({
+        where:{bookId_storageName:{bookId,storageName:payload.name}},
+        create:{
+          bookId,storageName:payload.name,byteSize:payload.size,
+          mediaType:normalized.contentType,confirmedById:auth.user.id,status:'UNSCANNED'
+        },
+        update:{
+          byteSize:payload.size,mediaType:normalized.contentType,
+          confirmedById:auth.user.id,status:'UNSCANNED',
+          sha256:null,scannerVersion:null,scannedAt:null
+        }
+      });
       await prisma.auditEvent.create({data:{
         actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
-        action:'BOOK_SOURCE_UPLOAD_CONFIRMED',metadata:{name:payload.name,size:payload.size}
+        action:'BOOK_SOURCE_UPLOAD_CONFIRMED',metadata:{name:payload.name,size:payload.size,scanStatus:'UNSCANNED'}
       }});
-      return Response.json({ok:true,confirmed:true},{headers:{'Cache-Control':'no-store'}});
+      return Response.json({ok:true,confirmed:true,scanStatus:'UNSCANNED'},
+        {headers:{'Cache-Control':'no-store'}});
     }
     if(payload.action!==undefined)return errorResponse('VALIDATION_ERROR');
     const source=validateSource(payload);
@@ -93,6 +126,7 @@ export async function DELETE(request:Request,{params}:Ctx){
     const used=await prisma.manuscriptSourceImport.count({where:{bookId,sourceName:body.name}});
     if(used>0)return errorResponse('SOURCE_IN_USE',409);
     await deleteFile(bookId,body.name);
+    await prisma.sourceSecurityRecord.deleteMany({where:{bookId,storageName:body.name}});
     await prisma.auditEvent.create({data:{
       actorId:auth.user.id,workspaceId:auth.book.workspaceId,subjectId:bookId,
       action:'BOOK_SOURCE_DELETED',metadata:{name:body.name}

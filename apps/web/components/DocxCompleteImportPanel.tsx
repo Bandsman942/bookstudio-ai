@@ -29,6 +29,7 @@ const labels={
   failed:'Lot non confirmé. Réessayez pour reprendre avec les mêmes identifiants (pas de doublons).',
   conflict:'Un lot a été modifié ou entre en conflit avec une opération précédente.',
   forbidden:'Accès interdit ou fichier source privé indisponible.',
+  scanBlocked:'Analyse antivirus obligatoire : cette source n’est pas encore vérifiée.',
   exitNote:'Fermer le dialogue après une création partielle ne supprime pas les chapitres déjà créés.'
  },
  en:{
@@ -51,6 +52,7 @@ const labels={
   failed:'Batch not confirmed. Retry with the same IDs to avoid duplicate chapters.',
   conflict:'The batch changed or conflicts with a prior operation.',
   forbidden:'Access denied or the private source file is unavailable.',
+  scanBlocked:'Antivirus clearance required: this source is not yet verified.',
   exitNote:'Closing the dialog after partial completion does not remove chapters already created.'
  }
 } as const;
@@ -111,7 +113,8 @@ export default function DocxCompleteImportPanel({bookId,name,preview,onBusyChang
        const data=await response.json().catch(()=>({})) as {chapter?:{id:string};chapters?:{id:string}[];error?:string};
        const saved=single?(data.chapter?[data.chapter]:[]):data.chapters??[];
        if(!response.ok||saved.length!==chapters.length||!saved[0]?.id){
-         setError(['DOCX_OPERATION_CONFLICT','DOCX_BATCH_CONFLICT','DOCX_IMPORT_CONFLICT'].includes(data.error??'')?
+         setError(data.error==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:
+           ['DOCX_OPERATION_CONFLICT','DOCX_BATCH_CONFLICT','DOCX_IMPORT_CONFLICT'].includes(data.error??'')?
            t.conflict:['NOT_FOUND_OR_FORBIDDEN','DOCX_SOURCE_NOT_FOUND','DOCX_SOURCE_INVALID'].includes(data.error??'')?
            t.forbidden:t.failed);
          return;

@@ -18,6 +18,7 @@ const copy={
   invalid:'Ce DOCX dépasse les limites de sécurité de l’archive ou contient des éléments suspects. Aucune portion n’est masquée : analyse refusée.',
   corrupted:'Ce DOCX paraît corrompu ou contient du XML invalide.',
   network:'Connexion au stockage interrompue ou lien expiré. Rouvrez ce fichier.',
+  scanBlocked:'Mode de sécurité strict : analyse antivirus fiable requise avant prévisualisation.',
   warnings:'Éléments nécessitant une revue humaine',
   count:'{count} blocs de texte disponibles sur {chars} caractères. La pagination concerne uniquement l’affichage.',
   page:'Page {page} sur {pages}',previous:'Précédent',next:'Suivant',
@@ -41,6 +42,7 @@ const copy={
   invalid:'This DOCX exceeds archive safety limits or contains unsafe elements. No partial preview is shown.',
   corrupted:'The DOCX appears corrupt or contains invalid XML.',
   network:'Storage connection failed or signed link expired. Reopen this file.',
+  scanBlocked:'Strict security mode: reliable antivirus clearance is required before preview.',
   warnings:'Content needing human review',
   count:'{count} text blocks available, {chars} characters. Pagination only affects rendering.',
   page:'Page {page} of {pages}',previous:'Previous',next:'Next',
@@ -80,7 +82,10 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
          method:'POST',headers:{'Content-Type':'application/json'},
          body:JSON.stringify({action:'download',name}),signal:controller.signal
        });
-       if(!signed.ok)throw Error('NETWORK');
+       if(!signed.ok){
+         const detail=await signed.json().catch(()=>({})) as {error?:string};
+         throw Error(detail.error==='SOURCE_SCAN_REQUIRED'?'SOURCE_SCAN_REQUIRED':'NETWORK');
+       }
        const ticket=await signed.json() as {url?:string};
        if(typeof ticket.url!=='string')throw Error('NETWORK');
        const url=new URL(ticket.url);
@@ -101,7 +106,8 @@ export default function DocxPreviewDialog({bookId,name,onClose,editable}:{
      }catch(e){
        if(controller.signal.aborted)return;
        setError(e instanceof DocxPreviewError?
-         ['DOCX_CORRUPTED','DOCX_INVALID_XML'].includes(e.code)?t.corrupted:t.invalid:t.network);
+         ['DOCX_CORRUPTED','DOCX_INVALID_XML'].includes(e.code)?t.corrupted:t.invalid:
+         e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:t.network);
      }
    }
    void inspect();

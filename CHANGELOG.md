@@ -4,6 +4,17 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.15.0] — alpha candidate, NON DÉPLOYÉE
+### BS-010a1 — Traçabilité du contrôle de sécurité des manuscrits (#109)
+- Après confirmation réelle du stockage Supabase, chaque source reçoit un **statut de sécurité UNSCANNED** dans Neon. Ce statut signifie **non analysé par antivirus** ; confirmer le transfert ou reconnaître le type MIME n'est jamais une preuve d'absence de malware.
+- La base `source_security_records` conserve le livre, la source, les métadonnées et l'auteur de la confirmation, et prévoit des champs d'empreinte et d'identité du scanner **non renseignés sans preuve**. Migration Prisma additive ; les fichiers historiques sans ligne sont considérés UNSCANNED.
+- L'UI des fichiers sources affiche le statut réel en FR/EN pour chaque manuscrit ; confirmation de transfert et messages détaillés sont rectifiés.
+- Mode strict **opt-in**, `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES=false` par défaut : s'il est activé, refuser signatures de téléchargement et importation DOCX non certifiées avec HTTP 423 ; exige SCANNED_CLEAN **plus** empreinte SHA-256, version de scanner et horodatage valides. Aucune action utilisateur ne peut déclarer un fichier propre.
+- La reconfirmation du stockage remet le statut à UNSCANNED et efface les éventuelles preuves devenues obsolètes. La suppression source supprime aussi le statut.
+- Tests unitaires des politiques, workflow E2E et recette sur Neon isolée. Aucun téléchargement binaire dans les fonctions Vercel et aucune nouvelle clé côté navigateur.
+- **Non livré :** antivirus opérationnel, isolation physique en quarantaine, worker de scan, sauvegarde/restauration démontrées. Ne PAS activer le mode strict en production avant livraison du scanner isolé (#104).
+
+
 ## [0.14.0] — 2026-11-04 (production alpha privée)
 ### P0 — Importation DOCX complète, sans limite artificielle de 200 paragraphes (#105)
 - **Cause corrigée** : l'ancienne prévisualisation s'arrêtait silencieusement après 200 paragraphes ou 100 000 caractères, bloquant ensuite l'import. Le texte simple du fichier Supabase existant est désormais lu dans son intégralité **à l'intérieur des plafonds de sécurité ZIP/XML**, sans réupload ni découpe silencieuse.

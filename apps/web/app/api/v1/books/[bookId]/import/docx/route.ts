@@ -4,6 +4,7 @@ import type {Prisma} from '@prisma/client';
 import {activeUser,accessToBook} from '@/lib/auth';
 import {isSameOrigin,errorResponse} from '@/lib/security';
 import {isBookId,listFiles} from '@/lib/supabase-storage';
+import {canUseSource,scanStrictModeEnabled} from '@/lib/source-security-policy';
 import {prepareReviewedDocxImport,ReviewedImportError} from '@/lib/reviewed-docx-import';
 
 export const runtime='nodejs';
@@ -60,6 +61,13 @@ export async function POST(request:Request,{params}:Ctx){
     if(source.contentType!==WORD_TYPE||!Number.isSafeInteger(source.size)||
        source.size<1||source.size>20*1024*1024)
       return errorResponse('DOCX_SOURCE_INVALID',422);
+    const required=scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES);
+    if(required){
+      const record=await prisma.sourceSecurityRecord.findUnique({
+        where:{bookId_storageName:{bookId,storageName:sourceName}}
+      });
+      if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
+    }
   }catch{return errorResponse('STORAGE_UNAVAILABLE',503);}
 
   const contentHash=digest(content);
