@@ -22,7 +22,8 @@ assert.ok(studio.includes('autolink:false')&&studio.includes('linkOnPaste:false'
 assert.ok(domain.includes('DOCUMENT_UNSAFE_LINK'),'Missing server-side URI validation');
 assert.ok(docx.includes('TargetMode="External"'),'Missing DOCX relationship');
 assert.ok(docx.includes('w:hyperlink r:id'),'Missing DOCX hyperlink run');
-assert.ok(pdf.includes('underline:flags.has'),'PDF must support underlines');
+assert.ok(pdf.includes('underline:flags.has')||pdf.includes('underline:span.flags.has'),
+  'PDF must support underlines for Unicode-rich spans');
 for(const marker of ['.ribbon-tabs','.ribbon-scroll','.ribbon-tool:focus-visible',
   'background:var(--surface)','@media(max-width:760px)'])
   assert.ok(css.includes(marker),'Missing responsive dark-theme ribbon style '+marker);
