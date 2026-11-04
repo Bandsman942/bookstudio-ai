@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.15.1] — alpha candidate, NON DÉPLOYÉE
+## [0.15.1] — 2026-11-04 (production alpha privée)
 ### P0 — PDF Unicode et export mobile contrôlé (#111)
 - Cause racine `EXPORT_UNSUPPORTED_GLYPHS` : les polices PDFKit intégrées Times/Helvetica/Courier limitaient tous les titres et les chapitres au codage WinAnsi ; **un seul caractère hors liste** entraînait l'échec de tout le PDF. La limite n'était pas liée aux 13 chapitres.
 - Remplacement du garde-fou WinAnsi par une sélection des glyphes disponibles dans des polices IBM Plex Sans OFL embarquées localement, épinglées `@fontsource/ibm-plex-sans@5.2.8`. Gestion des espaces typographiques et lettres/ponctuation françaises, ainsi que des alphabets complémentaires couverts ; les glyphes absents continuent à être refusés explicitement au lieu d'une substitution silencieuse.
@@ -14,7 +14,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Ne pas fusionner ni déployer avant recette propriétaire E2E v0.15.1-alpha BON.
 
 
-## [0.15.0] — alpha candidate, NON DÉPLOYÉE
+### Livraison en production
+- Propriétaire : **E2E v0.15.1-alpha BON**, PR #112 fusionnée, `main` SHA `d313cbdec63d08025e8b43c01150d710068fd1e5` et CI GitHub `test-and-build` SUCCESS.
+- Snapshot Neon `snap-icy-surf-bfl92n3w` créé avant fusion. Aucune migration SQL nouvelle (5 migrations Prisma existantes).
+- Vercel production READY le **2026-11-04T01:45:54.641Z** : `dpl_4dLYMczsyhSNeEYMZkTfxH9NQFzv`, `bookstudio-ai.dtsc-platform.com`. Santé et version HTTP 200 : `0.15.1-alpha`, base `ready`.
+- Build `prisma migrate deploy → prisma generate → next build` terminé ; ignored-build-step `exit 0` restauré, previews désactivées. Journal : `docs/deployments/2026-11-04T01-45-54Z_v0.15.1.md`.
+- Aucun tag Git annoté `v0.15.1` n'a été créé/vérifié. Le champ `gitTag` est une étiquette de version, pas une preuve de tag publié.
+
+## [0.15.0] — 2026-11-04 (production alpha privée)
 ### BS-010a1 — Traçabilité du contrôle de sécurité des manuscrits (#109)
 - Après confirmation réelle du stockage Supabase, chaque source reçoit un **statut de sécurité UNSCANNED** dans Neon. Ce statut signifie **non analysé par antivirus** ; confirmer le transfert ou reconnaître le type MIME n'est jamais une preuve d'absence de malware.
 - La base `source_security_records` conserve le livre, la source, les métadonnées et l'auteur de la confirmation, et prévoit des champs d'empreinte et d'identité du scanner **non renseignés sans preuve**. Migration Prisma additive ; les fichiers historiques sans ligne sont considérés UNSCANNED.
@@ -24,6 +31,10 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Tests unitaires des politiques, workflow E2E et recette sur Neon isolée. Aucun téléchargement binaire dans les fonctions Vercel et aucune nouvelle clé côté navigateur.
 - **Non livré :** antivirus opérationnel, isolation physique en quarantaine, worker de scan, sauvegarde/restauration démontrées. Ne PAS activer le mode strict en production avant livraison du scanner isolé (#104).
 
+
+### Livraison en production
+- E2E propriétaire v0.15.0-alpha BON ; PR #110 fusionnée, SHA `018a9dbd78deeaf2120d8e3bf55accc9cb10dd69`, CI SUCCESS, snapshot Neon `snap-fancy-king-bfcnyg35`.
+- Vercel `dpl_572uAMaGuwvqVzWNrsvSzF7KE8Rr` READY le 2026-11-04T01:17:25.427Z, santé/version HTTP 200. Le moteur antivirus réel demeure non livré.
 
 ## [0.14.0] — 2026-11-04 (production alpha privée)
 ### P0 — Importation DOCX complète, sans limite artificielle de 200 paragraphes (#105)
