@@ -59,3 +59,16 @@ ne constituent une preuve d'analyse antivirus réelle.
 
 ## Prévisualisation Web v0.11.0-alpha (BS-006a)
 Une inspection consultative complémentaire peut être effectuée **localement dans le navigateur** depuis des sources DOCX Supabase privées, avec quotas ZIP et avertissements. Cela ne rend pas le worker Python utilisable comme service de production. Les chapitres ne sont pas créés automatiquement ; aucun antivirus/restauration n'est déclaré disponible. Voir `docs/qa/E2E-DOCX-PRIVATE-PREVIEW.md`.
+
+## Vérification de sauvegarde/restauration locale (candidate v0.18.0-alpha)
+
+`source_backup.py` crée des versions append-only de fichiers **déjà matérialisés dans un worker isolé**, conserve un manifeste privé signé HMAC, vérifie la taille et SHA-256 et restaure vers un **nouveau fichier seulement**. Pas de sauvegarde automatique des objets Supabase. Exiger des répertoires privés 0700, fichiers 0600 et `BOOKSTUDIO_BACKUP_HMAC_KEY` de 64 caractères hexadécimaux (32 octets), exclusivement en environnement isolé. Cette clé ne doit jamais être envoyée au navigateur ni au serveur Vercel.
+
+```sh
+python apps/worker-documents/source_backup.py create --vault /private/vault --source /private/input/test.bin --book-id UUID --source-id UUID --expected-size BYTES --expected-sha256 HEX
+python apps/worker-documents/source_backup.py inventory --vault /private/vault --book-id UUID --source-id UUID
+python apps/worker-documents/source_backup.py verify --vault /private/vault --book-id UUID --source-id UUID --backup-id UUID
+python apps/worker-documents/source_backup.py restore --vault /private/vault --book-id UUID --source-id UUID --backup-id UUID --destination /private/restore/new.bin --confirm RESTORE_NEW_COPY
+```
+
+Réplication indépendante, chiffrement au repos, preuve de restauration et contrôle ACL restent à réaliser avant tout usage sur les manuscrits utilisateurs. Voir `docs/qa/E2E-SOURCE-BACKUP-0.18.0.md`.

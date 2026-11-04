@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.18.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-010a3 — source backups isolés (#124, #104)
+- Versions binaires append-only par UUID avec SHA-256, manifeste HMAC signé et restauration vérifiée vers un nouveau chemin privé exclusivement.
+- Tests synthétiques : corruption, mauvais ID/clé, symlink, permission, non-écrasement, inventaire, fichiers volumineux.
+- Composant hors Vercel, non raccordé aux sources client et sans preuve de réplication distante ; pas encore un backup de production.
+
+
 ## [0.17.0] — 2026-11-04 (production alpha privée)
 ### BS-010a2 — Adaptateur ClamAV isolé, première tranche de #104 (#120)
 - Nouveau worker Python hors Vercel qui réalise une copie privée exclusive du fichier source, calcule son empreinte SHA-256 sur les octets réellement analysés et contrôle taille, symlinks et mutation pendant la copie.
