@@ -10,7 +10,7 @@ type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revisio
 
 export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable}:Props){
  const {t,locale}=useAppPreferences(),{notify}=useToast();
- const [mode,setMode]=useState<'rename'|'delete'|null>(null);
+ const [mode,setMode]=useState<'create'|'rename'|'delete'|null>(null);
  const [desired,setDesired]=useState(title),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const router=useRouter(),pathname=usePathname();
  const endpoint='/api/v1/books/'+bookId+'/chapters/'+chapterId;
@@ -23,11 +23,12 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
  async function submit(event:React.FormEvent){
    event.preventDefault();if(!editable||busy||!mode)return;
    setBusy(true);setError('');
-   const deleting=mode==='delete',verb=deleting?'chapter-delete':'chapter-rename';
+   const deleting=mode==='delete',creating=mode==='create';
+   const verb=deleting?'chapter-delete':creating?'chapter-create':'chapter-rename';
    try{
-     const response=await fetch(deleting?endpoint:endpoint+'/metadata',{
-       method:deleting?'DELETE':'PATCH',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify(deleting?{
+     const response=await fetch(creating?'/api/v1/books/'+bookId+'/chapters':deleting?endpoint:endpoint+'/metadata',{
+       method:creating?'POST':deleting?'DELETE':'PATCH',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify(creating?{title:desired}:deleting?{
          confirm:'DELETE',expectedRevision:revision,expectedUpdatedAt:updatedAt
        }:{title:desired,expectedUpdatedAt:updatedAt})
      });
@@ -35,18 +36,22 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      if(!response.ok){
        const msg=explainActionError({locale,operation:verb,status:response.status,code:payload.error});
        setError(msg);notify({tone:response.status===409?'warning':'error',
-         title:locale==='fr'?(deleting?'Suppression du chapitre refusée':'Renommage refusé'):
-           (deleting?'Chapter removal refused':'Rename refused'),detail:msg});return;
+         title:locale==='fr'?(deleting?'Suppression du chapitre refusée':creating?'Création du chapitre refusée':'Renommage refusé'):
+           (deleting?'Chapter removal refused':creating?'Chapter creation refused':'Rename refused'),detail:msg});return;
      }
      setMode(null);
      notify({tone:'success',
-       title:locale==='fr'?(deleting?'Chapitre retiré du manuscrit':'Chapitre renommé'):
-         (deleting?'Chapter removed from manuscript':'Chapter renamed'),
+       title:locale==='fr'?(deleting?'Chapitre retiré du manuscrit':creating?'Chapitre créé':'Chapitre renommé'):
+         (deleting?'Chapter removed from manuscript':creating?'Chapter created':'Chapter renamed'),
        detail:locale==='fr'?(deleting?'« '+title+' » reste conservé avec son historique et peut être restauré depuis la vue d’ensemble.':
+         creating?'« '+desired+' » a été ajouté au manuscrit.':
          '« '+title+' » est désormais intitulé « '+desired+' ».'):
          (deleting?'“'+title+'” is preserved with its revision history and can be restored from the overview.':
+           creating?'“'+desired+'” was added to the manuscript.':
            '“'+title+'” is now named “'+desired+'”.')});
-     if(deleting&&pathname===('/books/'+bookId+'/chapters/'+chapterId)){
+     if(creating&&payload.chapter?.id){
+       router.push('/books/'+bookId+'/chapters/'+payload.chapter.id);
+     }else if(deleting&&pathname===('/books/'+bookId+'/chapters/'+chapterId)){
        router.replace('/books/'+bookId);
      }else router.refresh();
    }catch{
@@ -54,24 +59,26 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      notify({tone:'error',title:locale==='fr'?'Action sur le chapitre interrompue':'Chapter action interrupted',detail:msg});
    }finally{setBusy(false);}
  }
- const start=(next:'rename'|'delete')=>{setDesired(title);setError('');setMode(next);};
+ const start=(next:'create'|'rename'|'delete')=>{setDesired(next==='create'?'':title);setError('');setMode(next);};
  return <>
    <ActionMenu label={t('chapter.actionsFor',{title})} disabled={busy} actions={[
      {label:t('chapter.open'),href:endpoint.replace('/api/v1','')},
-     ...(editable?[{label:t('chapter.rename'),separatorBefore:true,onSelect:()=>start('rename')},
+     ...(editable?[{label:t('book.chapterAdd'),separatorBefore:true,onSelect:()=>start('create')},
+       {label:t('chapter.rename'),onSelect:()=>start('rename')},
        {label:locale==='fr'?'Retirer le chapitre…':'Remove chapter…',destructive:true,
          onSelect:()=>start('delete')}]:[])
    ]}/>
    {mode&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
      <form className="modal" role="dialog" aria-modal="true"
-       aria-label={locale==='fr'?(mode==='delete'?'Retirer un chapitre':t('chapter.renameHeading')):
+       aria-label={mode==='create'?t('book.newChapterTitle'):
+         locale==='fr'?(mode==='delete'?'Retirer un chapitre':t('chapter.renameHeading')):
          (mode==='delete'?'Remove chapter':t('chapter.renameHeading'))} onSubmit={submit}>
        <button className="close" type="button" aria-label={t('common.close')} disabled={busy} onClick={close}>×</button>
        <div className="eyebrow">{t('chapter.section')}</div>
-       <h2>{mode==='rename'?t('chapter.renameHeading'):
+       <h2>{mode==='create'?t('book.newChapterTitle'):mode==='rename'?t('chapter.renameHeading'):
          (locale==='fr'?'Retirer ce chapitre du manuscrit ?':'Remove this chapter from the manuscript?')}</h2>
-       {mode==='rename'?<>
-         <p>{t('chapter.renameDetails')}</p>
+       {mode!=='delete'?<>
+         <p>{mode==='create'?t('book.overviewSubtitle'):t('chapter.renameDetails')}</p>
          <label>{t('book.newTitle')}
            <input autoFocus required minLength={2} maxLength={180} value={desired}
              onChange={event=>setDesired(event.target.value)}/>
@@ -81,7 +88,7 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
          '“'+title+'” will disappear from active navigation and search. Its content, revisions and comments remain preserved and can be restored from the overview.'}</p>}
        {error&&<p className="form-error" role="alert">{error}</p>}
        <button className={'button full'+(mode==='delete'?' is-danger':'')} type="submit" disabled={busy}>
-         {busy?t('book.saving'):mode==='delete'?
+         {busy?t('book.saving'):mode==='create'?t('book.chapterCreate'):mode==='delete'?
            (locale==='fr'?'Confirmer le retrait réversible':'Confirm reversible removal'):
            t('book.saveTitle')}
        </button>
