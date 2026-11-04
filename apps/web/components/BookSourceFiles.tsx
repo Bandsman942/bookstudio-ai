@@ -8,7 +8,8 @@ import {
   type UploadStage
 } from '@/lib/source-upload-client';
 
-type Item={name:string;size:number;createdAt:string|null};
+type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
+type Item={name:string;size:number;createdAt:string|null;scanStatus?:ScanStatus};
 const text={
   fr:{heading:'Fichiers sources',action:'Importer un manuscrit',
     explain:'Ajoutez ici le fichier original de votre livre. Il est enregistré directement dans votre espace privé Supabase Storage.',
@@ -19,12 +20,17 @@ const text={
     remove:'Supprimer',busy:'Chargement…',notReady:'La liaison Supabase Storage n’est pas encore configurée.',
     error:'Stockage momentanément indisponible. Réessayez.',
     tooLarge:'Format non autorisé ou fichier supérieur à 20 Mio.',
-    uploaded:'Manuscrit reçu et confirmé par le serveur.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
+    uploaded:'Fichier reçu et enregistré ; analyse antivirus non effectuée.',uploadFailed:'Transfert interrompu : fichier non confirmé. Réessayez.',
     mismatch:'Fichier reçu, mais taille ou type non conforme : aucune confirmation.',
     forbidden:'Accès au stockage refusé pour cet ouvrage.',
     confirm:'Supprimer définitivement ce fichier source ?',
     restricted:'DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 Mio maximum.',
-    notImported:'Important : ce fichier est conservé comme source. Sa conversion en chapitres éditables sera proposée dans une prochaine version.',
+    notImported:'La confirmation du stockage ne constitue pas une analyse antivirus. Les fichiers DOCX peuvent être relus et convertis après revue de l’auteur.',
+    scanRequired:'Mode strict : les sources non analysées ne peuvent pas être utilisées tant qu’un moteur antivirus isolé n’est pas opérationnel.',
+    scanBlocked:'Téléchargement ou importation interdits tant que la source ne dispose pas d’un contrôle antivirus fiable.',
+    scanStatus:{UNSCANNED:'Analyse antivirus non effectuée',QUEUED:'Analyse demandée — non terminée',
+      SCANNING:'Analyse en cours — non vérifiée',SCANNED_CLEAN:'Analyse terminée sans détection',
+      REJECTED:'Fichier rejeté par l’analyse',SCAN_UNAVAILABLE:'Service d’analyse indisponible'},
     deleted:'Fichier supprimé.'},
   en:{heading:'Source files',action:'Import a manuscript',
     explain:'Add the original document for your book. It is uploaded directly to your private Supabase Storage.',
@@ -35,12 +41,17 @@ const text={
     remove:'Delete',busy:'Loading…',notReady:'Supabase Storage is not configured.',
     error:'Storage is temporarily unavailable. Please retry.',
     tooLarge:'Unsupported type or larger than 20 MiB.',
-    uploaded:'Manuscript uploaded and confirmed by the server.',uploadFailed:'Transfer interrupted: file not confirmed. Please retry.',
+    uploaded:'File saved to storage; antivirus scan has not been performed.',uploadFailed:'Transfer interrupted: file not confirmed. Please retry.',
     mismatch:'File received, but size or MIME type differs: not confirmed.',
     forbidden:'Storage access denied for this book.',
     confirm:'Permanently delete this source file?',
     restricted:'DOCX, PDF, TXT, MD, EPUB, ODT, PNG, JPG, WEBP · 20 MiB max.',
-    notImported:'Important: this is the original source file; it is not yet converted into editable chapters.',
+    notImported:'Storage confirmation is not an antivirus scan. DOCX files can be reviewed and converted by the author.',
+    scanRequired:'Strict mode: unscanned sources cannot be used until an isolated antivirus service is available.',
+    scanBlocked:'Downloading or importing requires reliable antivirus clearance.',
+    scanStatus:{UNSCANNED:'Antivirus scan not performed',QUEUED:'Scan queued — not complete',
+      SCANNING:'Scanning — not verified',SCANNED_CLEAN:'Scan finished with no detection',
+      REJECTED:'File rejected by scanner',SCAN_UNAVAILABLE:'Scan service unavailable'},
     deleted:'File deleted.'}
 };
 function shortName(stored:string){return stored.replace(/^[0-9a-f-]{36}-/i,'');}
@@ -48,7 +59,7 @@ function humanSize(size:number){return size<1024?size+' B':size<1048576?Math.rou
 
 export default function BookSourceFiles({bookId,editable}:{bookId:string;editable:boolean}){
   const {locale}=useAppPreferences(),t=text[locale];
-  const [files,setFiles]=useState<Item[]>([]),[error,setError]=useState(''),[notice,setNotice]=useState(''),
+  const [files,setFiles]=useState<Item[]>([]),[scanRequired,setScanRequired]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),
         [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[dragging,setDragging]=useState(false),
         [stage,setStage]=useState<UploadStage|null>(null);
   const input=useRef<HTMLInputElement>(null);
@@ -57,9 +68,10 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
   const refresh=useCallback(async()=>{
     try{
       const response=await fetch(base,{cache:'no-store'});
-      const data=await response.json() as {files?:Item[];error?:string};
+      const data=await response.json() as {files?:Item[];scanRequired?:boolean;error?:string};
       if(!response.ok)throw new Error(data.error);
       setFiles(Array.isArray(data.files)?data.files:[]);
+      setScanRequired(data.scanRequired===true);
       setError('');
     }catch(e){
       setError(e instanceof Error&&e.message==='STORAGE_NOT_CONFIGURED'?
@@ -102,7 +114,7 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
         if(!data.url)throw Error('NO_URL');
         window.location.assign(data.url);
       }else{await refresh();setNotice(t.deleted);}
-    }catch{setError(t.error);}
+    }catch(e){setError(e instanceof Error&&e.message==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:t.error);}
     finally{setBusy(false);}
   }
   const stageLabel=stage==='authorizing'?t.authorizing:
@@ -115,6 +127,7 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       </button>
     </div>
     <p className="source-note">{t.explain}</p>
+    {scanRequired&&<p role="status" className="source-note source-scan-strict"><AppIcon name="shield" size={15}/>{t.scanRequired}</p>}
     {editable&&<div className={'source-dropzone'+(dragging?' is-dragging':'')}
       onDragOver={event=>{event.preventDefault();if(!busy)setDragging(true);}}
       onDragLeave={event=>{
@@ -141,6 +154,7 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
       <ul className="source-list">{files.map(f=><li key={f.name}>
         <span title={shortName(f.name)} className="source-filename"><AppIcon name="manuscript"/>{shortName(f.name)}</span>
         <small>{humanSize(f.size)}</small>
+        <small className="source-scan-status"><AppIcon name="shield" size={14}/>{t.scanStatus[f.scanStatus??'UNSCANNED']}</small>
         <div className="source-actions">
           {f.name.toLowerCase().endsWith('.docx')&&<button type="button" className="text-button" disabled={busy}
             onClick={()=>setPreviewName(f.name)}><AppIcon name="search" size={15}/>{t.preview}</button>}

@@ -719,3 +719,13 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .docx-jump-import:hover{border-color:var(--green);background:var(--surface-hover)}
 .docx-jump-import:focus-visible{outline:3px solid var(--menu-focus);outline-offset:3px}
 #docx-complete-title{scroll-margin-top:15px}
+
+/* BS-010a1: inspection transparency, never a false 'secure' badge. */
+.source-list .source-scan-status{display:inline-flex;align-items:center;gap:7px;flex:0 1 auto;
+  font-size:11px;font-weight:650;line-height:1.45;max-width:100%;
+  white-space:normal;color:var(--muted)}
+.source-list .source-scan-status .app-icon{color:var(--muted)}
+.source-scan-strict{display:flex;align-items:flex-start;gap:8px;padding:12px 13px;
+  border:1px solid var(--line);border-radius:8px;background:var(--surface-muted)}
+.source-scan-strict>.app-icon{color:var(--muted)}
+@media(max-width:640px){.source-list .source-scan-status{width:100%;flex-basis:100%}}
