@@ -20,7 +20,8 @@
     "@bookstudio/database": "workspace:*",
     "@prisma/client": "6.19.3",
     "fflate": "0.8.2",
-    "pdfkit": "0.20.2"
+    "pdfkit": "0.20.2",
+    "@fontsource/ibm-plex-sans": "5.2.8"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
