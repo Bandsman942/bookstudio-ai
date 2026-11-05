@@ -63,12 +63,11 @@ export async function POST(request:Request,{params}:Ctx){
       const listed=await listFiles(bookId);
       if(!listed.some(file=>file.name===payload.name))return errorResponse('NOT_FOUND',404);
       const required=scanStrictModeEnabled(process.env.BOOKSTUDIO_REQUIRE_SCANNED_SOURCES);
-      if(required){
-        const record=await prisma.sourceSecurityRecord.findUnique({
-          where:{bookId_storageName:{bookId,storageName:payload.name}}
-        });
-        if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
-      }
+      const record=await prisma.sourceSecurityRecord.findUnique({
+        where:{bookId_storageName:{bookId,storageName:payload.name}}
+      });
+      if(record?.status==='REJECTED')return errorResponse('SOURCE_REJECTED',423);
+      if(!canUseSource(required,record))return errorResponse('SOURCE_SCAN_REQUIRED',423);
       return Response.json({url:await signDownload(bookId,payload.name)},
         {headers:{'Cache-Control':'no-store'}});
     }
@@ -95,6 +94,13 @@ export async function POST(request:Request,{params}:Ctx){
           id:bookId,workspaceId:auth.book.workspaceId,archivedAt:null
         },select:{id:true}});
         if(!member||!liveBook)return 'FORBIDDEN' as const;
+        // A rejected source cannot be re-confirmed to reset the rejection.
+        // A genuinely new upload must use a new server-generated storage name.
+        const previous=await tx.sourceSecurityRecord.findUnique({
+          where:{bookId_storageName:{bookId,storageName:payload.name}},
+          select:{status:true}
+        });
+        if(previous?.status==='REJECTED')return 'REJECTED_SOURCE' as const;
         const recent=requested?await tx.sourceScanJob.count({where:{
           bookId,createdAt:{gte:new Date(Date.now()-60*60*1000)}
         }}):0;
@@ -131,6 +137,7 @@ export async function POST(request:Request,{params}:Ctx){
         return {status,queueDeferred:requested&&!queued} as const;
       });
       if(outcome==='FORBIDDEN')return errorResponse('NOT_FOUND_OR_FORBIDDEN',404);
+      if(outcome==='REJECTED_SOURCE')return errorResponse('SOURCE_REJECTED_REUPLOAD_REQUIRED',423);
       return Response.json({ok:true,confirmed:true,scanStatus:outcome.status,
         queueDeferred:outcome.queueDeferred},
         {headers:{'Cache-Control':'no-store'}});

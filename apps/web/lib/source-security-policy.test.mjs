@@ -12,10 +12,11 @@ test('strict mode must be explicitly enabled, never inferred from an empty varia
 test('legacy sources without row remain transparently UNSCANNED',()=>{
  assert.equal(publicScanStatus(undefined),'UNSCANNED');
  assert.equal(canUseSource(false,undefined),true);
+ assert.equal(canUseSource(false,{status:'REJECTED'}),false);
  assert.equal(canUseSource(true,undefined),false);
 });
 test('fail closed for all non-clean statuses and forged incomplete confirmations',()=>{
- for(const status of ['UNSCANNED','QUEUED','SCANNING','REJECTED','SCAN_UNAVAILABLE']){
+ for(const status of ['UNSCANNED','QUEUED','SCANNING','SCAN_PENDING_PROMOTION','REJECTED','SCAN_UNAVAILABLE']){
   assert.equal(canUseSource(true,{status}),false);
  }
  assert.equal(canUseSource(true,{status:'SCANNED_CLEAN'}),false);

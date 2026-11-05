@@ -10,7 +10,7 @@ import {
   type UploadStage
 } from '@/lib/source-upload-client';
 
-type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
+type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCAN_PENDING_PROMOTION'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
 type Item={name:string;size:number;createdAt:string|null;scanStatus?:ScanStatus};
 const text={
   fr:{heading:'Fichiers sources',action:'Importer un manuscrit',
@@ -30,8 +30,9 @@ const text={
     notImported:'La confirmation du stockage ne constitue pas une analyse antivirus. Les fichiers DOCX peuvent être relus et convertis après revue de l’auteur.',
     scanRequired:'Mode strict : les sources non analysées ne peuvent pas être utilisées tant qu’un moteur antivirus isolé n’est pas opérationnel.',
     scanBlocked:'Téléchargement ou importation interdits tant que la source ne dispose pas d’un contrôle antivirus fiable.',
+    scanRejected:'Fichier rejeté par l’analyse de sécurité : téléchargement et conversion interdits.',
     scanStatus:{UNSCANNED:'Analyse antivirus non effectuée',QUEUED:'Analyse demandée — non terminée',
-      SCANNING:'Analyse en cours — non vérifiée',SCANNED_CLEAN:'Analyse terminée sans détection',
+      SCANNING:'Analyse en cours — non vérifiée',SCAN_PENDING_PROMOTION:'Analyse sans détection — stockage sécurisé en attente',SCANNED_CLEAN:'Analyse terminée sans détection',
       REJECTED:'Fichier rejeté par l’analyse',SCAN_UNAVAILABLE:'Service d’analyse indisponible'},
     deleted:'Fichier supprimé.'},
   en:{heading:'Source files',action:'Import a manuscript',
@@ -51,8 +52,9 @@ const text={
     notImported:'Storage confirmation is not an antivirus scan. DOCX files can be reviewed and converted by the author.',
     scanRequired:'Strict mode: unscanned sources cannot be used until an isolated antivirus service is available.',
     scanBlocked:'Downloading or importing requires reliable antivirus clearance.',
+    scanRejected:'File rejected by security scan: download and conversion are blocked.',
     scanStatus:{UNSCANNED:'Antivirus scan not performed',QUEUED:'Scan queued — not complete',
-      SCANNING:'Scanning — not verified',SCANNED_CLEAN:'Scan finished with no detection',
+      SCANNING:'Scanning — not verified',SCAN_PENDING_PROMOTION:'Scan clean — secure storage pending',SCANNED_CLEAN:'Scan finished with no detection',
       REJECTED:'File rejected by scanner',SCAN_UNAVAILABLE:'Scan service unavailable'},
     deleted:'File deleted.'}
 };
@@ -97,7 +99,8 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
     }catch(e){
       const code=uploadErrorCode(e);
       await refresh();
-      const msg=code==='STORAGE_NOT_CONFIGURED'?t.notReady:
+      const msg=code==='SOURCE_REJECTED_REUPLOAD_REQUIRED'?t.scanRejected:
+        code==='STORAGE_NOT_CONFIGURED'?t.notReady:
         code==='FILE_NOT_ALLOWED_OR_TOO_LARGE'?t.tooLarge:
         code==='SOURCE_TYPE_MISMATCH'||code==='SOURCE_SIZE_MISMATCH'?t.mismatch:
         code==='UNAUTHENTICATED'||code==='NOT_FOUND_OR_FORBIDDEN'?t.forbidden:
@@ -134,7 +137,8 @@ export default function BookSourceFiles({bookId,editable}:{bookId:string;editabl
     }catch(e){
       const code=e instanceof Error?e.message.split('|')[0]:'';
       const status=Number(e instanceof Error?e.message.split('|')[1]:0)||0;
-      const msg=code==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:
+      const msg=code==='SOURCE_REJECTED'?t.scanRejected:
+        code==='SOURCE_SCAN_REQUIRED'?t.scanBlocked:
         code==='SOURCE_IN_USE'?(locale==='fr'?'Ce fichier est déjà utilisé pour créer des chapitres : il doit être conservé.':
           'This file is already referenced by chapters and must be retained.'):
         explainActionError({locale,operation:action==='delete'?'source-delete':'source-download',code,status});

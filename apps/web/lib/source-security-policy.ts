@@ -1,5 +1,5 @@
 /** Clear distinction: a confirmed storage object is NOT a virus-scanned object. */
-export type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
+export type ScanStatus='UNSCANNED'|'QUEUED'|'SCANNING'|'SCAN_PENDING_PROMOTION'|'SCANNED_CLEAN'|'REJECTED'|'SCAN_UNAVAILABLE';
 export type ScanEvidence={
   status:ScanStatus;
   sha256?:string|null;
@@ -15,6 +15,7 @@ export function scanStrictModeEnabled(envValue?:string):boolean{
 }
 /** No evidence or an unfinished/malicious scan always fails closed in strict mode. */
 export function canUseSource(required:boolean,record:ScanEvidence):boolean{
+  if(record?.status==='REJECTED')return false;
   if(!required)return true;
   if(!record||record.status!=='SCANNED_CLEAN'||
      !record.sha256||!SHA256.test(record.sha256)||

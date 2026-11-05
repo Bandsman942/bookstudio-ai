@@ -35,6 +35,13 @@ const alternate=await request('/api/v1/auth/login',{method:'POST',originOverride
 assert.equal(alternate.status,401,'configured extra Origin accepted');
 const rogueOrigin=await request('/api/v1/auth/login',{method:'POST',originOverride:'https://unauthorized.example.invalid',body:{email:'nobody@example.invalid',password:'wrong'}});
 assert.equal(rogueOrigin.status,403,'unlisted Origin denied');
+// No external antivirus worker credentials are enabled in routine CI.
+for(const path of ['/api/internal/source-scans/claim','/api/internal/source-scans/report']){
+  const noAuth=await request(path,{method:'POST',body:{}});
+  assert.equal(noAuth.status,404,'worker endpoint inaccessible to browser');
+  const fake=await request(path,{method:'POST',body:{jobId:randomUUID()}});
+  assert.equal(fake.status,404,'worker endpoint must not trust client-supplied fields');
+}
 const suffix=randomUUID().slice(0,8);
 const password='BookStudio-CI-Private-Only-2026!';
 

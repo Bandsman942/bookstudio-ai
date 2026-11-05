@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.21.0] — alpha candidate (NON DÉPLOYÉE)
+### #131 — travail ClamAV isolé et attesté (#126)
+- M2M et le bail de travaux de scan Neon, téléchargement privé Supabase signé, worker hors Vercel, résultat HMAC.
+- Statut SCAN_PENDING_PROMOTION après un résultat sans détection ; aucune source déclarée SCANNED_CLEAN avant sa promotion immuable.
+- Fichiers rejetés bloqués même sans mode strict, contrôles conservés OFF tant que la chaîne réelle n'est pas validée.
+
+
 ## [0.20.0] — alpha candidate (NON DÉPLOYÉE)
 ### BS-010a4a — intents antivirus durables (#129, #126)
 - Génération UUID renouvelée à chaque confirmation de source, invalidant les anciens jobs.
