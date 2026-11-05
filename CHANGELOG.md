@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.22.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.22.0] — alpha privée livrée le 5 novembre 2026 (PR #134, CI #179/#180, Vercel READY)
 ### BS-004 #5 — Réorganisation non destructive des chapitres
 - Monter/descendre un chapitre dans la vue d'ensemble et la navigation gauche de l'éditeur via les menus ⋯, clavier et mobile.
 - API `PATCH /api/v1/books/[bookId]/chapters/reorder` RBAC OWNER/EDITOR, CSRF, token optimiste SHA-256 sur identifiants/positions, transaction Serializable avec audit ; 409 sur structure modifiée ailleurs.
