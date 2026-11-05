@@ -7,9 +7,10 @@ import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 
-type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revision:number;editable:boolean;beforeNavigate?:()=>boolean};
+type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revision:number;editable:boolean;beforeNavigate?:()=>boolean;
+ reorder?:{token:string;index:number;total:number}};
 
-export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable,beforeNavigate}:Props){
+export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable,beforeNavigate,reorder}:Props){
  const {t,locale}=useAppPreferences(),{notify}=useToast();
  const [mode,setMode]=useState<'create'|'rename'|'delete'|null>(null);
  const [desired,setDesired]=useState(title),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -61,12 +62,42 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      notify({tone:'error',title:locale==='fr'?'Action sur le chapitre interrompue':'Chapter action interrupted',detail:msg});
    }finally{setBusy(false);}
  }
+ async function move(direction:'up'|'down'){
+   if(!editable||busy||!reorder||beforeNavigate?.()===false)return;
+   setBusy(true);setError('');
+   try{
+     const response=await fetch('/api/v1/books/'+bookId+'/chapters/reorder',{
+       method:'PATCH',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({chapterId,direction,expectedOrderToken:reorder.token})
+     });
+     const result=await response.json().catch(()=>({})) as {error?:string};
+     if(!response.ok){
+       const detail=explainActionError({locale,operation:'chapter-reorder',
+         status:response.status,code:result.error});
+       notify({tone:response.status===409?'warning':'error',
+         title:locale==='fr'?'Réorganisation du chapitre refusée':'Chapter reorder refused',
+         detail});return;
+     }
+     notify({tone:'success',title:locale==='fr'?'Chapitre déplacé':'Chapter moved',
+       detail:locale==='fr'?'« '+title+' » a été déplacé '+(direction==='up'?'vers le haut.':'vers le bas.')+
+           ' Son texte et ses révisions restent intacts.':
+         '“'+title+'” moved '+(direction==='up'?'up.':'down.')+' Its content and revisions are unchanged.'});
+     router.refresh();
+   }catch{
+     const detail=explainActionError({locale,operation:'chapter-reorder',status:0});
+     notify({tone:'error',title:locale==='fr'?'Déplacement interrompu':'Move interrupted',detail});
+   }finally{setBusy(false);}
+ }
  const start=(next:'create'|'rename'|'delete')=>{if((next==='create'||next==='delete')&&beforeNavigate?.()===false)return;setDesired(next==='create'?'':title);setError('');setMode(next);};
  return <>
    <ActionMenu label={t('chapter.actionsFor',{title})} disabled={busy} actions={[
      {label:t('chapter.open'),href:endpoint.replace('/api/v1',''),onSelect:()=>beforeNavigate?.()!==false},
      ...(editable?[{label:t('book.chapterAdd'),separatorBefore:true,onSelect:()=>start('create')},
        {label:t('chapter.rename'),onSelect:()=>start('rename')},
+       ...(reorder?[{label:locale==='fr'?'Monter d’une position':'Move up one position',
+         disabled:reorder.index<=0,onSelect:()=>void move('up')},
+         {label:locale==='fr'?'Descendre d’une position':'Move down one position',
+           disabled:reorder.index>=reorder.total-1,onSelect:()=>void move('down')}]:[]),
        {label:locale==='fr'?'Retirer le chapitre…':'Remove chapter…',destructive:true,
          onSelect:()=>start('delete')}]:[])
    ]}/>

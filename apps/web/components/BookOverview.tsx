@@ -17,10 +17,10 @@ import AppIcon from './AppIcon';
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
   bookId:string;title:string;status:string;kind:string;
-  chapters:Chapter[];updatedAt:string;editable:boolean
+  chapters:Chapter[];updatedAt:string;editable:boolean;orderToken:string
 };
 
-export default function BookOverview({bookId,title,status,kind,chapters,updatedAt,editable}:Props){
+export default function BookOverview({bookId,title,status,kind,chapters,updatedAt,editable,orderToken}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
@@ -81,7 +81,8 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
         <AppIcon name="chevronRight" className="chapter-arrow"/>
       </Link>
       <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}
-        updatedAt={chapter.updatedAt} revision={chapter.revision} editable={editable}/>
+        updatedAt={chapter.updatedAt} revision={chapter.revision} editable={editable}
+        reorder={{token:orderToken,index,total:chapters.length}}/>
     </div>)}</div>
     {editable&&<ChapterTrash bookId={bookId}/>}
     <SnapshotsPanel bookId={bookId} editable={editable}/>

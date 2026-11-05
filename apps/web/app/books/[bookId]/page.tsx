@@ -4,6 +4,7 @@ import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import BookOverview from '@/components/BookOverview';
 import AppIcon from '@/components/AppIcon';
 import ChapterActionsMenu from '@/components/ChapterActionsMenu';
+import {chapterOrderToken} from '@/lib/chapter-order';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -16,6 +17,7 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
   const t=(key:Parameters<typeof translate>[1])=>translate(locale,key);
   const editable=canWriteBook(book);
   const chapters=book.editions[0]?.manuscript?.chapters??[];
+  const orderToken=chapterOrderToken(chapters);
   return <div className="workspace">
     <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
       <div className="nav-section">{t('book.navigation')}</div>
@@ -30,11 +32,12 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
         <Link className="nav-link" href={'/books/'+bookId+'/chapters/'+c.id}>
           <AppIcon name="edit"/><span>{i+1}. {c.title}</span></Link>
         <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title}
-          revision={c.revisionSeq} updatedAt={c.updatedAt.toISOString()} editable={editable}/>
+          revision={c.revisionSeq} updatedAt={c.updatedAt.toISOString()} editable={editable}
+          reorder={{token:orderToken,index:i,total:chapters.length}}/>
       </div>)}</div>
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
     </aside>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">{t('common.library')}</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>
-    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} chapters={chapters.map(c=>({id:c.id,title:c.title,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
+    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} orderToken={orderToken} chapters={chapters.map(c=>({id:c.id,title:c.title,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
   </div>;
 }

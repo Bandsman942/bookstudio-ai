@@ -1,6 +1,6 @@
 # Système d'actions contextuelles — BookStudio AI
 
-**Lot :** BS-025 #55 / BS-026 #56 — **état : non publié**, prochaine version alpha.
+**Lot :** BS-025 #55 / BS-026 #56 livrés en production ; extension BS-004 #5 — **v0.22.0-alpha candidate E2E approuvée, publication soumise au contrôle documentaire et CI**.
 
 ## Principe d'interface
 Conserver une action primaire visible pour chaque section (ex. « Nouveau livre », « Ajouter un chapitre », « Créer une version », « Ajouter une note »). Tous les autres verbes attachés à un objet sont accessibles à partir du bouton **⋯** de cet objet ; éviter l'empilement de boutons indépendants dans les fiches, cartes et lignes de liste.
@@ -9,7 +9,7 @@ Conserver une action primaire visible pour chaque section (ex. « Nouveau livre 
 |---|---|---|
 | Bibliothèque | Nouveau livre | Ouvrir, Renommer, Archiver… sur chaque carte |
 | Fiche ouvrage | Ajouter un chapitre | Renommer, Archiver… pour le livre |
-| Chapitre | Ouvrir le chapitre via le titre | Ouvrir, Renommer le chapitre… |
+| Chapitre | Ouvrir le chapitre via le titre | Ouvrir, Créer, Renommer, **Monter / Descendre d'une position** (OWNER/EDITOR, limites de liste), Retirer réversiblement… |
 | Versions | Créer une version | Télécharger PDF / Word / Markdown ; Restaurer… si habilité |
 | Archives | Revenir à la bibliothèque | Restaurer l'ouvrage (rôle adéquat) |
 | Commentaires | Ajouter une note | Résoudre / Rouvrir le commentaire |
@@ -35,3 +35,7 @@ Conserver une action primaire visible pour chaque section (ex. « Nouveau livre 
 
 ### Pratiques à conserver dans les prochains modules
 Créer une issue et une PR, réutiliser `ActionMenu` pour les actions secondaires et afficher une seule CTA principale par zone. Ne pas reconstituer une rangée de boutons PDF/Word/Markdown/Restaurer. Pour les nouveaux gestes, ajouter des E2E sur le parcours complet, le clavier, les rôles et les conflits ; versionner et publier seulement après validation de la release.
+
+## Réorganisation structurelle (v0.22)
+
+Une action Monter/Descendre déplace seulement la **position** d'un chapitre. Le menu est désactivé aux extrémités ou pour un lecteur. L'éditeur exige de résoudre les changements locaux avant de naviguer ; la vue d'ensemble peut déclencher l'action directement. L'API `PATCH /api/v1/books/{bookId}/chapters/reorder` accepte `chapterId`, `direction: up|down` et `expectedOrderToken` obtenu par `GET /api/v1/books/{bookId}/chapters`. Le serveur revérifie RBAC/CSRF, renvoie 409 si l'ordre a changé, et échange les positions au moyen d'une position sentinelle libre pour respecter la contrainte SQL `UNIQUE(manuscript_id,position)`. Texte, révisions, commentaires et snapshots ne changent pas. Une restauration depuis la corbeille ajoute le chapitre en fin d'ouvrage.

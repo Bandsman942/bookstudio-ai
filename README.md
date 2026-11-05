@@ -2,55 +2,53 @@
 
 Application autonome de rédaction, de révision et d'édition intelligente de livres — dépôt `Bandsman942/bookstudio-ai`.
 
-## Version et historique
+## Version et état réel
 
-- Politique de versionnement : [SemVer et déploiements](docs/ops/VERSIONING.md) ; version de production privée **v0.4.0-alpha**.
-- Historique des changements : [CHANGELOG.md](CHANGELOG.md) ; fiche de livraison [v0.4.0](docs/releases/v0.4.0.md).
-- Après déploiement réel, la fiche reçoit SHA, ID Vercel, URL, date UTC et résultats des recettes. La version courante est exposée par `GET /api/version`.
-- **Chaque nouvelle version exige CI verte, E2E validé, sauvegarde Neon, déploiement depuis `main`, contrôle READY, tag Git et fiche post-déploiement.**
+- Version de production **à vérifier dynamiquement** par `GET /api/version` et `GET /api/health` sur `https://bookstudio-ai.dtsc-platform.com` ; ne jamais déduire le déploiement du fichier `release.json`.
+- Dernière version de production confirmée au moment de préparer la v0.22 : **v0.21.0-alpha**, commit `a3405d3d0eb6` (5 novembre 2026, alpha privée).
+- Version candidate `v0.22.0-alpha` : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, revue documentaire et CI du commit final requises avant publication.
+- Versionnement et politique : [VERSIONING](docs/ops/VERSIONING.md), [CHANGELOG](CHANGELOG.md), [fiche v0.22](docs/releases/v0.22.0.md).
+- **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
+- Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
 
-## État de livraison
+## Fonctionnalités déjà disponibles dans l'alpha privée
 
-Socle éditorial et exports de base avec versions nommées. **v0.4.0-alpha déployée en production privée le 3 novembre 2026, sous Vercel Authentication.** `/api/health` et `/api/version` répondent HTTP 200 ; les recettes E2E v0.3.0 et v0.4.0 ont été déclarées bonnes par le propriétaire avant publication. Le dépôt GitHub et le projet Neon sont indépendants de DTSC Platform.
+- Monorepo Next.js, TypeScript, Tiptap, Prisma et Neon PostgreSQL isolé de DTSC Platform.
+- Authentification locale (cookies HttpOnly), workspace RBAC OWNER/EDITOR/REVIEWER/VIEWER et actions métier vérifiées côté serveur.
+- Bibliothèque multi-ouvrages : création, renommage, archivage et restauration sans effacement.
+- Chapitres : création, édition, autosave, contrôle des conflits, renommage, retrait et restauration réversible ; **réorganisation par déplacement d'un cran dans la candidate v0.22**.
+- Révisions, versions/snapshots immuables et export PDF/DOCX/Markdown de lecture avec limites documentées.
+- Recherche privée, commentaires simples, volet manuscrit défilant, menus contextuels/tactile et raccourcis ; notifications globales contextualisées.
+- UI FR/EN, thèmes clair/sombre/système ; première tranche du ruban Word-like.
+- Import DOCX par lots après prévisualisation/revue humaine, stockage de source privé sur Supabase et registre de provenance/analyses en Neon. **Le scanner ClamAV n'est PAS installé ni actif sur les manuscrits de production**.
 
-### Inclus
-- Monorepo Next.js / TypeScript, Tiptap et Prisma sur Neon PostgreSQL dédié.
-- Authentification locale par sessions HTTP-only ; inscription publique désactivée par défaut.
-- Bibliothèque privée, manuscrits en chapitres, révisions historisées et contrôles de conflits.
-- Points de restauration immuables et retour à une ancienne version sans écraser l'historique.
-- Export Word DOCX et Markdown depuis une version enregistrée ; préanalyse DOCX locale durcie (sans upload web).
-- Migrations de production appliquées et sauvegardées de manière contrôlée sur Neon dédié ; trois migrations actives et tests métier/CI.
-- Recherche privée dans les textes actuels, commentaires éditoriaux liés à une révision.
-- Renommage, archivage et restauration réversible des ouvrages depuis la bibliothèque.
-- Ports API pour l'intégration éventuelle à DTSC Platform sans couplage de base de données.
+## Limites importantes
 
-### Non inclus dans le MVP courant
-Import Word/PDF complet et sécurisé sur le web, OCR, export PDF de qualité imprimeur et gabarits d'édition finalisés, IA et bibliographie avancée, sauvegardes/restauration d'exploitation, SSO, paiements, collaboration temps réel et ouverture publique générale.
+- **Sécurité documentaire P0 non terminée :** pas de serveur antivirus isolé actif, pas de quarantaine/promotion immuable réellement raccordée, pas de sauvegarde binaire hors site prouvée. Les issues #104, #126, #131 et #133 restent ouvertes ; aucun mode strict ni flag de file scanner à activer.
+- Import PDF avec OCR fidèle et médias/notes/tables Word avancés à poursuivre ; export PDF de lecture ≠ PDF imprimeur.
+- Ruban Word-like ≠ Microsoft Word complet ; tableaux avancés #73, typographie #74 et suivi des modifications #75 restent à développer.
+- Pas d'ouverture commerciale générale ni de garanties de récupération/scan tant que les P0 opérationnels ne sont pas validés.
 
-## Mise en route
+## Utilisation et documentation
 
-Prérequis : Node.js 22.18+, Corepack/pnpm 10 et base Neon dédiée, jamais les identifiants DTSC.
+- [Guide utilisateur — livres, chapitres et droits](docs/guides/CHAPITRES.md)
+- [API versionnée](docs/api/openapi.yaml)
+- [Conception des menus contextuels](docs/design/ACTIONS-CONTEXTUELLES.md)
+- [Procédure d'exploitation Vercel/Neon](docs/ops/VERCEL_PRODUCTION.md)
+- [Backlog priorisé](docs/roadmap/BACKLOG.md)
+
+## Démarrage et contrôles
+
+Node.js >=22.18, pnpm 10/Corepack et base Neon **BookStudio dédiée** :
 
 ```bash
 corepack enable
 pnpm install
 cp .env.example apps/web/.env.local
-# Renseigner DATABASE_URL et DIRECT_URL dans un fichier local non versionné
+# Renseigner les secrets uniquement dans un fichier non versionné
 pnpm db:generate
 pnpm db:migrate
 pnpm dev
 ```
 
-Ne pas appliquer de migration sur la branche production Neon sans revue.
-
-## Vérifications
-
-```bash
-pnpm test
-pnpm db:generate
-pnpm typecheck
-pnpm build
-```
-
-## Gouvernance
-Issue → branche → tests → PR → revue → E2E propriétaire → merge. Voir [cahier des charges](docs/CAHIER_DES_CHARGES_v1.md), [règles](CONTRIBUTING.md) et [backlog](docs/roadmap/BACKLOG.md).
+Avant PR/livraison : `pnpm release:check && pnpm test && pnpm typecheck && pnpm build`. Migrations production uniquement après snapshot et procédure validée. Cahier des charges : [document de référence](docs/CAHIER_DES_CHARGES_v1.md).
