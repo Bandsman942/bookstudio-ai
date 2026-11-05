@@ -45,16 +45,32 @@ export async function PATCH(request:Request,{params}:Ctx){
       if(!proposed)return {status:'NOT_FOUND'} as const;
       if(proposed.every((c,i)=>c.id===rows[i].id))
         return {status:'OK',changed:false,orderToken:chapterOrderToken(rows)} as const;
-      const duplicates=new Set(rows.map(x=>x.position)).size!==rows.length;
-      const changes=duplicates?proposed.map((c,index)=>({id:c.id,old:c.position,next:index}))
-        :proposed.map((c,index)=>({id:c.id,old:c.position,next:rows[index].position}))
-          .filter(c=>c.old!==c.next);
-      for(const item of changes){
-        const updated=await tx.chapter.updateMany({where:{
-          id:item.id,manuscriptId,deletedAt:null,position:item.old
-        },data:{position:item.next}});
-        if(updated.count!==1)throw Error('CHAPTER_ORDER_CONFLICT');
-      }
+      // The database enforces UNIQUE(manuscript_id, position), including
+      // soft-deleted chapters. A direct swap violates that constraint even
+      // inside one transaction: park one row in a free temporary position.
+      const source=rows.find(c=>c.id===body.chapterId)!;
+      // The position now occupied by the moved chapter in the proposed order
+      // belonged to its neighbour in the original order.
+      const oldIndex=rows.findIndex(c=>c.id===source.id);
+      const neighbour=rows[oldIndex+(body.direction==='up'?-1:1)];
+      if(!neighbour||source.position===neighbour.position)
+        throw Error('CHAPTER_ORDER_CONFLICT');
+      const max=await tx.chapter.aggregate({where:{manuscriptId},_max:{position:true}});
+      const temporary=(max._max.position??-1)+1;
+      if(!Number.isSafeInteger(temporary)||temporary>2147483647)
+        return {status:'TOO_LARGE'} as const;
+      const park=await tx.chapter.updateMany({where:{
+        id:source.id,manuscriptId,deletedAt:null,position:source.position
+      },data:{position:temporary}});
+      if(park.count!==1)throw Error('CHAPTER_ORDER_CONFLICT');
+      const shift=await tx.chapter.updateMany({where:{
+        id:neighbour.id,manuscriptId,deletedAt:null,position:neighbour.position
+      },data:{position:source.position}});
+      if(shift.count!==1)throw Error('CHAPTER_ORDER_CONFLICT');
+      const finish=await tx.chapter.updateMany({where:{
+        id:source.id,manuscriptId,deletedAt:null,position:temporary
+      },data:{position:neighbour.position}});
+      if(finish.count!==1)throw Error('CHAPTER_ORDER_CONFLICT');
       await tx.book.update({where:{id:bookId},data:{updatedAt:new Date()}});
       await tx.auditEvent.create({data:{
         actorId:user.id,workspaceId:book.workspaceId,subjectId:body.chapterId,
@@ -64,8 +80,7 @@ export async function PATCH(request:Request,{params}:Ctx){
           to:proposed.findIndex(c=>c.id===body.chapterId)
         }
       }});
-      const final=proposed.map((c,index)=>({id:c.id,
-        position:duplicates?index:rows[index].position}));
+      const final=proposed.map((c,index)=>({id:c.id,position:rows[index].position}));
       return {status:'OK',changed:true,orderToken:chapterOrderToken(final)} as const;
     },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,maxWait:7000,timeout:12000});
     if(result.status==='NOT_FOUND')return errorResponse('NOT_FOUND',404);
@@ -74,7 +89,7 @@ export async function PATCH(request:Request,{params}:Ctx){
     return Response.json({ok:true,changed:result.changed,orderToken:result.orderToken},
       {headers:{'Cache-Control':'private, no-store'}});
   }catch(e){
-    if((e as {code?:string})?.code==='P2034'||
+    if(['P2034','P2002'].includes((e as {code?:string})?.code??'')||
        (e instanceof Error&&e.message==='CHAPTER_ORDER_CONFLICT'))
       return errorResponse('CHAPTER_ORDER_CONFLICT',409);
     return errorResponse('CHAPTER_REORDER_FAILED',503);
