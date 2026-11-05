@@ -13,3 +13,7 @@
 11. Aucun scanner ClamAV dédié n'est installé : pas d'activation des variables ni de validation antivirus réclamée.
 
 **Aucune fusion ni mise en production** sans E2E propriétaire `v0.24.0-alpha BON`, CI sur le SHA final documenté, snapshot Neon, `main` uniquement, Preview OFF et contrôles de production.
+
+## E2E v0.25.0-alpha — prolongement #141
+
+Contrôler la recherche de destination d'import parmi plus de 100 livres, le choix d'un ouvrage absent des 24 cartes initiales, la pagination de 20 résultats, l'interdiction pour VIEWER/REVIEWER et hors workspace, l'archivage concurrent et le transfert DOCX confirmé côté serveur. Vérifier les six compteurs éditoriaux et les archives sur tous les livres autorisés. Tester réseau faible, FR/EN, clavier et mobile 320px. Exiger CI verte, manifeste documentaire et E2E propriétaire BON avant toute livraison. Scanner ClamAV non installé.
