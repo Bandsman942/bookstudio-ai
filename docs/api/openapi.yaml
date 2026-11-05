@@ -29,6 +29,10 @@ paths:
           in: query
           schema: {type: string, const: '1'}
           description: Archives réversibles uniquement; absence = livres actifs
+        - name: editable
+          in: query
+          schema: {type: string, const: '1'}
+          description: Filtre OWNER ou EDITOR pour la destination des imports
         - name: q
           in: query
           schema: {type: string, maxLength: 80}
@@ -51,7 +55,7 @@ paths:
           schema: {type: string, maxLength: 850}
           description: Curseur renvoyé par la page précédente et valable pour les mêmes filtres
       responses:
-        '200': {description: 'books[], total filtré, nextCursor (ou null), stats globales (total/writing/review)'}
+        '200': {description: 'books[], total filtré, nextCursor (ou null), stats globales (total/writing/review, archived, byStatus des six étapes)'}
         '400': {description: 'Filtre, limite ou curseur invalide/non applicable'}
         '401': {description: Non authentifié}
         '503': {description: Lecture temporairement indisponible}
