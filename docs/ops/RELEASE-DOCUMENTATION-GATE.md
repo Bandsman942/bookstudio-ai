@@ -44,3 +44,18 @@ Décision du propriétaire : **toute documentation nécessaire doit être actual
 ## Lot candidate v0.24.0-alpha — bibliothèque scalable
 
 Le manifeste obligatoire `docs/releases/v0.24.0.md` référence les six documents. `pnpm release:check`, E2E API et tests de pagination vérifient les filtres et curseurs. Sans validation propriétaire **E2E v0.24.0-alpha BON**, aucune fusion sur `main` ni déploiement Vercel. **Aucune migration SQL**, rollback applicatif seulement avec vérification préalable de l'état de la base. Les compteurs globaux sont construits à partir des livres autorisés ; jamais du seul premier lot de cartes.
+
+## Prépublication v0.25.0-alpha — issue #141
+
+Le sélecteur d'import utilise `GET /api/v1/books?editable=1&limit=20` :
+le serveur filtre OWNER/EDITOR avant pagination, y compris les compteurs.
+La confirmation du transfert refait le contrôle métier. Le tableau éditorial
+est agrégé depuis la base pour l'utilisateur connecté ; pas de nouveaux
+champs de base ni de migrations SQL. Surveiller les performances de
+`GET /api/v1/books` à grande échelle, les états mobiles et le réseau faible.
+Les documents utilisateur, design, API, exploitation, QA, roadmap et notes de
+version doivent être présents dans la PR avant CI/E2E et production.
+
+Aucun worker ClamAV n'est installé sur son hôte dédié ; ne pas activer
+les flags de scan ni le mode strict. La version doit rester candidate tant
+que `E2E v0.25.0-alpha BON` n'est pas reçu.
