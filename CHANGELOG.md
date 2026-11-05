@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.23.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.23.0] — alpha privée livrée le 5 novembre 2026 (PR #137, CI #183/#184, Vercel READY)
 ### BS-004b #136 — Propriétés des ouvrages et progression éditoriale
 - Dans les menus ⋯ des livres : modifier le type d'ouvrage et la langue de référence FR/EN, sans modifier le manuscrit, les révisions, les sources ni les éditions.
 - Étapes éditoriales contrôlées DRAFT → WRITING → REVIEW → APPROVED → PRODUCTION → PUBLISHED (avec retours autorisés par les règles métier), statut déclaré manuellement et non publication publique.
