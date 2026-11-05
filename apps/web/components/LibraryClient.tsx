@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import Link from 'next/link';
 import ActionMenu from './ActionMenu';
@@ -12,6 +12,10 @@ import {explainActionError} from '@/lib/notification-copy';
 import type {Locale,MessageKey} from '@/lib/i18n';
 
 type Book={id:string;title:string;bookType:string;language:string;status:string;updatedAt:string;editable:boolean};
+type Counters={total:number;writing:number;review:number};
+type Filters={q:string;type:string;status:string;sort:'recent'|'title'};
+type Page={books:Book[];nextCursor:string|null;total:number;stats:Counters};
+const emptyFilters:Filters={q:'',type:'',status:'',sort:'recent'};
 const bookTypes:{value:string;key:MessageKey}[]=[
   {value:'GENERAL',key:'library.kindGeneral'},
   {value:'NOVEL',key:'library.kindNovel'},
@@ -21,13 +25,30 @@ const bookTypes:{value:string;key:MessageKey}[]=[
   {value:'EDUCATION',key:'library.kindEducation'},
 ];
 
-export default function LibraryClient({books,displayName}:{books:Book[];displayName:string}){
+export default function LibraryClient({books,displayName,initialNextCursor,initialTotal,initialStats}:{
+  books:Book[];displayName:string;initialNextCursor:string|null;initialTotal:number;initialStats:Counters
+}){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
   const prefs=usePreferenceActions();
   const [creating,setCreating]=useState(false),[importing,setImporting]=useState(false),[title,setTitle]=useState(''),
     [kind,setKind]=useState('GENERAL'),[bookLanguage,setBookLanguage]=useState<Locale>(locale),
     [loading,setLoading]=useState(false),[error,setError]=useState('');
+  const [items,setItems]=useState(books),[nextCursor,setNextCursor]=useState(initialNextCursor),
+    [visibleTotal,setVisibleTotal]=useState(initialTotal),[stats,setStats]=useState(initialStats);
+  const [query,setQuery]=useState(''),[filterType,setFilterType]=useState(''),
+    [filterStatus,setFilterStatus]=useState(''),[sort,setSort]=useState<'recent'|'title'>('recent');
+  const [applied,setApplied]=useState<Filters>(emptyFilters),[listBusy,setListBusy]=useState(false),
+    [listError,setListError]=useState('');
+  const sequence=useRef(0),abort=useRef<AbortController|null>(null);
+  useEffect(()=>{
+    // A router.refresh from book metadata/archive actions resets stale pages.
+    sequence.current++;abort.current?.abort();
+    setItems(books);setNextCursor(initialNextCursor);setVisibleTotal(initialTotal);
+    setStats(initialStats);setApplied(emptyFilters);setQuery('');setFilterType('');
+    setFilterStatus('');setSort('recent');setListBusy(false);setListError('');
+  },[books,initialNextCursor,initialTotal,initialStats]);
+  useEffect(()=>()=>abort.current?.abort(),[]);
   const router=useRouter();
   const fmt=locale==='fr'?'fr-FR':'en-US';
   const typeLabel=(type:string)=>t(bookTypes.find(x=>x.value===type)?.key??'library.kindGeneral');
@@ -36,6 +57,46 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
     status==='APPROVED'?(locale==='fr'?'Approuvé':'Approved'):
     status==='PRODUCTION'?(locale==='fr'?'En production éditoriale':'Editorial production'):
     status==='PUBLISHED'?(locale==='fr'?'Publié (déclaré)':'Published (declared)'):status;
+  async function loadPage(filters:Filters,cursor:string|null){
+    if(listBusy&&cursor)return;
+    const seq=++sequence.current;abort.current?.abort();
+    const controller=new AbortController();abort.current=controller;
+    setListBusy(true);setListError('');
+    const params=new URLSearchParams({limit:'24',sort:filters.sort});
+    if(filters.q)params.set('q',filters.q);
+    if(filters.type)params.set('type',filters.type);
+    if(filters.status)params.set('status',filters.status);
+    if(cursor)params.set('cursor',cursor);
+    try{
+      const response=await fetch('/api/v1/books?'+params.toString(),{
+        method:'GET',cache:'no-store',signal:controller.signal
+      });
+      const payload=await response.json().catch(()=>({})) as Page;
+      if(seq!==sequence.current)return;
+      if(!response.ok||!Array.isArray(payload.books)||!payload.stats)
+        throw Error('LIBRARY_PAGE_UNAVAILABLE');
+      setItems(old=>cursor?[...old,...payload.books.filter(next=>
+        !old.some(prev=>prev.id===next.id))]:payload.books);
+      setNextCursor(payload.nextCursor??null);
+      setVisibleTotal(payload.total);setStats(payload.stats);setApplied(filters);
+    }catch{
+      if(controller.signal.aborted||seq!==sequence.current)return;
+      const detail=locale==='fr'?
+        'La bibliothèque ne peut pas charger ces résultats. Vérifiez votre connexion et réessayez ; vos livres restent enregistrés.':
+        'The library could not load those results. Check your connection and retry; your saved books are unchanged.';
+      setListError(detail);
+      notify({tone:'error',title:locale==='fr'?'Chargement de la bibliothèque interrompu':'Library loading interrupted',detail});
+    }finally{
+      if(seq===sequence.current)setListBusy(false);
+    }
+  }
+  function submitFilters(event:React.FormEvent){
+    event.preventDefault();void loadPage({q:query.trim(),type:filterType,status:filterStatus,sort},null);
+  }
+  function resetFilters(){
+    setQuery('');setFilterType('');setFilterStatus('');setSort('recent');
+    void loadPage(emptyFilters,null);
+  }
   async function create(event:React.FormEvent){
     event.preventDefault();setError('');setLoading(true);
     try{
@@ -88,14 +149,57 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
         </button>
       </div>
     </div>
-    <div className="stat-row"><div><strong>{books.length}</strong><span>{t('common.books')}</span></div>
-      <div><strong>{books.filter(book=>book.status==='WRITING').length}</strong><span>{t('library.writing')}</span></div>
-      <div><strong>{books.filter(book=>book.status==='REVIEW').length}</strong><span>{t('library.review')}</span></div>
+    <div className="stat-row"><div><strong>{stats.total}</strong><span>{t('common.books')}</span></div>
+      <div><strong>{stats.writing}</strong><span>{t('library.writing')}</span></div>
+      <div><strong>{stats.review}</strong><span>{t('library.review')}</span></div>
     </div>
+    <form className="library-filters" role="search" onSubmit={submitFilters}
+      aria-label={locale==='fr'?'Filtrer les ouvrages':'Filter books'}>
+      <label className="library-search-label"><span>{locale==='fr'?'Rechercher un titre':'Search title'}</span>
+        <input type="search" value={query} maxLength={80} disabled={listBusy}
+          onChange={event=>setQuery(event.target.value)}
+          placeholder={locale==='fr'?'Titre de l’ouvrage…':'Book title…'}/>
+      </label>
+      <label><span>{locale==='fr'?'Type':'Type'}</span>
+        <select value={filterType} onChange={event=>setFilterType(event.target.value)} disabled={listBusy}>
+          <option value="">{locale==='fr'?'Tous les types':'All types'}</option>
+          {bookTypes.map(option=><option key={option.value} value={option.value}>{t(option.key)}</option>)}
+        </select>
+      </label>
+      <label><span>{locale==='fr'?'Étape':'Milestone'}</span>
+        <select value={filterStatus} onChange={event=>setFilterStatus(event.target.value)} disabled={listBusy}>
+          <option value="">{locale==='fr'?'Toutes les étapes':'All milestones'}</option>
+          {['DRAFT','WRITING','REVIEW','APPROVED','PRODUCTION','PUBLISHED'].map(value=>
+            <option key={value} value={value}>{statusLabel(value)}</option>)}
+        </select>
+      </label>
+      <label><span>{locale==='fr'?'Tri':'Sort'}</span>
+        <select value={sort} onChange={event=>setSort(event.target.value as 'recent'|'title')} disabled={listBusy}>
+          <option value="recent">{locale==='fr'?'Modification récente':'Recently updated'}</option>
+          <option value="title">{locale==='fr'?'Titre A–Z':'Title A–Z'}</option>
+        </select>
+      </label>
+      <div className="library-filter-actions">
+        <button className="button" type="submit" disabled={listBusy}>
+          {listBusy?(locale==='fr'?'Chargement…':'Loading…'):
+            (locale==='fr'?'Appliquer':'Apply')}
+        </button>
+        <button className="text-button" type="button" onClick={resetFilters} disabled={listBusy}>
+          {locale==='fr'?'Réinitialiser':'Reset'}
+        </button>
+      </div>
+    </form>
+    {listError&&<p role="alert" className="form-error">{listError}</p>}
     <div className="section-header"><h2><AppIcon name="book"/>{t('library.myWorks')}</h2>
-      <span>{books.length} {t(books.length===1?'library.project':'library.projects')}</span></div>
-    <div className="book-grid">
-      {books.map((book,index)=><article key={book.id} className="book-card">
+      <span role="status" aria-live="polite">{items.length} / {visibleTotal} {
+        locale==='fr'?'ouvrages affichés':'books displayed'
+      }</span></div>
+    {items.length===0&&<p className="library-empty" role="status">{
+      locale==='fr'?'Aucun ouvrage ne correspond à ces critères. Essayez un autre filtre.':
+        'No books match these filters. Try another search.'
+    }</p>}
+    <div className="book-grid" aria-busy={listBusy}>
+      {items.map((book,index)=><article key={book.id} className="book-card">
         <Link href={'/books/'+book.id} className="book-card-link" aria-label={t('library.openBook',{title:book.title})}>
           <div className={'cover cover-'+(index%4)}><span>BOOKSTUDIO</span><strong>{book.title}</strong><small>by DTSC</small></div>
           <div className="book-meta"><h3>{book.title}</h3>
@@ -114,9 +218,17 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
       <button type="button" className="new-book-card" onClick={()=>{setBookLanguage(locale);setCreating(true)}}>
         <span>＋</span><strong>{t('library.start')}</strong><small>{t('library.fromScratch')}</small>
       </button>
-    </div></div>
+    </div>
+    {nextCursor&&<div className="library-load-more">
+      <button type="button" className="button" disabled={listBusy}
+        onClick={()=>void loadPage(applied,nextCursor)}>
+        {listBusy?(locale==='fr'?'Chargement…':'Loading…'):
+          (locale==='fr'?'Afficher davantage d’ouvrages':'Load more books')}
+      </button>
+    </div>}
+    </div>
   </main>
-  {importing&&<ManuscriptImportDialog books={books.filter(book=>book.editable).map(book=>({id:book.id,title:book.title}))}
+  {importing&&<ManuscriptImportDialog books={items.filter(book=>book.editable).map(book=>({id:book.id,title:book.title}))}
     onClose={()=>setImporting(false)}
     onCreateBook={()=>{setImporting(false);setBookLanguage(locale);setCreating(true);}}
     onUploaded={bookId=>{setImporting(false);router.push('/books/'+bookId+'#book-source-files');router.refresh();}}/>}
