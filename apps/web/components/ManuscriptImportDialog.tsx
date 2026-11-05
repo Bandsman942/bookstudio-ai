@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import AppIcon from './AppIcon';
+import BookDestinationPicker from './BookDestinationPicker';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {MANUSCRIPT_ACCEPT,MANUSCRIPT_MAX_BYTES,uploadErrorCode,uploadSourceToBook,type UploadStage} from '@/lib/source-upload-client';
@@ -19,7 +20,7 @@ export default function ManuscriptImportDialog({books,onClose,onCreateBook,onUpl
     document.addEventListener('keydown',escape);
     return ()=>document.removeEventListener('keydown',escape);
   },[busy,onClose]);
-  const currentId=books.some(b=>b.id===bookId)?bookId:(books[0]?.id??'');
+  const currentId=bookId;
   async function submit(event:React.FormEvent){
     event.preventDefault();
     if(!currentId||!file||busy)return;
@@ -53,15 +54,9 @@ export default function ManuscriptImportDialog({books,onClose,onCreateBook,onUpl
       <span className="eyebrow">{t('import.eyebrow')}</span>
       <h2 id="import-dialog-title"><AppIcon name="upload" size={24}/> {t('import.title')}</h2>
       <p>{t('import.intro')}</p>
-      {books.length===0?<div className="import-empty">
-        <AppIcon name="book" size={28}/><p>{t('import.noBook')}</p>
-        <button type="button" className="button" onClick={onCreateBook}><AppIcon name="plus"/>{t('import.createBook')}</button>
-      </div>:<>
-        <label htmlFor="import-book">{t('import.bookLabel')}
-          <select id="import-book" autoFocus value={currentId} disabled={busy} onChange={e=>setBookId(e.target.value)}>
-            {books.map(book=><option key={book.id} value={book.id}>{book.title}</option>)}
-          </select>
-        </label>
+      <>
+        <BookDestinationPicker books={books} value={bookId}
+          onChange={setBookId} disabled={busy} onCreateBook={onCreateBook}/>
         <label htmlFor="import-file">{t('import.fileLabel')}
           <input id="import-file" ref={picker} type="file" disabled={busy}
             accept={MANUSCRIPT_ACCEPT} onChange={e=>{setFile(e.target.files?.[0]??null);setError('');}}/>
