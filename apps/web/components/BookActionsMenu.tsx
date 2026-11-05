@@ -6,10 +6,14 @@ import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
+import BookPropertiesDialog from './BookPropertiesDialog';
 
 type Props={
   bookId:string;
   title:string;
+  bookType:string;
+  language:string;
+  status:string;
   updatedAt:string;
   editable:boolean;
   showOpen?:boolean;
@@ -17,10 +21,10 @@ type Props={
 };
 
 /** Shared book commands. The same confirm dialogs serve book cards and detail. */
-export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpen=false,onArchive='library'}:Props){
+export default function BookActionsMenu({bookId,title,bookType,language,status,updatedAt,editable,showOpen=false,onArchive='library'}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
-  const [mode,setMode]=useState<'rename'|'archive'|null>(null);
+  const [mode,setMode]=useState<'rename'|'archive'|'properties'|'status'|null>(null);
   const [desired,setDesired]=useState(title);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const router=useRouter();
@@ -31,7 +35,7 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
     return ()=>document.removeEventListener('keydown',esc);
   },[mode,busy]);
 
-  function open(mode:'rename'|'archive'){
+  function open(mode:'rename'|'archive'|'properties'|'status'){
     setError('');setDesired(title);setMode(mode);
   }
   async function commit(action:'rename'|'archive'){
@@ -71,12 +75,16 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
     ...(showOpen?[{label:t('book.openBook'),href:'/books/'+bookId}]:[]),
     ...(editable?[
       {label:t('common.rename'),onSelect:()=>open('rename'),separatorBefore:showOpen},
+      {label:locale==='fr'?'Modifier les propriétés…':'Edit book properties…',
+        onSelect:()=>open('properties')},
+      {label:locale==='fr'?'Faire évoluer le statut éditorial…':'Change editorial status…',
+        onSelect:()=>open('status'),disabled:status==='PUBLISHED'},
       {label:t('book.archiveEllipsis'),onSelect:()=>open('archive'),destructive:true},
     ]:[])
   ];
   return <>
     <ActionMenu label={t('book.actionsFor',{title})} actions={actions} disabled={busy}/>
-    {mode&&<div className="modal-backdrop" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
+    {(mode==='rename'||mode==='archive')&&<div className="modal-backdrop" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
       {mode==='rename'?<form className="modal" onSubmit={event=>{event.preventDefault();void commit('rename');}}
         role="dialog" aria-modal="true" aria-label={t('book.rename')}>
         <button className="close" type="button" aria-label={t('common.close')} disabled={busy} onClick={()=>setMode(null)}>×</button>
@@ -98,5 +106,9 @@ export default function BookActionsMenu({bookId,title,updatedAt,editable,showOpe
         <button className="text-button" type="button" disabled={busy} onClick={()=>setMode(null)}>{t('common.cancel')}</button>
       </div>}
     </div>}
+    {(mode==='properties'||mode==='status')&&
+      <BookPropertiesDialog mode={mode} bookId={bookId} title={title}
+        bookType={bookType} language={language} status={status}
+        updatedAt={updatedAt} onClose={()=>setMode(null)}/>}
   </>;
 }

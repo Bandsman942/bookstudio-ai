@@ -1,7 +1,7 @@
 /** Localized action/error copy. Never pass raw API response text or manuscript contents. */
 export type Operation=
   'pdf'|'docx'|'markdown'|'snapshot-create'|'snapshot-restore'|'snapshot-list'|
-  'book-create'|'book-rename'|'book-archive'|'book-restore'|'chapter-create'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
+  'book-create'|'book-rename'|'book-properties'|'book-status'|'book-archive'|'book-restore'|'chapter-create'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
   'docx-import'|'comment-add'|'comment-change'|'comment-list'|'editor-save'|'authentication';
 export type Issue={locale:'fr'|'en';operation:Operation;status?:number;code?:string;
   codepoints?:string;chapterNumber?:number|null};
@@ -10,7 +10,8 @@ const actions={
   pdf:'l’export PDF',docx:'l’export Word',markdown:'l’export Markdown',
   'snapshot-create':'l’enregistrement de la version','snapshot-restore':'la restauration de la version',
   'snapshot-list':'le chargement de l’historique','book-create':'la création du livre',
-  'book-rename':'le renommage du livre','book-archive':'l’archivage du livre','book-restore':'la restauration du livre',
+  'book-rename':'le renommage du livre',
+  'book-properties':'la modification des propriétés du livre','book-status':'la modification du statut éditorial','book-archive':'l’archivage du livre','book-restore':'la restauration du livre',
   'chapter-rename':'le renommage du chapitre','chapter-reorder':'le déplacement du chapitre',
   'chapter-delete':'le retrait réversible du chapitre','chapter-restore':'la restauration du chapitre',
   'chapter-create':'la création du chapitre','source-upload':'l’importation du manuscrit',
@@ -24,7 +25,8 @@ const actions={
   pdf:'PDF export',docx:'Word export',markdown:'Markdown export',
   'snapshot-create':'saving this version','snapshot-restore':'restoring this version',
   'snapshot-list':'loading version history','book-create':'creating this book',
-  'book-rename':'renaming this book','book-archive':'archiving this book','book-restore':'restoring this book',
+  'book-rename':'renaming this book',
+  'book-properties':'updating book properties','book-status':'updating editorial status','book-archive':'archiving this book','book-restore':'restoring this book',
   'chapter-rename':'renaming this chapter','chapter-reorder':'moving this chapter',
   'chapter-delete':'removing this chapter','chapter-restore':'restoring this chapter',
   'chapter-create':'creating this chapter','source-upload':'uploading the manuscript',
@@ -53,6 +55,9 @@ export function explainActionError(issue:Issue):string{
  if(code==='SOURCE_SCAN_REQUIRED'||status===423)return locale==='fr'?
    `Pour ${label}, le manuscrit doit d’abord disposer d’une analyse antivirus vérifiée. Le stockage seul ne prouve pas qu’il est sain.`:
    `Before ${label}, the manuscript requires a verified antivirus scan. Storage confirmation is not proof that it is safe.`;
+ if(code==='BOOK_STATUS_TRANSITION_INVALID')return locale==='fr'?
+   'Ce changement de statut n’est pas autorisé depuis l’étape actuelle. Actualisez l’ouvrage et choisissez une transition proposée.':
+   'This status change is not allowed from the current milestone. Refresh the book and choose an available transition.';
  if(status===401)return locale==='fr'?
    `Votre session a expiré pendant ${label}. Reconnectez-vous, puis réessayez.`:
    `Your session expired during ${label}. Sign in again and retry.`;
