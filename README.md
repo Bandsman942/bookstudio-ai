@@ -5,8 +5,8 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 ## Version et état réel
 
 - Version de production **à vérifier dynamiquement** par `GET /api/version` et `GET /api/health` sur `https://bookstudio-ai.dtsc-platform.com` ; ne jamais déduire le déploiement du fichier `release.json`.
-- Dernière version de production confirmée au moment de préparer la v0.22 : **v0.21.0-alpha**, commit `a3405d3d0eb6` (5 novembre 2026, alpha privée).
-- Version candidate `v0.22.0-alpha` : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, revue documentaire et CI du commit final requises avant publication.
+- Production privée **v0.22.0-alpha confirmée le 5 novembre 2026**, commit `4123f9e7b6af`, Vercel `READY`. Dernière vérification de version et santé : HTTP 200. Voir la [fiche de déploiement](docs/deployments/2026-11-05T18-13-19Z_v0.22.0.md).
+- Version **v0.22.0-alpha livrée** : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, documentation prépublication contrôlée en CI #179 et main #180 SUCCESS. Prochain lot métier restant à développer : propriétés et pilotage des ouvrages.
 - Versionnement et politique : [VERSIONING](docs/ops/VERSIONING.md), [CHANGELOG](CHANGELOG.md), [fiche v0.22](docs/releases/v0.22.0.md).
 - **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
 - Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
@@ -16,7 +16,7 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 - Monorepo Next.js, TypeScript, Tiptap, Prisma et Neon PostgreSQL isolé de DTSC Platform.
 - Authentification locale (cookies HttpOnly), workspace RBAC OWNER/EDITOR/REVIEWER/VIEWER et actions métier vérifiées côté serveur.
 - Bibliothèque multi-ouvrages : création, renommage, archivage et restauration sans effacement.
-- Chapitres : création, édition, autosave, contrôle des conflits, renommage, retrait et restauration réversible ; **réorganisation par déplacement d'un cran dans la candidate v0.22**.
+- Chapitres : création, édition, autosave, contrôle des conflits, renommage, retrait et restauration réversible ; **réorganisation par déplacement d'un cran disponible depuis v0.22**.
 - Révisions, versions/snapshots immuables et export PDF/DOCX/Markdown de lecture avec limites documentées.
 - Recherche privée, commentaires simples, volet manuscrit défilant, menus contextuels/tactile et raccourcis ; notifications globales contextualisées.
 - UI FR/EN, thèmes clair/sombre/système ; première tranche du ruban Word-like.

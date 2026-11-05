@@ -23,9 +23,9 @@
 | BS-019 | P2 | Paiements DTSC via API | Webhooks idempotents |
 | BS-020 | P2 | IA DTSC via API | Consentement, quotas |
 
-## Situation au 5 novembre 2026 — version candidate v0.22
+## Situation au 5 novembre 2026 — v0.22.0-alpha déployée
 
-- **Production v0.21.0-alpha** livrée depuis `main` ; v0.22 en PR #134, E2E propriétaire BON, CI finale et snapshot avant livraison.
+- **Production v0.22.0-alpha** déployée depuis `main` (PR #134, E2E BON, CI #179/#180 SUCCESS, snapshot Neon `snap-orange-lake-bfx01wyp`, Vercel READY). Documentation prépublication intégrée au SHA testé et journal réel ajouté après publication.
 - **BS-004 #5 (P0, reste ouvert)** : bibliothèque, CRUD, archivage, retrait/restauration, menus et réorganisation des chapitres réalisés ; poursuivre fiches de propriétés (type d'ouvrage, métadonnées), tableau de bord, pagination/performance et QA complète multi-tenant.
 - **Sécurité (#104/#126/#131/#133, P0 toujours ouverte mais exécution différée par le propriétaire)** : code de queue/attestations présent ; **ClamAV non installé**, aucune file active, quarantaine et sauvegarde binaire indépendante non finalisées. Ne pas déclarer de fichiers SCANNED_CLEAN ni fermer ces issues.
 - **Prochain lot métier après v0.22** : compléments de gestion des ouvrages (édition des métadonnées et type, listes/tri, tableaux de bord) sur PR distincte, sans déployer sans E2E.
