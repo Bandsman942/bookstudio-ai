@@ -40,3 +40,7 @@ Décision du propriétaire : **toute documentation nécessaire doit être actual
 - Le statut éditorial est un état manuel, aucun déclenchement externe ni faux effet « publication ».
 - Dossier documentaire : `docs/releases/v0.23.0.md`, `docs/guides/CHAPITRES.md`, `docs/design/BOOK-LIFECYCLE.md`, `docs/api/openapi.yaml`, `docs/qa/E2E-BOOK-METADATA-0.23.0.md`, `docs/roadmap/BACKLOG.md`.
 - Cette PR **ne doit pas** être fusionnée tant que GitHub CI sur SHA documenté et validation propriétaire `E2E v0.23.0-alpha BON` ne sont pas confirmées ; snapshot Neon avant publication, Preview OFF, scanner ClamAV non activé.
+
+## Lot candidate v0.24.0-alpha — bibliothèque scalable
+
+Le manifeste obligatoire `docs/releases/v0.24.0.md` référence les six documents. `pnpm release:check`, E2E API et tests de pagination vérifient les filtres et curseurs. Sans validation propriétaire **E2E v0.24.0-alpha BON**, aucune fusion sur `main` ni déploiement Vercel. **Aucune migration SQL**, rollback applicatif seulement avec vérification préalable de l'état de la base. Les compteurs globaux sont construits à partir des livres autorisés ; jamais du seul premier lot de cartes.

@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.24.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004c #138 — Bibliothèque paginée et filtrée
+- Bibliothèque SSR : première page limitée à 24 ouvrages ; total global et compteurs de rédaction/relecture exacts, indépendants des cartes chargées.
+- API `GET /api/v1/books` étendue : recherche serveur sur titre (80 caractères), filtres type/statut, tri récent ou alphabétique, pagination keyset et curseur de portée (limite 1–100, compatibilité archives).
+- Contrôles membership multi-tenant dans toutes les requêtes, 400 pour curseur obsolète/filtre invalide, pas de contenu manuscrit dans la liste ; index SQL existants conservés.
+- UI mobile/desktop : filtres FR/EN accessibles, états vides, messages contextualisés, compteur de résultats et bouton « Afficher davantage », absence de rechargement complet pour filtrer.
+- Tests unitaires de parsing et curseur ; E2E API permissions, doublons, total et filtres ; CI release documentaire obligatoire.
+- **Aucune migration Prisma, variable Vercel ou activation ClamAV**.
+
+
 ## [0.23.0] — alpha privée livrée le 5 novembre 2026 (PR #137, CI #183/#184, Vercel READY)
 ### BS-004b #136 — Propriétés des ouvrages et progression éditoriale
 - Dans les menus ⋯ des livres : modifier le type d'ouvrage et la langue de référence FR/EN, sans modifier le manuscrit, les révisions, les sources ni les éditions.

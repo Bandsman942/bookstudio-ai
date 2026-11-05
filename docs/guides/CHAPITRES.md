@@ -51,3 +51,20 @@ Sur la carte du livre ou la **vue d'ensemble**, ouvrir le menu `⋯` :
 ### English
 
 From a book card or Book overview, open `⋯` → **Edit book properties** to change the reference language (FR/EN) or book genre. Book text and edition languages are never translated or rewritten. Use **Change editorial status** to select only an allowed workflow transition. `PUBLISHED` is a manually declared milestone, **not** automatic public publication. OWNER/EDITOR can edit, readers cannot; archive first requires restoration. A 409 conflict requires refresh.
+
+## 7. Rechercher, filtrer et parcourir une bibliothèque volumineuse (candidate v0.24)
+
+Sur **Bibliothèque**, les compteurs présentent tous les livres accessibles, même si les premières cartes affichées sont limitées à **24 ouvrages**.
+
+1. Dans « Rechercher un titre », saisir jusqu'à 80 caractères ; cette recherche concerne le **titre**, pas le texte des chapitres.
+2. Choisir le type (roman, médecine, sciences, etc.) et/ou l'étape éditoriale (brouillon, rédaction, relecture, approbation, production, publication déclarée).
+3. Choisir le tri **Modification récente** ou **Titre A–Z**, puis sélectionner **Appliquer** (ou Entrée).
+4. Lire le résultat **X / Y ouvrages affichés**. Si plusieurs pages existent, utiliser **Afficher davantage d’ouvrages**. Les pages sont associées aux filtres ; changer les critères repart du début.
+5. **Réinitialiser** rétablit la liste complète, les filtres et le tri récent. Un chargement impossible affiche un message et conserve les cartes déjà visibles.
+6. Les lecteurs ne voient que leurs ouvrages autorisés ; les actions d'édition restent réservées à OWNER/EDITOR. Les compteurs ne révèlent pas les livres d'autres espaces.
+
+**Limite connue :** le sélecteur de destination de l'import utilise les ouvrages actuellement visibles dans la bibliothèque ; pour importer vers un livre qui n'apparaît pas, filtrez la bibliothèque avant d'ouvrir la fenêtre d'import. Le travail d'un sélecteur d'import indépendant et paginé restera à compléter dans un lot dédié.
+
+### English
+
+On **Library**, search by book title (not chapter content), filter by book type or editorial milestone, choose Recently updated or Title A–Z and press Apply. The first page shows 24 books; **Load more books** displays subsequent results without reloading the whole application. The counters reflect the entire authorized library. Invalid or outdated page requests are rejected without exposing books from other workspaces.
