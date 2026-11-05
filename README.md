@@ -5,11 +5,11 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 ## Version et état réel
 
 - Version de production **à vérifier dynamiquement** par `GET /api/version` et `GET /api/health` sur `https://bookstudio-ai.dtsc-platform.com` ; ne jamais déduire le déploiement du fichier `release.json`.
-- Dernière production **v0.23.0-alpha vérifiée le 5 novembre 2026**, commit `531d21175d40`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.23](docs/deployments/2026-11-05T18-51-19Z_v0.23.0.md).
+- Dernière production **v0.24.0-alpha vérifiée le 5 novembre 2026**, commit `8556307311c4`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.24](docs/deployments/2026-11-05T19-31-06Z_v0.24.0.md).
 - Version **v0.22.0-alpha livrée** : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, documentation prépublication contrôlée en CI #179 et main #180 SUCCESS. Prochain lot métier restant à développer : propriétés et pilotage des ouvrages.
 - Versionnement et politique : [VERSIONING](docs/ops/VERSIONING.md), [CHANGELOG](CHANGELOG.md), [fiche v0.22](docs/releases/v0.22.0.md).
 - **v0.23.0-alpha déployée en production privée le 5 novembre 2026**, propriétés du livre et statut éditorial (issue #136, PR #137), CI main #184 et Vercel READY au commit `531d21175d40`. Voir [fiche v0.23](docs/releases/v0.23.0.md) et [journal de production](docs/deployments/2026-11-05T18-51-19Z_v0.23.0.md).
-- Prochain lot candidate **v0.24.0-alpha** : bibliothèque paginée, recherche et filtres, indicateurs consolidés, issue #138 (PR en préparation, non publiée). Voir [fiche v0.24](docs/releases/v0.24.0.md).
+- Lot livré **v0.24.0-alpha** : bibliothèque paginée, recherche et filtres, indicateurs consolidés, issue #138 (PR #140, validée E2E ; prochain lot #141 sur le sélecteur d'import indépendant). Voir [fiche v0.24](docs/releases/v0.24.0.md).
 - **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
 - Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
 

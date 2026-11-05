@@ -50,3 +50,7 @@ Bibliothèque volumineuse : pagination stable, recherche de titre et filtres de 
 - **QA** : curseurs/totaux/tri/recherche et cross-tenant, navigation avec >30 ouvrages, mobile FR/EN, réseau faible. Documentation API, utilisateur, technique, exploitation et recette intégrée dans PR **avant toute mise en production**.
 - **À poursuivre après validation** : dashboard éditorial plus complet, sélecteur de destination d'import paginé, analyse d'index de recherche à très grande échelle (GIN trigram si nécessaire), clavier avancé et autres critères restant au P0 #5.
 - Sécurité documentaire P0 #104/#126/#131/#133 : différée, ClamAV dédié non installé, conserver flags OFF.
+
+## Livraison confirmée v0.24 et suite
+
+La sous-tranche #138 est livrée dans PR #140 : E2E BON, CI #188/#189 SUCCESS, snapshot Neon `snap-lucky-cloud-bf011zsa`, Vercel READY. Prochain lot : #141, destination d'import parmi tous les ouvrages éditables et suivi éditorial détaillé. La sécurité ClamAV reste différée et ouverte (#104/#126/#131/#133).
