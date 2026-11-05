@@ -33,3 +33,18 @@ test('book page cursor is scope-bound, deterministic and rejects tampering',()=>
  const titleCursor=encodeLibraryCursor('title','Édition spéciale',id,scopeForFilters(titleFilters));
  assert.equal(decodeLibraryCursor(titleCursor,titleFilters).key,'Édition spéciale');
 });
+
+test('editable-only destination filter is validated and bound to cursor scope',()=>{
+ const all=parseLibraryFilters(new URLSearchParams({limit:'20',q:'Manuscrit'}));
+ const editable=parseLibraryFilters(new URLSearchParams({editable:'1',limit:'20',q:'Manuscrit'}));
+ assert.equal(all.editable,false);
+ assert.equal(editable.editable,true);
+ assert.notEqual(scopeForFilters(all),scopeForFilters(editable));
+ const id='d1f2ffae-9454-40bf-aeb6-743391110e02';
+ const c=encodeLibraryCursor('recent','2026-11-05T19:30:00.000Z',id,scopeForFilters(editable));
+ assert.deepEqual(decodeLibraryCursor(c,editable).scope,scopeForFilters(editable));
+ assert.throws(()=>decodeLibraryCursor(c,all),/LIBRARY_FILTER_INVALID/);
+ for(const value of ['false','0','true','2']){
+   assert.throws(()=>parseLibraryFilters(new URLSearchParams({editable:value})),/LIBRARY_FILTER_INVALID/);
+ }
+});

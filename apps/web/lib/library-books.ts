@@ -11,9 +11,13 @@ const select={id:true,title:true,bookType:true,language:true,status:true,
 
 /** Query only membership-authorized books; no content, source links or auth tokens. */
 export async function listAccessibleBooks(userId:string,filters:LibraryFilters){
+  const membership:Prisma.MembershipWhereInput=filters.editable?
+    {userId,role:{in:['OWNER','EDITOR']}}:{userId};
+  const workspaceScope:Prisma.BookWhereInput={
+    workspace:{memberships:{some:membership}}
+  };
   const membershipWhere:Prisma.BookWhereInput={
-    archivedAt:filters.archived?{not:null}:null,
-    workspace:{memberships:{some:{userId}}}
+    ...workspaceScope,archivedAt:filters.archived?{not:null}:null
   };
   const filteredWhere:Prisma.BookWhereInput={
     ...membershipWhere,
@@ -33,14 +37,15 @@ export async function listAccessibleBooks(userId:string,filters:LibraryFilters){
     };
     pageWhere={AND:[filteredWhere,comparison]};
   }
-  const [rows,count,groups,editableMemberships]=await Promise.all([
+  const [rows,count,groups,editableMemberships,archivedTotal]=await Promise.all([
     prisma.book.findMany({where:pageWhere,
       orderBy:filters.sort==='recent'?[{updatedAt:'desc'},{id:'desc'}]:
         [{title:'asc'},{id:'asc'}],take:filters.limit+1,select}),
     prisma.book.count({where:filteredWhere}),
     prisma.book.groupBy({by:['status'],where:membershipWhere,_count:{_all:true}}),
     prisma.membership.findMany({where:{userId,role:{in:['OWNER','EDITOR']}},
-      select:{workspaceId:true}})
+      select:{workspaceId:true}}),
+    prisma.book.count({where:{...workspaceScope,archivedAt:{not:null}}})
   ]);
   const editable=new Set(editableMemberships.map(m=>m.workspaceId));
   const hasMore=rows.length>filters.limit;
@@ -50,8 +55,13 @@ export async function listAccessibleBooks(userId:string,filters:LibraryFilters){
     filters.sort==='recent'?last.updatedAt.toISOString():last.title,last.id,scope):null;
   const counts=Object.fromEntries(groups.map(g=>[g.status,g._count._all]));
   const total=groups.reduce((n,g)=>n+g._count._all,0);
+  const byStatus={
+    DRAFT:counts.DRAFT??0,WRITING:counts.WRITING??0,
+    REVIEW:counts.REVIEW??0,APPROVED:counts.APPROVED??0,
+    PRODUCTION:counts.PRODUCTION??0,PUBLISHED:counts.PUBLISHED??0
+  };
   return {books:trimmed.map(({workspaceId,...book})=>({
     ...book,editable:editable.has(workspaceId)
   })),total:count,nextCursor,stats:{total,writing:counts.WRITING??0,
-    review:counts.REVIEW??0}};
+    review:counts.REVIEW??0,archived:archivedTotal,byStatus}};
 }
