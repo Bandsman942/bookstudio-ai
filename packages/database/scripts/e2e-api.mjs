@@ -169,14 +169,74 @@ const outsiderRename=await request(archivePath,{method:'PATCH',cookie:outsider,b
   action:'rename',title:'Titre pirate',expectedUpdatedAt:renamed.data.book.updatedAt
 }});
 assert.equal(outsiderRename.status,404,'unauthorized book rename denied');
+// BS-004b: type + language + progression are book metadata only, never text.
+const badType=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'properties',bookType:'UNKNOWN',language:'fr',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(badType.status,400,'unknown book types must be rejected');
+const badLanguage=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'properties',bookType:'MEDICINE',language:'bad-lang',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(badLanguage.status,400,'book language must be a supported reference locale');
+const prematureStatus=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'status',status:'APPROVED',expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(prematureStatus.status,422,'editorial status cannot skip approval workflow');
+const outsiderProperties=await request(archivePath,{method:'PATCH',cookie:outsider,body:{
+  action:'properties',bookType:'MEDICINE',language:'en',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(outsiderProperties.status,404,'non-member cannot alter book properties');
+const csrfProperties=await request(archivePath,{method:'PATCH',cookie:author,omitOrigin:true,body:{
+  action:'properties',bookType:'MEDICINE',language:'en',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(csrfProperties.status,403,'properties changes reject cross-site request');
+const propertiesSaved=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'properties',bookType:'MEDICINE',language:'en',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(propertiesSaved.status,200,'book properties update accepted');
+assert.equal(propertiesSaved.data.book.bookType,'MEDICINE');
+assert.equal(propertiesSaved.data.book.language,'en');
+assert.equal(propertiesSaved.data.book.status,'DRAFT','metadata does not change workflow');
+const staleProperties=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'properties',bookType:'SCIENCE',language:'fr',
+  expectedUpdatedAt:renamed.data.book.updatedAt
+}});
+assert.equal(staleProperties.status,409,'old metadata version rejected');
+const writing=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'status',status:'WRITING',expectedUpdatedAt:propertiesSaved.data.book.updatedAt
+}});
+assert.equal(writing.status,200,'DRAFT to WRITING transition accepted');
+assert.equal(writing.data.book.status,'WRITING');
+const invalidJump=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'status',status:'PUBLISHED',expectedUpdatedAt:writing.data.book.updatedAt
+}});
+assert.equal(invalidJump.status,422,'cannot jump directly to published');
+const review=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'status',status:'REVIEW',expectedUpdatedAt:writing.data.book.updatedAt
+}});
+assert.equal(review.status,200,'WRITING to REVIEW transition accepted');
+assert.equal(review.data.book.status,'REVIEW');
+const afterWorkflow=await request('/api/v1/books',{cookie:author});
+const bookWithWorkflow=afterWorkflow.data.books.find(b=>b.id===archiveBookId);
+assert.equal(bookWithWorkflow?.status,'REVIEW','library reflects new workflow status');
+assert.equal(bookWithWorkflow?.bookType,'MEDICINE','library reflects new book type');
 const noOriginArchive=await request(archivePath,{method:'PATCH',cookie:author,omitOrigin:true,body:{
-  action:'archive',expectedUpdatedAt:renamed.data.book.updatedAt
+  action:'archive',expectedUpdatedAt:review.data.book.updatedAt
 }});
 assert.equal(noOriginArchive.status,403,'archive CSRF enforced');
 const archived=await request(archivePath,{method:'PATCH',cookie:author,body:{
-  action:'archive',expectedUpdatedAt:renamed.data.book.updatedAt
+  action:'archive',expectedUpdatedAt:review.data.book.updatedAt
 }});
 assert.equal(archived.status,200,'soft archive accepted');
+const archivedStatusAttempt=await request(archivePath,{method:'PATCH',cookie:author,body:{
+  action:'status',status:'WRITING',expectedUpdatedAt:archived.data.book.updatedAt
+}});
+assert.equal(archivedStatusAttempt.status,404,'archived books cannot change workflow');
 const liveList=await request('/api/v1/books',{cookie:author});
 assert.equal(liveList.status,200);
 assert.equal(liveList.data.books.some(b=>b.id===archiveBookId),false,'archived book excluded from active library');
