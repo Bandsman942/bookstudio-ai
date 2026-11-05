@@ -70,7 +70,7 @@ export default function ManuscriptImportDialog({books,onClose,onCreateBook,onUpl
           <AppIcon name="upload" size={18}/>{busy?stageLabel:t('import.submit')}
         </button>
         {file&&file.size>MANUSCRIPT_MAX_BYTES&&<p className="form-error" role="alert">{t('import.invalid')}</p>}
-      </>}
+      </>
     </form>
   </div>;
 }
