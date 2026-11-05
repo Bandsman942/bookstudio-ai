@@ -11,7 +11,7 @@ import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 import type {Locale,MessageKey} from '@/lib/i18n';
 
-type Book={id:string;title:string;bookType:string;status:string;updatedAt:string;editable:boolean};
+type Book={id:string;title:string;bookType:string;language:string;status:string;updatedAt:string;editable:boolean};
 const bookTypes:{value:string;key:MessageKey}[]=[
   {value:'GENERAL',key:'library.kindGeneral'},
   {value:'NOVEL',key:'library.kindNovel'},
@@ -31,7 +31,11 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
   const router=useRouter();
   const fmt=locale==='fr'?'fr-FR':'en-US';
   const typeLabel=(type:string)=>t(bookTypes.find(x=>x.value===type)?.key??'library.kindGeneral');
-  const statusLabel=(status:string)=>status==='DRAFT'?t('library.draft'):status==='WRITING'?t('library.writing'):status==='REVIEW'?t('library.review'):status;
+  const statusLabel=(status:string)=>status==='DRAFT'?t('library.draft'):
+    status==='WRITING'?t('library.writing'):status==='REVIEW'?t('library.review'):
+    status==='APPROVED'?(locale==='fr'?'Approuvé':'Approved'):
+    status==='PRODUCTION'?(locale==='fr'?'En production éditoriale':'Editorial production'):
+    status==='PUBLISHED'?(locale==='fr'?'Publié (déclaré)':'Published (declared)'):status;
   async function create(event:React.FormEvent){
     event.preventDefault();setError('');setLoading(true);
     try{
@@ -95,12 +99,13 @@ export default function LibraryClient({books,displayName}:{books:Book[];displayN
         <Link href={'/books/'+book.id} className="book-card-link" aria-label={t('library.openBook',{title:book.title})}>
           <div className={'cover cover-'+(index%4)}><span>BOOKSTUDIO</span><strong>{book.title}</strong><small>by DTSC</small></div>
           <div className="book-meta"><h3>{book.title}</h3>
-            <p>{typeLabel(book.bookType)} · {t('common.modified')} {new Date(book.updatedAt).toLocaleDateString(fmt)}</p>
+            <p>{typeLabel(book.bookType)} · {book.language.toUpperCase()} · {t('common.modified')} {new Date(book.updatedAt).toLocaleDateString(fmt)}</p>
             <span className="status">{statusLabel(book.status)}</span>
           </div>
         </Link>
         <div className="book-card-overflow"><BookActionsMenu bookId={book.id} title={book.title}
-          updatedAt={book.updatedAt} editable={book.editable} showOpen onArchive="refresh"/></div>
+          updatedAt={book.updatedAt} bookType={book.bookType} language={book.language}
+          status={book.status} editable={book.editable} showOpen onArchive="refresh"/></div>
       </article>)}
       <button type="button" className="new-book-card import-book-card" onClick={()=>setImporting(true)}>
         <span className="import-card-glyph"><AppIcon name="upload" size={26}/></span>

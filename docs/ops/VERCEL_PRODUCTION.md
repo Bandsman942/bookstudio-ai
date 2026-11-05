@@ -52,3 +52,10 @@ Après migration sur la base cible, utiliser `pnpm --filter @bookstudio/database
 5. Vérifier les logs, cookies, origine, ACL et une sauvegarde/restauration ; n'attribuer le domaine public qu'après la recette de publication.
 
 **Ne pas considérer un build CI ou une première page Vercel comme une preuve que l'application est utilisable en production.**
+
+## Lot v0.23.0-alpha — propriétés et statut
+
+- **Aucune variable nouvelle** ; aucun changement à `DATABASE_URL`, `DIRECT_URL` ni aux secrets Supabase.
+- **Aucune migration Prisma nouvelle** ; seules `books.book_type`, `books.language` et `books.status` existantes sont concernées.
+- Requiert documentation `docs/releases/v0.23.0.md`, guide et API, CI finale, E2E propriétaire et snapshot Neon avant production.
+- Conserver les flags antivirus OFF tant que ClamAV dédié n'est pas installé et validé.

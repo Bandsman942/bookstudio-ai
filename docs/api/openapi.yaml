@@ -110,3 +110,51 @@ paths:
         '409': {description: Ordre modifié par une autre session}
         '422': {description: Structure trop volumineuse}
         '503': {description: Incident temporaire, aucune décision partielle commitée}
+
+  /books/{bookId}:
+    patch:
+      summary: Gérer titre, archivage, propriétés ou statut éditorial d'un livre
+      description: >-
+        Session + RBAC OWNER/EDITOR, CSRF par Origin, livre/espace vérifié,
+        expectedUpdatedAt obligatoire, transaction Serializable et audit.
+        Le statut éditorial déclaré manuellement ne publie rien.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [action,expectedUpdatedAt,bookType,language]
+                  properties:
+                    action: {type: string, const: properties}
+                    expectedUpdatedAt: {type: string, format: date-time}
+                    bookType: {type: string, enum: [GENERAL,NOVEL,ESSAY,SCIENCE,MEDICINE,EDUCATION]}
+                    language: {type: string, enum: [fr,en]}
+                - type: object
+                  required: [action,expectedUpdatedAt,status]
+                  properties:
+                    action: {type: string, const: status}
+                    expectedUpdatedAt: {type: string, format: date-time}
+                    status: {type: string, enum: [DRAFT,WRITING,REVIEW,APPROVED,PRODUCTION,PUBLISHED]}
+                - type: object
+                  required: [action,expectedUpdatedAt]
+                  properties:
+                    action: {type: string, enum: [rename,archive,restore]}
+                    expectedUpdatedAt: {type: string, format: date-time}
+                    title: {type: string, minLength: 2, maxLength: 180}
+      responses:
+        '200': {description: Métadonnées enregistrées ou unchanged=true}
+        '400': {description: Type, langue, statut ou autre paramètre invalide}
+        '401': {description: Non authentifié}
+        '403': {description: Origine CSRF refusée}
+        '404': {description: Livre absent/inaccessible, statut interdit sur livre archivé}
+        '409': {description: Conflit de métadonnées ou d'archivage}
+        '413': {description: Corps de requête trop grand}
+        '422': {description: Transition éditoriale non autorisée}
+        '503': {description: Échec transactionnel temporaire}

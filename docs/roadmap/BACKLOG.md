@@ -31,3 +31,10 @@
 - **Prochain lot métier après v0.22** : compléments de gestion des ouvrages (édition des métadonnées et type, listes/tri, tableaux de bord) sur PR distincte, sans déployer sans E2E.
 - P1 #73–#75 : tables de publication, styles/notes et collaboration avancée, non clos.
 - **Gouvernance ajoutée** : porte documentaire `docs/ops/RELEASE-DOCUMENTATION-GATE.md` à satisfaire pour chaque future version avant toute fusion/déploiement ; preuves CI + E2E propriétaire requises.
+
+## Lot métier candidat v0.23.0-alpha (issue #136, BS-004)
+
+- **Fonctionnel** : modification du type d'ouvrage et de sa langue de référence, suivi d'étapes éditoriales contrôlées via menu contextuel partagé ; aucun effet sur texte/révision/snapshot/éditions. **Statut déclaré ≠ publication effective.**
+- **Sécurité métier** : rôles OWNER/EDITOR, CSRF, conflit optimiste 409, transition interdite 422, livre archivé protégé, journal d'audit.
+- **Portée documentaire** : `docs/releases/v0.23.0.md` + `docs/guides/CHAPITRES.md` + `docs/design/BOOK-LIFECYCLE.md` + OpenAPI + ops + QA + changelog, toutes intégrées **avant** déploiement.
+- **BS-004 #5 reste ouvert** pour les travaux restants de bibliothèque scalable, filtres/pagination, détails de tableau de bord et autres critères métier. Les chantiers sécurité P0 restent ouverts mais reportés conformément à la demande du propriétaire (ClamAV non installé).

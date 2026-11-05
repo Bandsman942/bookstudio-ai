@@ -16,11 +16,11 @@ import AppIcon from './AppIcon';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
-  bookId:string;title:string;status:string;kind:string;
+  bookId:string;title:string;status:string;kind:string;language:string;
   chapters:Chapter[];updatedAt:string;editable:boolean;orderToken:string
 };
 
-export default function BookOverview({bookId,title,status,kind,chapters,updatedAt,editable,orderToken}:Props){
+export default function BookOverview({bookId,title,status,kind,language,chapters,updatedAt,editable,orderToken}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
@@ -62,14 +62,15 @@ export default function BookOverview({bookId,title,status,kind,chapters,updatedA
       <div><h1>{title}<span className="dot">.</span></h1><p>{t('book.overviewSubtitle')}</p></div>
       {editable&&<div className="book-header-actions">
         <a className="button small" href="#book-source-files"><AppIcon name="upload"/>{t('book.importManuscript')}</a>
-        <BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt} editable onArchive="library"/>
+        <BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt}
+          bookType={kind} language={language} status={status} editable onArchive="library"/>
       </div>}
     </div>
     <BookSourceFiles bookId={bookId} editable={editable}/>
     <div className="overview-cards">
       <div><span>{t('book.chapters')}</span><strong>{chapters.length}</strong><small>{t('book.organized')}</small></div>
-      <div><span>{t('book.status')}</span><strong className="status-label">{status==='DRAFT'?t('library.draft'):status}</strong><small>{t('book.historySaved')}</small></div>
-      <div><span>{t('book.type')}</span><strong className="status-label">{kind==='NOVEL'?t('library.kindNovel'):kind==='MEDICINE'?t('library.kindMedicine'):kind==='SCIENCE'?t('library.kindScience'):t('library.kindGeneral')}</strong><small>{t('book.customizable')}</small></div>
+      <div><span>{t('book.status')}</span><strong className="status-label">{status==='DRAFT'?t('library.draft'):status==='WRITING'?t('library.writing'):status==='REVIEW'?t('library.review'):status}</strong><small>{t('book.historySaved')}</small></div>
+      <div><span>{t('book.type')}</span><strong className="status-label">{kind==='NOVEL'?t('library.kindNovel'):kind==='MEDICINE'?t('library.kindMedicine'):kind==='SCIENCE'?t('library.kindScience'):kind==='EDUCATION'?t('library.kindEducation'):kind==='ESSAY'?t('library.kindEssay'):t('library.kindGeneral')}</strong><small>{language.toUpperCase()} · {t('book.customizable')}</small></div>
     </div>
     <div className="section-header" id="book-structure"><h2><AppIcon name="chapter"/>{t('book.structure')}</h2>
       {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}><AppIcon name="plus"/>{t('book.chapterAdd')}</button>}
