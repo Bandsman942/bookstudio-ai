@@ -15,8 +15,8 @@ import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import {useToast} from './ToastProvider';
 type Chapter={id:string;title:string;updatedAt:string;revision:number};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
-type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean};
-export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit}:Props){
+type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean;orderToken:string};
+export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit,orderToken}:Props){
  const {t,locale}=useAppPreferences();
  const router=useRouter();
  const preferenceActions=usePreferenceActions();
@@ -276,7 +276,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
           <AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span>
         </Link>
         <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title} revision={c.revision}
-          updatedAt={c.updatedAt} editable={canEdit} beforeNavigate={canLeaveEditor}/>
+          updatedAt={c.updatedAt} editable={canEdit} beforeNavigate={canLeaveEditor}
+          reorder={{token:orderToken,index:i,total:chapters.length}}/>
       </div>)}</div>
     <div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>

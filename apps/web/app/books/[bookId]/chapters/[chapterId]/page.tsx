@@ -2,6 +2,7 @@ import {redirect,notFound} from 'next/navigation';
 import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import {prisma} from '@bookstudio/database';
 import StudioEditor from '@/components/StudioEditor';
+import {chapterOrderToken} from '@/lib/chapter-order';
 export const dynamic='force-dynamic';
 export default async function ChapterPage({params}:{params:Promise<{bookId:string;chapterId:string}>}){
   const user=await activeUser();if(!user)redirect('/login');
@@ -13,5 +14,5 @@ export default async function ChapterPage({params}:{params:Promise<{bookId:strin
   const canEdit=canWriteBook(book);
   return <StudioEditor key={chapterId} bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
     revision={chapter.revisionSeq} initialContent={revision.content as Record<string,unknown>}
-    chapters={chapters.map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} canEdit={canEdit}/>;
+    chapters={chapters.map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} orderToken={chapterOrderToken(chapters)} canEdit={canEdit}/>;
 }

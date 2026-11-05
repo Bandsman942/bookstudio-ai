@@ -4,7 +4,7 @@ export async function GET(_req:Request,{params}:{params:Promise<{bookId:string}>
   const book=await accessToBook(bookId,user.id,false);
   if(!book)return errorResponse('NOT_FOUND',404);
   const chapters=book.editions[0]?.manuscript?.chapters ?? [];
-  return Response.json({chapters:chapters.map(c=>({
+  return Response.json({orderToken:chapterOrderToken(chapters),chapters:chapters.map(c=>({
     id:c.id,title:c.title,revision:c.revisionSeq,position:c.position,updatedAt:c.updatedAt
   }))},{headers:{'Cache-Control':'no-store'}});
 }
@@ -14,6 +14,7 @@ import {isSameOrigin,errorResponse} from '@/lib/security';
 import {prisma} from '@bookstudio/database';
 import {emptyDocument,normalizeTitle} from '@bookstudio/domain';
 import {createHash} from 'node:crypto';
+import {chapterOrderToken} from '@/lib/chapter-order';
 export async function POST(req:Request,{params}:{params:Promise<{bookId:string}>}){
   if(!isSameOrigin(req))return errorResponse('ORIGIN_FORBIDDEN',403);
   const user=await activeUser();if(!user)return errorResponse('UNAUTHENTICATED',401);

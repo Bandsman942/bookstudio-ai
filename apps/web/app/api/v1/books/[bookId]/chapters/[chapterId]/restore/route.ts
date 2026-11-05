@@ -24,9 +24,12 @@ export async function POST(request:Request,{params}:{params:Promise<{bookId:stri
         where:{id:bookId,workspaceId:book.workspaceId,archivedAt:null},select:{id:true}
       });
       if(!allowed||!currentBook)return 'NOT_FOUND' as const;
+      // Restoring a chapter appends it to the active structure. It cannot
+      // silently collide with positions already changed by a recent reorder.
+      const greatest=await tx.chapter.aggregate({where:{manuscriptId},_max:{position:true}});
       const changed=await tx.chapter.updateMany({
         where:{id:chapterId,manuscriptId,deletedAt:{not:null},updatedAt:expected},
-        data:{deletedAt:null}
+        data:{deletedAt:null,position:(greatest._max.position??-1)+1}
       });
       if(changed.count!==1)return 'CHAPTER_CONFLICT' as const;
       await tx.book.update({where:{id:bookId},data:{updatedAt:new Date()}});
