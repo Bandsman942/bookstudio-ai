@@ -68,3 +68,27 @@ Sur **Bibliothèque**, les compteurs présentent tous les livres accessibles, m�
 ### English
 
 On **Library**, search by book title (not chapter content), filter by book type or editorial milestone, choose Recently updated or Title A–Z and press Apply. The first page shows 24 books; **Load more books** displays subsequent results without reloading the whole application. The counters reflect the entire authorized library. Invalid or outdated page requests are rejected without exposing books from other workspaces.
+
+## 8. Destination d'import autonome et pilotage éditorial (candidate v0.25)
+
+Dans **Importer un manuscrit**, le sélecteur de destination recherche désormais parmi
+**tous les ouvrages modifiables** par votre compte, et non seulement ceux présents
+sur la première page de la bibliothèque. Saisissez un titre, choisissez
+**Rechercher**, sélectionnez un livre ou cliquez sur **Afficher d'autres livres**
+pour parcourir les résultats suivants. Il faut être OWNER ou EDITOR du workspace.
+L'application vérifie encore l'autorisation côté serveur lors du transfert :
+une destination archivée ou devenue inaccessible est refusée.
+
+Le tableau **Pilotage éditorial** récapitule les six étapes (Brouillon,
+Rédaction, Relecture, Approuvé, Production, Publié déclaré) et les archives pour
+**l'ensemble des livres accessibles**, pas seulement les cartes chargées. Chaque
+case d'étape permet de filtrer les ouvrages correspondants. Le statut Publié
+reste une déclaration interne : aucune publication réelle n'est déclenchée.
+
+### English
+
+The import destination selector independently searches all editable books.
+Search the title and load more results, even if the book is absent from the
+current library page. Server permissions are checked again when uploading.
+The editorial overview counts all authorized books by six stages plus archives;
+select a stage to filter. Published is a manual milestone, not public publishing.

@@ -54,3 +54,7 @@ Bibliothèque volumineuse : pagination stable, recherche de titre et filtres de 
 ## Livraison confirmée v0.24 et suite
 
 La sous-tranche #138 est livrée dans PR #140 : E2E BON, CI #188/#189 SUCCESS, snapshot Neon `snap-lucky-cloud-bf011zsa`, Vercel READY. Prochain lot : #141, destination d'import parmi tous les ouvrages éditables et suivi éditorial détaillé. La sécurité ClamAV reste différée et ouverte (#104/#126/#131/#133).
+
+## BS-004d #141 — version candidate v0.25.0-alpha
+
+Sélecteur de destination indépendant de la page de bibliothèque, recherche serveur et accès OWNER/EDITOR. Tableau de bord à six statuts et archives sur tous les ouvrages autorisés. CI et documentation obligatoires avant E2E et publication. ClamAV non installé et différé.

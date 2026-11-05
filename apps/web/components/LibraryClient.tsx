@@ -12,7 +12,10 @@ import {explainActionError} from '@/lib/notification-copy';
 import type {Locale,MessageKey} from '@/lib/i18n';
 
 type Book={id:string;title:string;bookType:string;language:string;status:string;updatedAt:string;editable:boolean};
-type Counters={total:number;writing:number;review:number};
+const milestones=['DRAFT','WRITING','REVIEW','APPROVED','PRODUCTION','PUBLISHED'] as const;
+type Milestone=typeof milestones[number];
+type Counters={total:number;writing:number;review:number;archived:number;
+  byStatus:Record<Milestone,number>};
 type Filters={q:string;type:string;status:string;sort:'recent'|'title'};
 type Page={books:Book[];nextCursor:string|null;total:number;stats:Counters};
 const emptyFilters:Filters={q:'',type:'',status:'',sort:'recent'};
@@ -93,6 +96,10 @@ export default function LibraryClient({books,displayName,initialNextCursor,initi
   function submitFilters(event:React.FormEvent){
     event.preventDefault();void loadPage({q:query.trim(),type:filterType,status:filterStatus,sort},null);
   }
+  function applyMilestone(status:Milestone){
+    setFilterStatus(status);
+    void loadPage({q:query.trim(),type:filterType,status,sort},null);
+  }
   function resetFilters(){
     setQuery('');setFilterType('');setFilterStatus('');setSort('recent');
     void loadPage(emptyFilters,null);
@@ -153,6 +160,29 @@ export default function LibraryClient({books,displayName,initialNextCursor,initi
       <div><strong>{stats.writing}</strong><span>{t('library.writing')}</span></div>
       <div><strong>{stats.review}</strong><span>{t('library.review')}</span></div>
     </div>
+    <section className="library-editorial-overview" aria-label={
+      locale==='fr'?'Pilotage des étapes éditoriales':'Editorial workflow dashboard'}>
+      <div className="section-header">
+        <h2>{locale==='fr'?'Pilotage éditorial':'Editorial overview'}</h2>
+        <span>{locale==='fr'?'Toutes les œuvres autorisées':'All accessible works'}</span>
+      </div>
+      <div className="library-milestone-grid">
+        {milestones.map(stage=><button key={stage} type="button"
+          className="library-milestone-card" disabled={listBusy}
+          aria-pressed={applied.status===stage}
+          onClick={()=>applyMilestone(stage)}>
+          <strong>{stats.byStatus[stage]??0}</strong>
+          <span>{statusLabel(stage)}</span>
+        </button>)}
+        <Link className="library-milestone-card" href="/library/archives">
+          <strong>{stats.archived}</strong>
+          <span>{locale==='fr'?'Ouvrages archivés':'Archived books'}</span>
+        </Link>
+      </div>
+      <p className="source-note">{locale==='fr'?
+        'Ces indicateurs couvrent toute votre bibliothèque autorisée, pas uniquement les cartes affichées. Sélectionnez une étape pour filtrer.':
+        'These figures cover all your accessible books, not just visible cards. Select a milestone to filter.'}</p>
+    </section>
     <form className="library-filters" role="search" onSubmit={submitFilters}
       aria-label={locale==='fr'?'Filtrer les ouvrages':'Filter books'}>
       <label className="library-search-label"><span>{locale==='fr'?'Rechercher un titre':'Search title'}</span>

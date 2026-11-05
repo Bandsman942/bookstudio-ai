@@ -162,6 +162,32 @@ assert.ok(firstPage.data.total>=2,'all accessible books counted, not first page 
 assert.match(firstPage.data.nextCursor,/^[A-Za-z0-9_-]+$/);
 assert.ok(firstPage.data.stats.total>=firstPage.data.total,
   'global counts must represent all visible books');
+assert.ok(firstPage.data.stats.byStatus.DRAFT>=2,'dashboard counts ALL draft works');
+for(const stage of ['DRAFT','WRITING','REVIEW','APPROVED','PRODUCTION','PUBLISHED'])
+  assert.equal(typeof firstPage.data.stats.byStatus[stage],'number','dashboard stage '+stage);
+const eligible=await request('/api/v1/books?editable=1&limit=1',{cookie:author});
+assert.equal(eligible.status,200);
+assert.equal(eligible.data.books.length,1);
+assert.equal(eligible.data.total,firstPage.data.total,
+  'owner can choose all their active books independent of first-page limit');
+assert.equal(eligible.data.books[0].editable,true);
+const firstDestination=await request('/api/v1/books?editable=1&sort=title&limit=1',{cookie:author});
+assert.equal(firstDestination.status,200);
+assert.match(firstDestination.data.nextCursor,/^[A-Za-z0-9_-]+$/);
+const nextDestination=await request('/api/v1/books?editable=1&sort=title&limit=1&cursor='+
+  firstDestination.data.nextCursor,{cookie:author});
+assert.equal(nextDestination.status,200);
+assert.notEqual(firstDestination.data.books[0].id,nextDestination.data.books[0].id,
+  'import picker can select later pages');
+const invalidDestination=await request('/api/v1/books?editable=false',{cookie:author});
+assert.equal(invalidDestination.status,400);
+const wrongScopeDestination=await request('/api/v1/books?limit=1&cursor='+
+  firstDestination.data.nextCursor,{cookie:author});
+assert.equal(wrongScopeDestination.status,400,'editable-only cursor cannot be used for public list');
+const unrelatedDestination=await request('/api/v1/books?editable=1',{cookie:outsider});
+assert.equal(unrelatedDestination.status,200);
+assert.ok(unrelatedDestination.data.books.every(b=>b.id!==archiveBookId),
+  'source title and destination must never leak to another workspace');
 const secondPage=await request('/api/v1/books?limit=1&cursor='+firstPage.data.nextCursor,{cookie:author});
 assert.equal(secondPage.status,200);
 assert.equal(secondPage.data.books.length,1);
@@ -269,6 +295,7 @@ const archivedStatusAttempt=await request(archivePath,{method:'PATCH',cookie:aut
 assert.equal(archivedStatusAttempt.status,404,'archived books cannot change workflow');
 const liveList=await request('/api/v1/books',{cookie:author});
 assert.equal(liveList.status,200);
+assert.ok(liveList.data.stats.archived>=1,'archived counter includes the hidden book');
 assert.equal(liveList.data.books.some(b=>b.id===archiveBookId),false,'archived book excluded from active library');
 const archiveList=await request('/api/v1/books?archived=1',{cookie:author});
 assert.equal(archiveList.status,200);
