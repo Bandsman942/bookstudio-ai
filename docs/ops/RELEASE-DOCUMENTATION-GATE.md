@@ -33,3 +33,10 @@ Décision du propriétaire : **toute documentation nécessaire doit être actual
 - Exploitation : `docs/ops/PRODUCTION-GATE.md`, `docs/ops/VERCEL_PRODUCTION.md`
 - Backlog : `docs/roadmap/BACKLOG.md`
 - Validation propriétaire E2E v0.22 BON ; GitHub CI #176 SUCCESS sur le commit fonctionnel, puis nouvelle CI nécessaire sur la version documentée.
+
+## Lot v0.23.0-alpha (prépublication)
+
+- Le type et la langue de référence ne transforment pas les octets du manuscrit ni les éditions existantes ; aucune migration SQL.
+- Le statut éditorial est un état manuel, aucun déclenchement externe ni faux effet « publication ».
+- Dossier documentaire : `docs/releases/v0.23.0.md`, `docs/guides/CHAPITRES.md`, `docs/design/BOOK-LIFECYCLE.md`, `docs/api/openapi.yaml`, `docs/qa/E2E-BOOK-METADATA-0.23.0.md`, `docs/roadmap/BACKLOG.md`.
+- Cette PR **ne doit pas** être fusionnée tant que GitHub CI sur SHA documenté et validation propriétaire `E2E v0.23.0-alpha BON` ne sont pas confirmées ; snapshot Neon avant publication, Preview OFF, scanner ClamAV non activé.

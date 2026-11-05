@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.23.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004b #136 — Propriétés des ouvrages et progression éditoriale
+- Dans les menus ⋯ des livres : modifier le type d'ouvrage et la langue de référence FR/EN, sans modifier le manuscrit, les révisions, les sources ni les éditions.
+- Étapes éditoriales contrôlées DRAFT → WRITING → REVIEW → APPROVED → PRODUCTION → PUBLISHED (avec retours autorisés par les règles métier), statut déclaré manuellement et non publication publique.
+- API `PATCH /api/v1/books/[bookId]` actions `properties` et `status` avec RBAC OWNER/EDITOR, CSRF, transaction Serializable, conflit HTTP 409, transition interdite 422 et audit.
+- Cartes de bibliothèque et vue d'ensemble actualisées, formulaire contextuel accessible FR/EN, toasts contextualisés.
+- Tests HTTP E2E cross-tenant, mauvais type/langue, origine, conflit, transitions interdites et livre archivé. **Aucune nouvelle migration SQL ni variable Vercel.**
+- Documentation utilisateur/API/technique/exploitation/QA/changelog/backlog livrée dans la même PR avant toute publication.
+
+
 ## [0.22.0] — alpha privée livrée le 5 novembre 2026 (PR #134, CI #179/#180, Vercel READY)
 ### BS-004 #5 — Réorganisation non destructive des chapitres
 - Monter/descendre un chapitre dans la vue d'ensemble et la navigation gauche de l'éditeur via les menus ⋯, clavier et mobile.
