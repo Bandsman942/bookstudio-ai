@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.22.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004 #5 — Réorganisation non destructive des chapitres
+- Monter/descendre un chapitre dans la vue d'ensemble et la navigation gauche de l'éditeur via les menus ⋯, clavier et mobile.
+- API `PATCH /api/v1/books/[bookId]/chapters/reorder` RBAC OWNER/EDITOR, CSRF, token optimiste SHA-256 sur identifiants/positions, transaction Serializable avec audit ; 409 sur structure modifiée ailleurs.
+- Restauration de chapitre retiré toujours en fin de manuscrit afin d'éviter une collision de position ; aucune modification de texte, révision ou snapshot.
+- Tests unitaires et parcours HTTP E2E avec mauvais tenant, CSRF, conflit, récupération, état intact ; pas de migration Neon.
+
+
 ## [0.21.0] — alpha candidate (NON DÉPLOYÉE)
 ### #131 — travail ClamAV isolé et attesté (#126)
 - M2M et le bail de travaux de scan Neon, téléchargement privé Supabase signé, worker hors Vercel, résultat HMAC.

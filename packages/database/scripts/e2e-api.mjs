@@ -255,6 +255,51 @@ const restoreDeleted=await request(deleteChapterPath+'/restore',{method:'POST',c
 assert.equal(restoreDeleted.status,200,'restore deleted chapter');
 assert.equal((await request(deleteChapterPath,{cookie:author})).status,200,'chapter content retained');
 assert.equal((await request(archivePath+'/chapters',{cookie:author})).data.chapters.length,2,'restored chapter plus new chapter');
+// BS-004 chapter ordering: only metadata moves, never edit revisions or snapshots.
+const orderPath=archivePath+'/chapters/reorder';
+const orderBefore=await request(archivePath+'/chapters',{cookie:author});
+assert.equal(orderBefore.status,200);
+assert.match(orderBefore.data.orderToken,/^[0-9a-f]{64}$/);
+const beforeIds=orderBefore.data.chapters.map(c=>c.id);
+assert.equal(beforeIds.length,2,'test fixture has two chapters');
+const tailId=beforeIds[1],headId=beforeIds[0];
+const crossTenantOrder=await request(orderPath,{method:'PATCH',cookie:outsider,body:{
+  chapterId:tailId,direction:'up',expectedOrderToken:orderBefore.data.orderToken
+}});
+assert.equal(crossTenantOrder.status,404,'cross-workspace reorder forbidden');
+const noOriginOrder=await request(orderPath,{method:'PATCH',cookie:author,omitOrigin:true,body:{
+  chapterId:tailId,direction:'up',expectedOrderToken:orderBefore.data.orderToken
+}});
+assert.equal(noOriginOrder.status,403,'reorder requires same-origin');
+const invalidOrder=await request(orderPath,{method:'PATCH',cookie:author,body:{
+  chapterId:tailId,direction:'far',expectedOrderToken:orderBefore.data.orderToken
+}});
+assert.equal(invalidOrder.status,400,'invalid direction rejected');
+const movedUp=await request(orderPath,{method:'PATCH',cookie:author,body:{
+  chapterId:tailId,direction:'up',expectedOrderToken:orderBefore.data.orderToken
+}});
+assert.equal(movedUp.status,200,'author can move a chapter one position');
+assert.equal(movedUp.data.changed,true);
+assert.notEqual(movedUp.data.orderToken,orderBefore.data.orderToken);
+const staleOrder=await request(orderPath,{method:'PATCH',cookie:author,body:{
+  chapterId:tailId,direction:'down',expectedOrderToken:orderBefore.data.orderToken
+}});
+assert.equal(staleOrder.status,409,'stale order token blocks overwritten order');
+const afterUp=await request(archivePath+'/chapters',{cookie:author});
+assert.deepEqual(afterUp.data.chapters.map(c=>c.id),[tailId,headId],'chapter ordering persisted');
+const noMove=await request(orderPath,{method:'PATCH',cookie:author,body:{
+  chapterId:tailId,direction:'up',expectedOrderToken:afterUp.data.orderToken
+}});
+assert.equal(noMove.status,200,'first chapter cannot move above first');
+assert.equal(noMove.data.changed,false);
+const moveBack=await request(orderPath,{method:'PATCH',cookie:author,body:{
+  chapterId:tailId,direction:'down',expectedOrderToken:afterUp.data.orderToken
+}});
+assert.equal(moveBack.status,200,'return chapter to original order');
+const afterBack=await request(archivePath+'/chapters',{cookie:author});
+assert.deepEqual(afterBack.data.chapters.map(c=>c.id),beforeIds,'restored original ordering');
+assert.deepEqual(afterBack.data.chapters.map(c=>c.revision),
+  orderBefore.data.chapters.map(c=>c.revision),'reorder does not create text revisions');
 const chapterAfterRename=await request(archivePath+'/chapters/'+archiveChapterId,{cookie:author});
 assert.equal(chapterAfterRename.status,200);
 assert.equal(chapterAfterRename.data.chapter.title,'Chapitre renommé sans toucher le texte');
