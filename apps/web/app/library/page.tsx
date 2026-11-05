@@ -11,7 +11,7 @@ export default async function Library(){
     prisma.book.findMany({
       where:{archivedAt:null,workspace:{memberships:{some:{userId:user.id}}}},
       orderBy:{updatedAt:'desc'},take:100,
-      select:{id:true,title:true,bookType:true,status:true,updatedAt:true,workspaceId:true}
+      select:{id:true,title:true,bookType:true,language:true,status:true,updatedAt:true,workspaceId:true}
     }),
     prisma.membership.findMany({
       where:{userId:user.id,role:{in:['OWNER','EDITOR']}},select:{workspaceId:true}
@@ -20,7 +20,7 @@ export default async function Library(){
   const writable=new Set(editableWorkspaces.map(m=>m.workspaceId));
   return <LibraryClient displayName={user.name}
     books={books.map(book=>({
-      id:book.id,title:book.title,bookType:book.bookType,status:book.status,
+      id:book.id,title:book.title,bookType:book.bookType,language:book.language,status:book.status,
       updatedAt:book.updatedAt.toISOString(),editable:writable.has(book.workspaceId)
     }))}/>;
 }
