@@ -2,7 +2,7 @@
 
 ## Préconditions générales
 
-1. Version SemVer préparée dans `release.json` ; CI verte sur le SHA exact de `main`.
+1. Version SemVer préparée dans `release.json` ; **porte documentaire obligatoire** décrite dans `docs/ops/RELEASE-DOCUMENTATION-GATE.md` franchie **avant fusion/déploiement** ; CI verte sur le SHA exact de la PR puis vérifiée sur `main`.
 2. Domaine HTTPS confirmé et `APP_ORIGIN` identique octet pour octet à son origine (sans slash final).
 3. `DATABASE_URL` poolée / `DIRECT_URL` directe pointent vers la **même base BookStudio production**, pas DTSC Platform ; contrôle sans afficher les secrets.
 4. Neon production protégée ; migration Prisma revue et approuvée, exécutée et vérifiée ; restauration sauvegarde testée.
@@ -11,7 +11,7 @@
 7. Recette propriétaire sur l'environnement accessible : bibliothèque, édition/sauvegarde, versions, Word et isolation des comptes.
 8. Aucun manuscrit sensible réel tant que stockage objet, analyse antivirus et restauration d'exploitation ne sont pas établis.
 9. Débloquer le build Vercel **seulement** pour la publication autorisée depuis `main`.
-10. Vérifier READY, `/api/version`, journal d'erreurs, et produire immédiatement la fiche du déploiement réel.
+10. Vérifier READY, `/api/version`, journal d'erreurs, et produire immédiatement la fiche du déploiement réel. Documentation fonctionnelle et technique déjà versionnée avant cette étape ; aucune donnée de production inventée dans les notes de release.
 
 ## Première production privée (alpha)
 

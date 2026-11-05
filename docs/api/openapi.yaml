@@ -76,3 +76,37 @@ paths:
       responses:
         '200': {description: Révision incrémentée}
         '409': {description: Conflit de révision}
+
+  /books/{bookId}/chapters/reorder:
+    patch:
+      summary: Déplacer un chapitre d'une position (OWNER/EDITOR uniquement)
+      description: >-
+        Conserve le texte, les révisions, commentaires et snapshots. Compare
+        expectedOrderToken à l'ordre courant des chapitres actifs ; 409 si une
+        autre modification est intervenue. Transaction sérialisable et audit.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [chapterId, direction, expectedOrderToken]
+              properties:
+                chapterId: {type: string, format: uuid}
+                direction: {type: string, enum: [up, down]}
+                expectedOrderToken: {type: string, minLength: 64, maxLength: 64, pattern: '^[0-9a-f]{64}$'}
+      responses:
+        '200': {description: 'Ordre mis à jour ou déplacement impossible aux extrémités (changed=false), nouveau orderToken'}
+        '400': {description: Paramètres non valides}
+        '401': {description: Non authentifié}
+        '403': {description: Origine CSRF refusée}
+        '404': {description: Non membre ou livre/chapitre inaccessible}
+        '409': {description: Ordre modifié par une autre session}
+        '422': {description: Structure trop volumineuse}
+        '503': {description: Incident temporaire, aucune décision partielle commitée}

@@ -25,3 +25,7 @@
    Preview OFF, snapshot Neon avant production.
 
 **Après E2E propriétaire BON seulement** : fusion puis livraison.
+
+## Validation consignée
+
+Propriétaire : **E2E v0.22.0-alpha BON**, 5 novembre 2026. CI #175 a d'abord échoué sur l'unicité `(manuscript_id,position)` ; un échange par position temporaire a corrigé l'échec. **CI #176 SUCCESS** au SHA fonctionnel `0b786e4e0f40b044097a9b3e46a73eaff4deebe2`. Toute mise à jour documentaire avant déploiement requiert une nouvelle CI verte sur le SHA final de la PR. Aucune analyse EICAR réelle n'est comprise dans cette recette ; scanner dédié non installé.

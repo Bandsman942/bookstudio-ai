@@ -1,6 +1,6 @@
 # Variables Vercel et recette de première publication — BookStudio AI by DTSC
 
-**Périmètre :** projet Vercel `bookstudio-ai`, équipe `bandsmans-projects`, dépôt `Bandsman942/bookstudio-ai`, branche `main`, root `apps/web`, Node 22.x. L'application est **distincte** de DTSC Platform ; jamais de chaîne de connexion ou de cookie partagé.
+**Périmètre et état actualisé 5 novembre 2026 :** BookStudio v0.21.0-alpha en production au moment de préparer la v0.22, et aucune installation ClamAV isolée opérationnelle. Projet Vercel `bookstudio-ai`, équipe `bandsmans-projects`, dépôt `Bandsman942/bookstudio-ai`, branche `main`, root `apps/web`, Node 22.x. L'application est **distincte** de DTSC Platform ; jamais de chaîne de connexion ou de cookie partagé.
 
 ## Variables nécessaires dans Vercel / Production
 
@@ -26,6 +26,18 @@
 | `DTSC_OIDC_ISSUER` | SSO OIDC validé, aucune réutilisation de cookies DTSC |
 
 Les deux dernières ne doivent pas être remplies simplement avec l'URL publique DTSC : elles attendent une véritable intégration contractuelle. Aucun jeton OpenRouter/IA n'est nécessaire lorsque `AI_PROVIDER_ENABLED=false`.
+
+## Variables Supabase et antivirus (état progressif)
+
+- Les sources privées DOCX sont stockées dans **Supabase Storage**. La configuration actuelle doit être vérifiée sans exposer de secret ni de lien signé ; le Vercel Blob anciennement envisagé (#46) a été abandonné.
+- `BOOKSTUDIO_SOURCE_SCAN_QUEUE_ENABLED` : **OFF** (variable absente en production à la dernière vérification), ne pas activer avant worker ClamAV réellement hébergé et vérifié.
+- `BOOKSTUDIO_SCAN_WORKER_ENABLED` : **OFF** (variable absente), ne jamais ajouter de secrets M2M avant une infrastructure isolée validée et des tests EICAR réels.
+- `BOOKSTUDIO_REQUIRE_SCANNED_SOURCES` : `false`, à conserver jusqu'à promotion immuable, quarantaine et migration des documents antérieurs.
+- Les clés de service Supabase, secrets Neon et jetons M2M ne doivent jamais apparaître dans GitHub, dans les requêtes navigateur ni dans les journaux.
+
+## Obligation documentaire avant chaque livraison
+
+La [porte documentaire](RELEASE-DOCUMENTATION-GATE.md) est bloquante : mise à jour du guide utilisateur, API, design/architecture, exploitation, QA E2E, notes/changelog et backlog **sur la PR de la version**. `pnpm release:check` refuse une version >= v0.22 dont les références essentielles sont absentes. La CI et l'E2E du propriétaire doivent viser le code final documenté. Ne déverrouiller Vercel que pour le commit `main` fusionné et explicitement autorisé.
 
 ## Provisionnement du propriétaire (une seule fois)
 
