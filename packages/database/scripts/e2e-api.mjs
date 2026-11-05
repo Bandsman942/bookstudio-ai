@@ -154,6 +154,36 @@ const archiveChapterId=archival.data.book.chapterId;
 const archivePath='/api/v1/books/'+archiveBookId;
 const initialBooks=await request('/api/v1/books',{cookie:author});
 assert.equal(initialBooks.status,200);
+// BS-004c: stable scoped pagination, server-side title/type/status filters.
+const firstPage=await request('/api/v1/books?limit=1',{cookie:author});
+assert.equal(firstPage.status,200);
+assert.equal(firstPage.data.books.length,1);
+assert.ok(firstPage.data.total>=2,'all accessible books counted, not first page only');
+assert.match(firstPage.data.nextCursor,/^[A-Za-z0-9_-]+$/);
+assert.ok(firstPage.data.stats.total>=firstPage.data.total,
+  'global counts must represent all visible books');
+const secondPage=await request('/api/v1/books?limit=1&cursor='+firstPage.data.nextCursor,{cookie:author});
+assert.equal(secondPage.status,200);
+assert.equal(secondPage.data.books.length,1);
+assert.notEqual(secondPage.data.books[0].id,firstPage.data.books[0].id,
+  'keyset pagination must not repeat first book');
+const scopeMismatch=await request('/api/v1/books?limit=1&type=MEDICINE&cursor='+
+  firstPage.data.nextCursor,{cookie:author});
+assert.equal(scopeMismatch.status,400,'cursor from different filters must be rejected');
+const wrongCursor=await request('/api/v1/books?limit=1&cursor=invalid',{cookie:author});
+assert.equal(wrongCursor.status,400);
+const invalidTypeFilter=await request('/api/v1/books?type=SECRET',{cookie:author});
+assert.equal(invalidTypeFilter.status,400);
+const filteredBook=await request('/api/v1/books?limit=5&sort=title&'+
+  new URLSearchParams({q:'Ouvrage à archiver',type:'ESSAY',status:'DRAFT'}),{cookie:author});
+assert.equal(filteredBook.status,200);
+assert.equal(filteredBook.data.total,1);
+assert.equal(filteredBook.data.books[0].id,archiveBookId);
+const outsiderFilter=await request('/api/v1/books?'+
+  new URLSearchParams({q:'Ouvrage à archiver'}),{cookie:outsider});
+assert.equal(outsiderFilter.status,200);
+assert.equal(outsiderFilter.data.total,0,'cross-tenant title filter stays private');
+assert.equal(outsiderFilter.data.books.length,0);
 const archiveOriginal=initialBooks.data.books.find(b=>b.id===archiveBookId);
 assert.ok(archiveOriginal?.updatedAt,'book should have concurrency token');
 const renamed=await request(archivePath,{method:'PATCH',cookie:author,body:{

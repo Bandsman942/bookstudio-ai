@@ -11,7 +11,7 @@ const helper=load('apps/web/lib/source-upload-client.ts');
 const icons=load('apps/web/components/AppIcon.tsx');
 const css=load('apps/web/app/styles.css');
 const i18n=load('apps/web/lib/i18n.ts');
-for(const marker of ['library.importManuscript','setImporting(true)','<ManuscriptImportDialog','books.filter(book=>book.editable)'])
+for(const marker of ['library.importManuscript','setImporting(true)','<ManuscriptImportDialog','items.filter(book=>book.editable)'])
   assert.ok(lib.includes(marker),'Import CTA must be visible and scoped to writable books: '+marker);
 assert.ok(overview.includes('<BookSourceFiles')&&
   overview.indexOf('<BookSourceFiles')<overview.indexOf('className="overview-cards"'),

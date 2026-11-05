@@ -823,3 +823,25 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 }
 @media(max-width:390px){.studio-quick-overview{max-width:114px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(prefers-reduced-motion:reduce){.context-menu-portal,.studio-mobile-navigation-open .studio-sidebar{transition:none}}
+
+
+/* Library pagination and filters — responsive across themes and 320px screens. */
+.library-filters{display:grid;grid-template-columns:minmax(180px,2fr) repeat(3,minmax(130px,1fr));gap:12px;
+  align-items:end;background:var(--surface,#fff);border:1px solid var(--line);border-radius:13px;
+  padding:14px;margin:2px 0 23px}
+.library-filters label{display:flex;flex-direction:column;gap:7px;min-width:0;
+  color:var(--muted);font-size:12px;font-weight:600}
+.library-filters input,.library-filters select{width:100%;min-width:0;min-height:41px;
+  padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface,#fff);color:var(--ink);font-size:14px}
+.library-filter-actions{display:flex;align-items:center;gap:14px;grid-column:1/-1}
+.library-filter-actions .button{min-height:40px;padding:10px 20px}
+.library-load-more{display:flex;justify-content:center;padding:24px 0 4px}
+.library-empty{padding:24px;background:var(--surface,#fff);border:1px solid var(--line);
+  border-radius:12px;color:var(--muted);margin:0 0 24px}
+@media(max-width:900px){.library-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){
+  .library-filters{grid-template-columns:1fr;gap:11px}
+  .library-filter-actions{flex-wrap:wrap}
+  .library-filter-actions .button{flex:1 1 auto}
+}

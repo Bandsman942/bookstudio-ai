@@ -42,3 +42,11 @@
 ### Prochain lot BS-004c — issue #138
 
 Bibliothèque volumineuse : pagination stable, recherche de titre et filtres de type/statut avec indicateurs complets de bibliothèque. Développer en v0.24.0-alpha candidate sans fusion ni publication avant CI sur documentation complète et E2E propriétaire. Sécurité ClamAV différée, issues toujours ouvertes.
+
+## Lot P0 BS-004c #138 — candidate v0.24.0-alpha
+
+- **Implémenté sur branche** : pagination keyset récente/titre, recherche par titre, filtres type/statut, indicateurs de toute la bibliothèque, UI mobile et RBAC.
+- **Sécurisé** : membership dans chaque requête Prisma, pagination scopée aux critères, aucun texte/URL/source dans l'API, réponses 400 contextualisées ; pas de migrations SQL.
+- **QA** : curseurs/totaux/tri/recherche et cross-tenant, navigation avec >30 ouvrages, mobile FR/EN, réseau faible. Documentation API, utilisateur, technique, exploitation et recette intégrée dans PR **avant toute mise en production**.
+- **À poursuivre après validation** : dashboard éditorial plus complet, sélecteur de destination d'import paginé, analyse d'index de recherche à très grande échelle (GIN trigram si nécessaire), clavier avancé et autres critères restant au P0 #5.
+- Sécurité documentaire P0 #104/#126/#131/#133 : différée, ClamAV dédié non installé, conserver flags OFF.

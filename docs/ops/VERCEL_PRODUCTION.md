@@ -59,3 +59,10 @@ Après migration sur la base cible, utiliser `pnpm --filter @bookstudio/database
 - **Aucune migration Prisma nouvelle** ; seules `books.book_type`, `books.language` et `books.status` existantes sont concernées.
 - Requiert documentation `docs/releases/v0.23.0.md`, guide et API, CI finale, E2E propriétaire et snapshot Neon avant production.
 - Conserver les flags antivirus OFF tant que ClamAV dédié n'est pas installé et validé.
+
+## Candidate v0.24.0-alpha — pagination bibliothèque
+
+- Aucun changement de variables d'environnement, pas de nouvelle migration Prisma.
+- L'API liste les livres par pages via Neon. Contrôler latences des requêtes `GET /api/v1/books` et montées en charge (24/100 livres/page), accès cross-tenant et comportement en réseau faible.
+- Le moteur de recherche sur titre emploie `contains` sur PostgreSQL. **L'indexation trigramme n'est pas revendiquée** ; mesurer avant ajout d'extension/index et migration dédiée.
+- Sauvegarder la base Neon avant fusion, vérifier main-only, Preview OFF, santé/version, runtime et journal réel **après** READY. ClamAV non installé et flags OFF.
