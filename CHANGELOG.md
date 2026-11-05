@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.24.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.24.0] — alpha privée livrée le 5 novembre 2026 (PR #140, CI #188/#189)
 ### BS-004c #138 — Bibliothèque paginée et filtrée
 - Bibliothèque SSR : première page limitée à 24 ouvrages ; total global et compteurs de rédaction/relecture exacts, indépendants des cartes chargées.
 - API `GET /api/v1/books` étendue : recherche serveur sur titre (80 caractères), filtres type/statut, tri récent ou alphabétique, pagination keyset et curseur de portée (limite 1–100, compatibilité archives).
