@@ -8,7 +8,7 @@ const json=(file)=>JSON.parse(fs.readFileSync(path.join(root,file),'utf8'));
 const rootPkg=json('package.json');
 const webPkg=json('apps/web/package.json');
 const release=json('release.json');
-const pattern=/^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?$/;
+const pattern=/^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$/;
 assert.match(release.version,pattern,'invalid SemVer');
 assert.equal(rootPkg.version,release.version,'root package release mismatch');
 assert.equal(webPkg.version,release.version,'web app release mismatch');
@@ -29,14 +29,14 @@ if(major>0||minor>=22){
   assert.ok(note.includes('## Documentation prepublication'),
     'release notes must include a pre-publication documentation manifest');
   const kinds=['User','Technical','API','Operations','QA','Roadmap'];
-  const lines=note.split(/\\r?\\n/);
+  const lines=note.split(String.fromCharCode(10));
   for(const kind of kinds){
     const line=lines.find(line=>line.startsWith('Documentation-'+kind+': '));
     assert.ok(line,'release documentation manifest missing '+kind);
-    const value=line.split('\\x60');
+    const value=line.split(String.fromCharCode(96));
     assert.equal(value.length,3,'documentation entry must use one backtick path for '+kind);
     const rel=value[1];
-    assert.ok(rel.startsWith('docs/')&&!rel.includes('..')&&!rel.includes('\\\\'),
+    assert.ok(rel.startsWith('docs/')&&!rel.includes('..')&&!rel.includes(String.fromCharCode(92)),
       'invalid documentation path '+rel);
     const file=path.resolve(root,rel);
     assert.ok(file.startsWith(path.join(root,'docs')+path.sep),
