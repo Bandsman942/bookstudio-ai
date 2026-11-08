@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.36.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.36.0] — alpha privée livrée le 8 novembre 2026 (PR #177, CI #254)
 ### BS-005a #176 — recherche et remplacement local du chapitre
 - Studio : bouton ⌕ visible sur ordinateur/mobile, Ctrl/Cmd+F/H, panneau FR/EN, recherche littérale Unicode dans les segments de texte du chapitre ouvert, option sensible à la casse, compteur, navigation et sélection. Les lecteurs peuvent rechercher, seuls les éditeurs modifient.
 - Remplacer une occurrence, ou remplacer toutes les occurrences **après confirmation du nombre exact** ; refus si plus de 500 correspondances, chaîne substitution ≤1000 caractères sur une ligne, aucune regex ni mutation des nœuds de style adjacents. Une transaction candidate intégralement validée contre la taille/complexité du schéma avant dispatch, un seul Undo, retour autosave/versionnement existant avec statut Enregistré.
