@@ -14,6 +14,7 @@ import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
 import type {BookProgress} from '@/lib/book-progress';
+import BookEditionsPanel from './BookEditionsPanel';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
@@ -146,6 +147,7 @@ export default function BookOverview({bookId,title,status,kind,language,chapters
         reorder={{token:orderToken,index,total:chapters.length}}/>
     </div>)}</div>
     {editable&&<ChapterTrash bookId={bookId}/>}
+    <BookEditionsPanel bookId={bookId} editable={editable}/>
     <SnapshotsPanel bookId={bookId} editable={editable}/>
     <ShortcutsHelp/>
     {showForm&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)setShowForm(false);}}>
