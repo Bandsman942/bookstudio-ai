@@ -8,7 +8,7 @@ import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError,type Operation} from '@/lib/notification-copy';
 
-type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string};
+type Version={id:string;name:string;createdAt:string;chapterCount:number;integrityHash:string;editionNumber?:number|null};
 type Chapter={id:string;revision:number};
 type ExportFormat='pdf'|'docx'|'md';
 const exportText={
@@ -46,6 +46,7 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
   const [name,setName]=useState('');
   const [busy,setBusy]=useState(false);
   const [pendingRestore,setPendingRestore]=useState<Version|null>(null);
+  const [pendingFork,setPendingFork]=useState<Version|null>(null);
   const [message,setMessage]=useState('');
   const [error,setError]=useState('');
   const router=useRouter();
@@ -57,11 +58,13 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
   },[bookId]);
   useEffect(()=>{refresh().catch(()=>report('snapshot-list',t('snapshot.loadError'),503));},[refresh]);
   useEffect(()=>{
-    if(!pendingRestore||busy)return;
-    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setPendingRestore(null);};
+    if((!pendingRestore&&!pendingFork)||busy)return;
+    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){
+      setPendingRestore(null);setPendingFork(null);
+    }};
     document.addEventListener('keydown',escape);
     return ()=>document.removeEventListener('keydown',escape);
-  },[pendingRestore,busy]);
+  },[pendingRestore,pendingFork,busy]);
 
 
   async function create(event:React.FormEvent){
@@ -156,6 +159,68 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
     finally{setBusy(false);}
   }
 
+
+  async function restoreAsEdition(version:Version){
+    if(!editable||busy)return;
+    setBusy(true);setError('');setMessage('');
+    const fr=locale==='fr';
+    try{
+      // Fresh preconditions on every confirmation: do not trust a stale card.
+      const inventory=await fetch('/api/v1/books/'+bookId+'/editions',
+        {cache:'no-store'});
+      const latest=await inventory.json().catch(()=>null) as
+        {currentEditionId?:string;expectedUpdatedAt?:string;error?:string}|null;
+      if(!inventory.ok||!latest?.currentEditionId||!latest.expectedUpdatedAt)
+        throw new Error('EDITION_LIST_UNAVAILABLE');
+      const response=await fetch('/api/v1/books/'+bookId+'/snapshots/'+
+        version.id+'/restore-as-edition',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({confirm:'RESTORE_SNAPSHOT_AS_NEW_EDITION',
+            expectedEditionId:latest.currentEditionId,
+            expectedUpdatedAt:latest.expectedUpdatedAt})
+        });
+      const result=await response.json().catch(()=>({})) as
+        {error?:string;edition?:{id:string;number:number;chapterCount:number}};
+      if(!response.ok){
+        const detail=response.status===409?
+          (fr?'La version a changé ou le snapshot est incohérent. Actualisez et vérifiez vos sauvegardes.':
+            'The book changed or snapshot integrity failed. Refresh and check saved versions.'):
+          response.status===422?
+          (fr?'Le snapshot dépasse 500 chapitres ou 20 Mio. Une restauration asynchrone sera nécessaire.':
+            'The snapshot exceeds 500 chapters or 20 MiB; an asynchronous recovery is required.'):
+          response.status===404?
+          (fr?'Ce snapshot ou cet ouvrage n’est plus accessible.':
+            'This snapshot or book is no longer accessible.'):
+          (fr?'Impossible de créer l’édition depuis ce snapshot. Aucun chapitre existant n’a été remplacé.':
+            'Could not create an edition from this snapshot. No existing chapter was replaced.');
+        setError(detail);
+        notify({tone:response.status===409?'warning':'error',
+          title:fr?'Restauration non effectuée':'Snapshot restoration not performed',
+          detail});
+        return;
+      }
+      const number=result.edition?.number;
+      setPendingFork(null);
+      const detail=fr?
+        '« '+version.name+' » a créé l’édition '+number+
+        ' sans toucher aux éditions ni aux sauvegardes précédentes.':
+        '“'+version.name+'” created edition '+number+
+        ' without changing any prior editions or snapshots.';
+      setMessage(detail);
+      notify({tone:'success',title:fr?'Nouvelle édition restaurée':'New edition restored',
+        detail});
+      await refresh();
+      window.dispatchEvent(new Event('bookstudio-editions-updated'));
+      router.refresh();
+    }catch{
+      const detail=locale==='fr'?
+        'Connexion interrompue. Vérifiez la liste des éditions avant toute nouvelle tentative.':
+        'Connection interrupted. Check the editions list before retrying.';
+      setError(detail);
+      notify({tone:'error',title:locale==='fr'?'Restauration interrompue':'Restore interrupted',detail});
+    }finally{setBusy(false);}
+  }
+
   return <section id="book-versions" className="versions-section" aria-label={t('book.versions')}>
     <div className="section-header"><h2><AppIcon name="history"/>{t('book.versions')}</h2>
       <span>{t('snapshot.count',{count:versions.length})}</span>
@@ -174,17 +239,46 @@ export default function SnapshotsPanel({bookId,editable}:{bookId:string;editable
         versions.map(version=><div className="version-row" key={version.id}>
           <div className="version-icon" aria-hidden="true">↺</div>
           <div className="version-details"><strong>{version.name}</strong>
-            <small>{new Date(version.createdAt).toLocaleString(locale==='fr'?'fr-FR':'en-US')} · {t('snapshot.details',{count:version.chapterCount,hash:version.integrityHash.slice(0,10)})}</small>
+            <small>{new Date(version.createdAt).toLocaleString(locale==='fr'?'fr-FR':'en-US')} · {t('snapshot.details',{count:version.chapterCount,hash:version.integrityHash.slice(0,10)})}
+             {version.editionNumber!=null?' · '+(locale==='fr'?'Édition ':'Edition ')+version.editionNumber:''}</small>
           </div>
           <ActionMenu label={t('snapshot.for',{name:version.name})} disabled={busy} actions={[
             {label:t('snapshot.exportPdf'),onSelect:()=>{void download(version,'pdf');},group:t('snapshot.export')},
             {label:t('snapshot.exportDocx'),onSelect:()=>{void download(version,'docx');}},
             {label:t('snapshot.exportMarkdown'),onSelect:()=>{void download(version,'md');}},
-            ...(editable?[{label:t('snapshot.restore'),separatorBefore:true,
-              onSelect:()=>{setError('');setPendingRestore(version);}}]:[])
+            ...(editable?[{label:locale==='fr'?'Restaurer dans une nouvelle édition':'Restore into a new edition',
+              separatorBefore:true,onSelect:()=>{setError('');setPendingFork(version);}},
+              {label:t('snapshot.restore'),onSelect:()=>{setError('');setPendingRestore(version);}}]:[])
           ]}/>
         </div>)}
     </div>
+
+    {pendingFork&&<div className="modal-backdrop" onMouseDown={event=>{
+      if(event.currentTarget===event.target&&!busy)setPendingFork(null);
+    }}>
+      <div className="modal" role="dialog" aria-modal="true"
+        aria-label={locale==='fr'?'Restaurer le snapshot dans une nouvelle édition':
+          'Restore snapshot into a new edition'}>
+        <button className="close" type="button" disabled={busy}
+          aria-label={t('common.close')} onClick={()=>setPendingFork(null)}>×</button>
+        <div className="eyebrow">{locale==='fr'?'Restauration sans écrasement':
+          'Non-destructive restoration'}</div>
+        <h2>{locale==='fr'?'Créer une édition depuis « '+pendingFork.name+' » ?':
+          'Create an edition from “'+pendingFork.name+'”?'}</h2>
+        <p>{locale==='fr'?
+          'Cette opération copie les chapitres et textes EXACTEMENT enregistrés dans ce snapshot, même s’il provient d’une ancienne édition. Une nouvelle édition devient courante et le statut revient à Brouillon. Les éditions, révisions, commentaires et versions précédentes ne sont jamais écrasés. Les commentaires, imports et sources ne sont pas recopiés.':
+          'This copies the chapters and text saved in this snapshot, even from an older edition. A new edition becomes current and the book returns to Draft. Earlier editions, revisions, comments and snapshots are preserved. Comments, imports and source files are not copied.'}</p>
+        {error&&<p className="form-error" role="alert">{error}</p>}
+        <button className="button full" type="button" disabled={busy}
+          onClick={()=>void restoreAsEdition(pendingFork)}>
+          {busy?(locale==='fr'?'Restauration en cours…':'Restoring…'):
+            (locale==='fr'?'Confirmer : créer une nouvelle édition':
+              'Confirm: create new edition')}
+        </button>
+        <button className="text-button" type="button" disabled={busy}
+          onClick={()=>setPendingFork(null)}>{t('common.cancel')}</button>
+      </div>
+    </div>}
     {pendingRestore&&<div className="modal-backdrop" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setPendingRestore(null);}}>
       <div className="modal" role="dialog" aria-modal="true" aria-label={t('snapshot.dialog')}>
         <button className="close" type="button" disabled={busy} aria-label={t('common.close')} onClick={()=>setPendingRestore(null)}>×</button>

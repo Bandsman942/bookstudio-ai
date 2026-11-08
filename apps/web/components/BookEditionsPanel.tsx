@@ -41,6 +41,11 @@ export default function BookEditionsPanel({bookId,editable}:Props){
    return()=>controller.abort();
  },[loadList]);
  useEffect(()=>{
+   const reload=()=>{void loadList();};
+   window.addEventListener('bookstudio-editions-updated',reload);
+   return()=>window.removeEventListener('bookstudio-editions-updated',reload);
+ },[loadList]);
+ useEffect(()=>{
    if(!selected)return;
    const key=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!busy&&!reading){
      setSelected(null);setDetail(null);setPreview(null);
