@@ -947,3 +947,17 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
   .edition-reader-chapters button{flex:0 0 auto;max-width:65vw}
   .edition-reader-text{max-height:55dvh}
 }
+
+
+/* P1 #151 — book card transforms must never constrain fixed dialogs. All
+   four book-action dialogs mount in document.body through a React portal. */
+.book-actions-overlay.modal-backdrop{position:fixed;inset:0;z-index:140;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+    max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+.book-actions-overlay .modal{width:min(100%,480px);min-width:0;
+  max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:480px){
+  .book-actions-overlay .modal{padding:25px 18px;gap:14px}
+  .book-actions-overlay .modal input,.book-actions-overlay .modal select{
+    min-width:0;width:100%;font-size:16px}
+}
