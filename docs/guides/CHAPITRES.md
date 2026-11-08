@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.29.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.31.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -159,3 +159,16 @@ Choisissez une révision pour afficher son **texte enregistré** à cette date, 
 ### English
 
 In the chapter editor choose **History**. The revision timeline shows each saved revision's date, sequence and author, paginated 20 at a time. Select an entry to read its **saved text** without editing it. OWNER/EDITOR may **Restore this revision**, which appends a new revision rather than overwriting any historical record; the book status resets to Draft. Save pending local edits and resolve conflicts before restoring. Stale server versions are rejected with 409; revisions from previous editions are read-only via the Editions viewer.
+
+## 14. Comparer deux révisions d'un même chapitre (candidate v0.31.0-alpha)
+
+1. Ouvrez un chapitre du livre, puis cliquez sur **Historique**. Les versions présentées représentent les textes **enregistrés**, et non vos éventuelles modifications non sauvegardées dans le navigateur.
+2. Dans **Révision de départ** et **Révision d'arrivée**, choisissez deux numéros différents puis cliquez sur **Comparer**. Pour rechercher un ancien numéro absent de la première page, sélectionnez **Charger les révisions précédentes**.
+3. La comparaison affiche : **vert/souligné = ajout**, **rouge/barré = suppression**, texte ordinaire = inchangé. Les compteurs désignent des unités lexicales **mots ou ponctuation** (pas les espaces). L'outil reconstitue intégralement les deux textes enregistrés sans omission.
+4. Les changements de **mise en forme Word** ne sont pas comparés dans cette tranche : si le texte est identique mais que les JSON structurés diffèrent, un avertissement le signale. Vous pouvez comparer dans les deux sens. Il s'agit d'une lecture seule ; l'opération ne crée aucune révision.
+5. Si les textes comportent trop de changements pour le calcul interactif (250 000 caractères UTF-16, 12 000 unités lexicales par texte ou plus de 4 millions de cases LCS), le service répond **422**, sans tronquer aucune donnée ni modifier le livre. Vous pouvez toujours ouvrir chaque version séparément et poursuivre l'édition. Le comparateur ne relit que les révisions du chapitre **de l'édition actuelle** et respecte les droits d'espace.
+6. L'interface s'adapte au téléphone, au clavier, aux thèmes clair/sombre et au français/anglais. Le texte est rendu sans interprétation HTML.
+
+### English
+
+In the chapter editor open **History**, choose distinct **From revision / To revision** values and select **Compare**. Earlier revisions can be loaded progressively. Green/underlined segments were **added**, red/struck-through segments were **removed**, normal text is **unchanged**. The counts refer to word-like or punctuation units, not whitespace. Comparison is read-only and uses **saved plain text only**: unsaved edits are excluded; rich formatting is not compared. A warning may report structural changes with identical plain text. Very large diffs return 422 without truncating or modifying any saved content. Only revisions from this active chapter are accessible; other workspaces are denied.

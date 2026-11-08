@@ -115,3 +115,7 @@ BS-008c #155 livré via PR #156 : E2E propriétaire BON, CI #210 SUCCESS, snapsh
 ## Livraison vérifiée v0.30.0-alpha — 8 novembre 2026
 
 Sous-issue #158 livrée en PR #159 : E2E propriétaire BON, CI #216 SUCCESS, snapshot de protection Neon `snap-hidden-mud-bfw2ewji` **avant** fusion, SHA `main` `b46c21976c247ea450a2edbafee02e13e8afbeea`, Vercel `dpl_8n81aoY1d8QwQd88YgjDqLaY1wQ1` READY, sondes privées `/api/health` 200 DB ready et `/api/version` 200 0.30.0-alpha. Journal `docs/deployments/2026-11-08-v0.30.0-alpha.md`. P0 parents #9/#6 restent ouverts pour le cahier des charges restant ; ClamAV hors service.
+
+## P0 BS-008e #161 — comparaison mot à mot des révisions (candidate v0.31.0-alpha)
+
+Comparaison lecture seule de deux révisions enregistrées **d'un chapitre de l'édition courante**, en segments de texte ajoutés, supprimés, inchangés, avec auteurs/dates et compteurs. API privée et RBAC, sélection FR/EN dans Historique, rendu texte échappé, budget temps/mémoire/longueur et refus 422 sans troncature ni altération. Tests unitaires sur fidélité des deux textes et E2E réels sur accès multitenant/anciens chapitres. **Non inclus** : diff JSON ProseMirror riche, formatage Word, comparaison inter-éditeurs asynchrones, fusion de branches, OCR ni antivirus ClamAV. Parents #9/#6 restent ouverts.

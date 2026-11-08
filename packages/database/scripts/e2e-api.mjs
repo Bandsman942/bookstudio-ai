@@ -847,6 +847,38 @@ assert.equal(latestText.data.revision.isCurrent,true);
 assert.equal((await request(historyPath+'/1',{cookie:outsider})).status,404);
 assert.equal((await request(historyPath+'/999',{cookie:author})).status,404);
 assert.equal((await request(historyPath+'/abc',{cookie:author})).status,400);
+// BS-008e: private deterministic word diff between any two SAVED chapter revisions.
+const compareSavedPath=historyPath+'/compare?from=1&to=2';
+const compared=await request(compareSavedPath,{cookie:author});
+assert.equal(compared.status,200,'compare two saved revisions in current chapter');
+assert.equal(compared.data.from.sequence,1);
+assert.equal(compared.data.to.sequence,2);
+assert.equal(compared.data.comparison.algorithm,'word-lcs-bounded-v1');
+const cmpSegments=compared.data.comparison.segments;
+assert.equal(cmpSegments.filter(s=>s.kind!=='added').map(s=>s.text).join(''),
+  earlyText.data.revision.text,'diff preserves exact left revision text');
+assert.equal(cmpSegments.filter(s=>s.kind!=='removed').map(s=>s.text).join(''),
+  latestText.data.revision.text,'diff preserves exact right revision text');
+assert.ok(compared.data.comparison.counts.added>0&&
+  compared.data.comparison.counts.removed>0,'rewritten text counts added/removed units');
+assert.equal(JSON.stringify(compared.data).includes('contentHash'),false,
+  'compare API never exposes revision content hashes');
+const reversed=await request(historyPath+'/compare?from=2&to=1',{cookie:author});
+assert.equal(reversed.status,200,'reverse comparison is supported');
+assert.equal(reversed.data.comparison.counts.added,compared.data.comparison.counts.removed);
+assert.equal((await request(compareSavedPath,{cookie:outsider})).status,404,
+  'cross-workspace revision diff denied');
+assert.equal((await request(compareSavedPath)).status,401,
+  'revision diff requires session');
+assert.equal((await request(historyPath+'/compare?from=1&to=1',{cookie:author})).status,400);
+assert.equal((await request(historyPath+'/compare?from=abc&to=2',{cookie:author})).status,400);
+assert.equal((await request(historyPath+'/compare?from=1&from=2&to=2',{cookie:author})).status,400);
+assert.equal((await request(historyPath+'/compare?from=1&to=2&extra=x',{cookie:author})).status,400);
+assert.equal((await request(historyPath+'/compare?from=1&to=999',{cookie:author})).status,404);
+assert.equal((await request(historyPath,{cookie:author})).data.currentRevision,2,
+  'read-only diff does not alter revision pointers');
+// Format-only or identical text after a restore is not a prose addition/removal.
+
 const versionItems=await request('/api/v1/books',{cookie:author});
 const historyMetadata=versionItems.data.books.find(b=>b.id===historyBookId);
 assert.ok(historyMetadata?.updatedAt);
@@ -880,6 +912,12 @@ assert.equal((await request(historyPath+'/1',{cookie:author})).data.revision.tex
  earlyText.data.revision.text,'source history immutable');
 assert.equal((await request(historyPath+'/2',{cookie:author})).data.revision.text,
  latestText.data.revision.text,'intermediate revision immutable');
+const sameTextCompare=await request(historyPath+'/compare?from=1&to=3',{cookie:author});
+assert.equal(sameTextCompare.status,200,'restored revision can be compared to source');
+assert.equal(sameTextCompare.data.comparison.counts.added,0);
+assert.equal(sameTextCompare.data.comparison.counts.removed,0);
+assert.equal(sameTextCompare.data.comparison.formattingMayDiffer,false);
+
 const bookAfterHistoryRestore=await request('/api/v1/books/'+historyBookId+'/editions',
  {cookie:author});
 assert.equal(bookAfterHistoryRestore.data.status,'DRAFT',
@@ -900,6 +938,8 @@ const historyFork=await request('/api/v1/books/'+historyBookId+'/editions',{
 assert.equal(historyFork.status,201);
 assert.equal((await request(historyPath,{cookie:author})).status,404,
  'revision history of older edition cannot be opened as current');
+assert.equal((await request(compareSavedPath,{cookie:author})).status,404,
+ 'comparison of old edition chapter cannot bypass current-edition ACL');
 assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
  body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:3}})).status,404,
  'revision history cannot mutate a chapter after edition change');
