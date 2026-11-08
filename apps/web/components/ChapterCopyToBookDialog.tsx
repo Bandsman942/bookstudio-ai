@@ -24,6 +24,7 @@ export default function ChapterCopyToBookDialog({
  const [loading,setLoading]=useState(false),[busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const seqRef=useRef(0),operationRef=useRef<string|null>(null);
+ const selectedRef=useRef('');
 
  async function loadDestinations(query:string){
    const seq=++seqRef.current;
@@ -39,11 +40,19 @@ export default function ChapterCopyToBookDialog({
        throw new Error('TARGETS_UNAVAILABLE');
      setTargets(body.targets);
      setHasMore(Boolean(body.hasMore));
-     setSelected(previous=>body.targets!.some(item=>item.id===previous)?
-       previous:body.targets![0]?.id??'');
+     const next=body.targets.some(item=>item.id===selectedRef.current)?
+       selectedRef.current:body.targets[0]?.id??'';
+     // Changing destinations after an uncertain network response is a NEW
+     // logical copy. Searching again for the SAME destination must preserve
+     // the operationId so an interrupted request can replay without duplicates.
+     if(next!==selectedRef.current){
+       selectedRef.current=next;
+       operationRef.current=window.crypto.randomUUID();
+     }
+     setSelected(next);
    }catch{
      if(seq!==seqRef.current)return;
-     setTargets([]);setSelected('');setHasMore(false);
+     setTargets([]);setSelected('');selectedRef.current='';setHasMore(false);
      const detail=locale==='fr'?
        'Impossible de charger les ouvrages modifiables de cet espace. Vérifiez votre connexion.':
        'Could not load editable destination books in this workspace. Check your connection.';
@@ -184,6 +193,7 @@ export default function ChapterCopyToBookDialog({
        <label>{locale==='fr'?'Livre de destination':'Destination book'}
          <select required value={selected} disabled={busy||loading||targets.length===0}
            onChange={event=>{
+             selectedRef.current=event.target.value;
              setSelected(event.target.value);
              operationRef.current=window.crypto.randomUUID();
            }}>
