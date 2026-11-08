@@ -7,6 +7,13 @@ import {useToast} from './ToastProvider';
 type Entry={sequence:number;createdAt:string;authorName:string};
 type Inventory={currentRevision:number;revisions:Entry[];nextBefore:number|null;error?:string};
 type Preview={revision:{sequence:number;recordedAt:string;authorName:string;text:string;isCurrent:boolean}};
+type Comparison={
+ from:{sequence:number;createdAt:string;authorName:string};
+ to:{sequence:number;createdAt:string;authorName:string};
+ comparison:{counts:{added:number;removed:number;unchanged:number};
+  segments:{kind:'equal'|'added'|'removed';text:string}[];
+  formattingMayDiffer:boolean;algorithm:string}
+};
 type Props={bookId:string;chapterId:string;canEdit:boolean;getCurrentRevision:()=>number;
  canRestoreNow:()=>boolean;onRestored:()=>void};
 
@@ -20,6 +27,10 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
  const [viewLoading,setViewLoading]=useState(false);
  const [confirm,setConfirm]=useState<number|null>(null),[busy,setBusy]=useState(false);
  const [error,setError]=useState('');
+ const [compareFrom,setCompareFrom]=useState<number|null>(null);
+ const [compareTo,setCompareTo]=useState<number|null>(null);
+ const [comparison,setComparison]=useState<Comparison|null>(null);
+ const [compareLoading,setCompareLoading]=useState(false);
  const closeRef=useRef<HTMLButtonElement>(null);
  const triggerRef=useRef<HTMLButtonElement>(null);
  const wasOpen=useRef(false);
@@ -36,6 +47,11 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
      setEntries(old=>cursor===null?payload.revisions:
        [...old,...payload.revisions.filter(v=>!old.some(o=>o.sequence===v.sequence))]);
      setCurrent(payload.currentRevision);setBefore(payload.nextBefore);
+     if(cursor===null){
+       setCompareTo(payload.currentRevision);
+       setCompareFrom(payload.revisions.length>1?
+         payload.revisions[1].sequence:payload.revisions[0]?.sequence??null);
+     }
    }catch{
      setError(fr?'Impossible de consulter les révisions enregistrées de ce chapitre.':
        'Could not read this chapter’s saved revisions.');
@@ -43,7 +59,8 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
  },[base,fr]);
  useEffect(()=>{
    if(!open)return;
-   setEntries([]);setBefore(null);setPreview(null);setConfirm(null);setError('');
+   setEntries([]);setBefore(null);setPreview(null);setComparison(null);
+   setCompareFrom(null);setCompareTo(null);setConfirm(null);setError('');
    void load(null);
  },[open,load]);
  useEffect(()=>{
@@ -75,7 +92,7 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
  },[open,busy]);
  async function showRevision(sequence:number){
    if(loading||viewLoading||busy)return;
-   setPreview(null);setConfirm(null);setError('');setViewLoading(true);
+   setPreview(null);setComparison(null);setConfirm(null);setError('');setViewLoading(true);
    try{
      const res=await fetch(base+'/'+sequence,{cache:'no-store'});
      const payload=await res.json().catch(()=>null) as Preview|null;
@@ -86,6 +103,40 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
        'The text of this saved revision could not be opened.');
    }finally{setViewLoading(false);}
  }
+
+ async function compare(){
+   if(compareFrom===null||compareTo===null||compareFrom===compareTo||
+      loading||compareLoading||busy)return;
+   setCompareLoading(true);setComparison(null);setPreview(null);
+   setConfirm(null);setError('');
+   try{
+     const response=await fetch(base+'/compare?from='+compareFrom+
+       '&to='+compareTo,{cache:'no-store'});
+     const result=await response.json().catch(()=>null) as Comparison|null;
+     if(!response.ok){
+       if(response.status===422)throw new Error('DIFF_TOO_LARGE');
+       if(response.status===409)throw new Error('DIFF_INVALID');
+       throw new Error('DIFF_UNAVAILABLE');
+     }
+     if(!result?.comparison||!Array.isArray(result.comparison.segments))
+       throw new Error('DIFF_UNAVAILABLE');
+     setComparison(result);
+   }catch(reason){
+     const key=reason instanceof Error?reason.message:'DIFF_UNAVAILABLE';
+     const detail=key==='DIFF_TOO_LARGE'?
+       (fr?'Les modifications entre ces révisions sont trop volumineuses pour une comparaison rapide. Aucun texte n’a été tronqué : consultez chaque version séparément.':
+         'The differences are too large for an interactive comparison. No text was truncated; open each revision separately.'):
+       key==='DIFF_INVALID'?
+       (fr?'Une révision est incomplète : vérifiez son historique avant de comparer.':
+         'A revision is incomplete. Check its history before comparing.'):
+       (fr?'Impossible de comparer ces révisions enregistrées. Vérifiez les numéros et votre connexion.':
+         'Could not compare these saved revisions. Check the selected versions and your connection.');
+     setError(detail);
+     notify({tone:key==='DIFF_TOO_LARGE'?'warning':'error',
+       title:fr?'Comparaison indisponible':'Comparison unavailable',detail});
+   }finally{setCompareLoading(false);}
+ }
+
  function chooseRestore(sequence:number){
    if(!canEdit)return;
    if(!canRestoreNow()){
@@ -162,6 +213,32 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
            'Chaque révision enregistrée est conservée. L’aperçu est en lecture seule ; restaurer crée une nouvelle révision et n’efface aucune version précédente.':
            'Every saved revision is preserved. Preview is read-only; restore creates a new revision without deleting earlier versions.'}</p>
          {error&&<p className="form-error" role="alert">{error}</p>}
+         {entries.length>1&&<div className="chapter-history-comparison-controls">
+           <label>{fr?'Révision de départ':'From revision'}
+             <select aria-label={fr?'Révision à comparer, départ':'Comparison source revision'}
+               disabled={compareLoading||busy} value={compareFrom??''}
+               onChange={event=>{setCompareFrom(Number(event.target.value));setComparison(null);}}>
+               {entries.map(entry=><option value={entry.sequence} key={entry.sequence}>
+                 {fr?'Révision ':'Revision '}{entry.sequence}</option>)}
+             </select>
+           </label>
+           <label>{fr?'Révision d’arrivée':'To revision'}
+             <select aria-label={fr?'Révision à comparer, arrivée':'Comparison target revision'}
+               disabled={compareLoading||busy} value={compareTo??''}
+               onChange={event=>{setCompareTo(Number(event.target.value));setComparison(null);}}>
+               {entries.map(entry=><option value={entry.sequence} key={entry.sequence}>
+                 {fr?'Révision ':'Revision '}{entry.sequence}</option>)}
+             </select>
+           </label>
+           <button type="button" className="button small"
+             disabled={busy||loading||compareLoading||compareFrom===null||
+               compareTo===null||compareFrom===compareTo}
+             onClick={()=>void compare()}>
+             {compareLoading?(fr?'Comparaison…':'Comparing…'):(fr?'Comparer':'Compare')}
+           </button>
+           <small>{fr?'Comparaison du texte enregistré seulement ; vos modifications non sauvegardées sont exclues.':
+             'Saved text only; unsaved edits are excluded.'}</small>
+         </div>}
          <div className="chapter-history-layout">
            <div className="chapter-history-list" aria-label={fr?'Révisions enregistrées':'Saved revisions'}>
              {entries.map(entry=><button key={entry.sequence} type="button"
@@ -181,7 +258,32 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
            </div>
            <div className="chapter-history-preview">
              {viewLoading&&<p role="status">{fr?'Ouverture du texte…':'Opening saved text…'}</p>}
-             {!preview&&!viewLoading&&<p className="source-note">
+             {compareLoading&&<p role="status">{fr?'Comparaison des deux textes…':'Comparing saved texts…'}</p>}
+             {comparison&&<div className="chapter-history-diff">
+               <h3>{fr?'Différences entre les révisions':'Differences between revisions'} {comparison.from.sequence} → {comparison.to.sequence}</h3>
+               <p className="source-note">{comparison.from.authorName} · {formatDate(comparison.from.createdAt)}
+                 {' → '}{comparison.to.authorName} · {formatDate(comparison.to.createdAt)}</p>
+               <div className="chapter-history-diff-stats" role="status">
+                 <span className="diff-added">{fr?'Ajouts':'Added'}: {comparison.comparison.counts.added}</span>
+                 <span className="diff-removed">{fr?'Suppressions':'Removed'}: {comparison.comparison.counts.removed}</span>
+                 <span>{fr?'Identiques':'Unchanged'}: {comparison.comparison.counts.unchanged}</span>
+               </div>
+               {comparison.comparison.formattingMayDiffer&&<p className="source-note">
+                 {fr?'Le texte brut est identique, mais le document structuré diffère : une modification de mise en forme ou de structure est possible.':
+                   'The plain text matches but structured content differs; formatting or structural changes may exist.'}</p>}
+               <pre className="chapter-history-diff-text" aria-label={fr?'Texte comparé : ajouts, suppressions et contenu inchangé':
+                 'Compared text: additions, removals and unchanged content'}>
+                 {comparison.comparison.segments.map((segment,index)=>segment.kind==='added'?
+                   <ins key={index} className="diff-added">{segment.text}</ins>:
+                   segment.kind==='removed'?
+                     <del key={index} className="diff-removed">{segment.text}</del>:
+                     <span key={index}>{segment.text}</span>)}
+               </pre>
+               <p className="source-note">{fr?
+                 'Les changements portent sur le texte enregistré (mots et ponctuation), pas sur la mise en forme Word ni sur les brouillons locaux. Aucun contenu n’est modifié.':
+                 'Changes are based on saved text (words and punctuation), not Word formatting or unsaved drafts. This view never edits the manuscript.'}</p>
+             </div>}
+             {!preview&&!comparison&&!viewLoading&&!compareLoading&&<p className="source-note">
                {fr?'Sélectionnez une révision pour lire le texte qui avait été enregistré.':
                  'Select a revision to read its previously saved text.'}</p>}
              {preview&&<div>
