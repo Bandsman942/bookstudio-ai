@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.26.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004e #145 — Progression réelle du manuscrit dans la vue d'ensemble
+- Indicateurs par livre, lecture privée : chapitres actifs et retirés, chapitres avec texte / sans texte, proportion de chapitres contenant du texte, révisions enregistrées et versions nommées.
+- Dernier chapitre modifié et dernière révision enregistrée, liens directs vers les chapitres et versions. Badges « Texte enregistré » / « Pas encore de texte » sur chaque chapitre.
+- Requêtes Prisma et SQL de statut du **dernier contenu enregistré** par chapitre ; aucune prose, chemin source ou URL privée n'est renvoyé. Permissions de workspace vérifiées avant agrégation et endpoint GET sans cache.
+- Pour la confidentialité/performance : le serveur n'envoie jamais le texte des chapitres au tableau de bord. Les indicateurs restent indisponibles sans bloquer l'ouverture ou l'édition d'un livre en cas d'incident statistique.
+- UI responsive FR/EN, thèmes, accessibilité ; tests unitaires du calcul de proportion et E2E HTTP multi-tenant / sauvegardes / snapshots ; aucune migration SQL ni variable supplémentaire.
+- Toute documentation préparée et testée **avant** publication ; ClamAV réel non installé et P0 sécurité ouverts.
+
+
 ## [0.25.0] — alpha privée livrée le 8 novembre 2026 (PR #143, CI #192/#193)
 ### BS-004d #141 — Import indépendant et pilotage éditorial
 - Sélecteur d'import indépendant des 24 premières cartes : recherche de titre, pagination de 20, rôles OWNER/EDITOR exclusivement.
