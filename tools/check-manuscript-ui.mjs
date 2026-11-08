@@ -20,7 +20,7 @@ assert.ok(book.includes('href="#book-source-files"'),'Book sidebar must link to 
 for(const marker of ['id="book-source-files"','source-dropzone','onDrop','type="file"','uploadSourceToBook',
  'MANUSCRIPT_ACCEPT','role="alert"','editable&&','source-disclaimer'])
   assert.ok(sources.includes(marker),'Missing accessible source panel '+marker);
-for(const marker of ['onCreateBook','onUploaded','books.map','uploadSourceToBook','import.notConverted'])
+for(const marker of ['onCreateBook','onUploaded','BookDestinationPicker','uploadSourceToBook','import.notConverted'])
   assert.ok(dialog.includes(marker),'Library import dialog missing '+marker);
 for(const marker of ["method:'PUT'","action:'confirm'",'MANUSCRIPT_MAX_BYTES','supabase\\.co',
  'SOURCE_SIGN_FAILED'])
@@ -37,3 +37,7 @@ for(const marker of ['--surface-muted','.source-dropzone','.library-primary-acti
 for(const key of ["'library.importManuscript'","'import.title'","'import.notConverted'","'book.sourcesNav'"])
   assert.equal(i18n.split(key).length,3,'Both locale catalogs must translate '+key);
 console.log('Manuscript import affordance, Supabase flow and professional SVG icons: OK');
+
+const dest=load('apps/web/components/BookDestinationPicker.tsx');
+for(const marker of ["editable:'1'","/api/v1/books?","books.map","onCreateBook","nextCursor","onChange"])
+  assert.ok(dest.includes(marker),'Independent writable-only import destination missing: '+marker);

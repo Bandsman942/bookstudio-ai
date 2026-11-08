@@ -4,7 +4,7 @@ export const LIBRARY_TYPES=['GENERAL','NOVEL','ESSAY','SCIENCE','MEDICINE','EDUC
 export const LIBRARY_STAGES=['DRAFT','WRITING','REVIEW','APPROVED','PRODUCTION','PUBLISHED'] as const;
 export const MAX_LIBRARY_PAGE=100;
 export type LibrarySort='recent'|'title';
-export type LibraryFilters={archived:boolean;q:string;type:string;status:string;sort:LibrarySort;
+export type LibraryFilters={archived:boolean;editable:boolean;q:string;type:string;status:string;sort:LibrarySort;
   limit:number;cursor:string|null};
 export type LibraryCursor={v:1;scope:string;sort:LibrarySort;key:string;id:string};
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,10 +13,10 @@ export class LibraryQueryError extends Error{
   constructor(){super('LIBRARY_FILTER_INVALID');}
 }
 export function parseLibraryFilters(params:URLSearchParams,defaultLimit=100):LibraryFilters{
-  const archived=params.get('archived'),q=params.get('q')??'',type=params.get('type')??'',
+  const archived=params.get('archived'),editable=params.get('editable'),q=params.get('q')??'',type=params.get('type')??'',
     status=params.get('status')??'',sort=params.get('sort')??'recent',
     limitParam=params.get('limit'),cursor=params.get('cursor');
-  if((archived!==null&&archived!=='1')||q.trim().length>80||/[\x00-\x1f\x7f]/.test(q)||
+  if((archived!==null&&archived!=='1')||(editable!==null&&editable!=='1')||q.trim().length>80||/[\x00-\x1f\x7f]/.test(q)||
     (type!==''&&!LIBRARY_TYPES.includes(type as typeof LIBRARY_TYPES[number]))||
     (status!==''&&!LIBRARY_STAGES.includes(status as typeof LIBRARY_STAGES[number]))||
     (sort!=='recent'&&sort!=='title')||
@@ -25,11 +25,11 @@ export function parseLibraryFilters(params:URLSearchParams,defaultLimit=100):Lib
   const limit=limitParam===null?defaultLimit:Number(limitParam);
   if(!Number.isSafeInteger(limit)||limit<1||limit>MAX_LIBRARY_PAGE)
     throw new LibraryQueryError();
-  return {archived:archived==='1',q:q.trim(),type,status,sort:sort as LibrarySort,
+  return {archived:archived==='1',editable:editable==='1',q:q.trim(),type,status,sort:sort as LibrarySort,
     limit,cursor};
 }
 export function scopeForFilters(filters:LibraryFilters):string{
-  const key=JSON.stringify([filters.archived,filters.q,filters.type,filters.status,filters.sort]);
+  const key=JSON.stringify([filters.archived,filters.editable,filters.q,filters.type,filters.status,filters.sort]);
   return createHash('sha256').update(key).digest('hex');
 }
 export function encodeLibraryCursor(sort:LibrarySort,key:string,id:string,scope:string):string{

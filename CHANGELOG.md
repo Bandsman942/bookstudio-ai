@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.25.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004d #141 — Import indépendant et pilotage éditorial
+- Sélecteur d'import indépendant des 24 premières cartes : recherche de titre, pagination de 20, rôles OWNER/EDITOR exclusivement.
+- Paramètre d'API editable=1 avec filtre de permission dans Prisma, compteurs et curseurs liés aux critères.
+- Tableau de bord des six étapes éditoriales et archives, indicateurs de tous les livres accessibles, raccourcis de filtre.
+- UI responsive et accessible, messages contextualisés FR/EN, tests de permissions, pagination et statistiques.
+- Documentation complète obligatoire avant publication ; aucune migration SQL, variable de production ni activation ClamAV.
+
+
 ## [0.24.0] — alpha privée livrée le 5 novembre 2026 (PR #140, CI #188/#189)
 ### BS-004c #138 — Bibliothèque paginée et filtrée
 - Bibliothèque SSR : première page limitée à 24 ouvrages ; total global et compteurs de rédaction/relecture exacts, indépendants des cartes chargées.
