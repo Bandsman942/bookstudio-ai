@@ -11,7 +11,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Garde de concurrence sur l’autosauvegarde : impossible d’écrire sur un chapitre qui a basculé dans une édition historique via un onglet ouvert.
 - Guide, architecture, OpenAPI, exploitation, QA et roadmap actualisés **avant tout déploiement**. ClamAV toujours désactivé.
 
-## [0.28.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.28.0] — alpha privée livrée le 8 novembre 2026 (PR #153, CI #205)
 ### BS-008b #152 et UI #151 — comparaison non destructive et menus d'ouvrages
 - Comparaison de deux éditions d'un livre sur le titre, la position et l'empreinte de la **dernière révision enregistrée** de chaque chapitre actif : nombre de chapitres inchangés, modifiés, renommés, déplacés, ajoutés et absents ; aucun texte manuscrit ni hash brut exposé par cette API.
 - Rapprochement conservateur : même position+titre+contenu, empreinte unique puis titre unique. Ne pas inventer de filiation si titre et contenu ont simultanément changé ou si des chapitres sont ambigus. Limite de 350 chapitres actifs par édition.

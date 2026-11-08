@@ -13,11 +13,11 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 - **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
 - Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
 
-- **Candidate v0.26.0-alpha** : progression détaillée et privée d'un livre, chapitre avec/sans texte, révisions et versions (#145), **non publiée avant validation E2E**. [Fiche v0.26](docs/releases/v0.26.0.md).
+- **v0.26.0-alpha livrée** : progression détaillée et privée d'un livre, chapitres avec/sans texte et activité (#145), après validation E2E. [Fiche v0.26](docs/releases/v0.26.0.md).
 
 - **Version livrée v0.27.0-alpha** : éditions multiples, copie non destructive du manuscrit courant et historique en lecture seule (issue #148). **E2E propriétaire BON, CI #201/#202, Vercel READY.** [Release v0.27](docs/releases/v0.27.0.md).
 
-- **Candidate v0.28.0-alpha** : comparaison de deux éditions et correction des modales de menus contextuels des ouvrages (issues #152/#151), **non publiée** avant E2E propriétaire. [Fiche v0.28](docs/releases/v0.28.0.md).
+- **v0.28.0-alpha livrée** : comparaison de deux éditions et correction des modales de menus contextuels des ouvrages (issues #152/#151), après E2E propriétaire et CI #205. [Fiche v0.28](docs/releases/v0.28.0.md).
 
 ## Fonctionnalités déjà disponibles dans l'alpha privée
 

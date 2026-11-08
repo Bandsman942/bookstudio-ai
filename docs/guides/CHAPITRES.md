@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.27.0-alpha.**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.29.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -122,7 +122,7 @@ Sur la **Vue d'ensemble d'un livre**, repérez la section **Éditions de l'ouvra
 
 On Book Overview, open **Book editions**. Members can view previous editions and read the saved text of historical chapters without changing them. OWNER/EDITOR can create a new edition from the latest **saved** text; unsaved local edits are not included. New chapter IDs and initial revisions are created; old editions, historical comments and snapshots remain intact. Editorial status returns to Draft. Earlier editions are read-only, with a plain-text preview rather than a faithful layout. Concurrent changes return 409; synchronous copies above 500 active chapters or 20 MiB are refused without touching the original.
 
-## 11. Comparer deux éditions et utiliser les menus des ouvrages (v0.28.0-alpha candidate)
+## 11. Comparer deux éditions et utiliser les menus des ouvrages (v0.28.0-alpha livrée)
 
 Dans **Vue d'ensemble du livre → Éditions → Comparer les éditions**, sélectionnez l'édition de départ et celle d'arrivée. Cliquez sur **Comparer** pour afficher les chapitres qui ont gardé les mêmes données, ceux dont le **titre, l'ordre ou le contenu enregistré** a changé, les nouveaux et ceux qui ne figurent plus dans la seconde édition.
 
