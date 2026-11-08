@@ -616,10 +616,87 @@ const restoredRetired=await request(path+'/restore',{method:'POST',cookie:author
 }});
 assert.equal(restoredRetired.status,200,'previous chapter and revisions restored');
 assert.equal((await request(path,{cookie:author})).data.chapter.revision,3,'restored chapter retains revision pointer');
+// BS-004f: creating a second edition must never delete the first.
+const editionsPath='/api/v1/books/'+bookId+'/editions';
+const editionsBefore=await request(editionsPath,{cookie:author});
+assert.equal(editionsBefore.status,200,'edition catalogue is accessible to the author');
+assert.equal(editionsBefore.data.editions.length,1,'new book starts with one edition');
+const firstEditionId=editionsBefore.data.currentEditionId;
+assert.equal(editionsBefore.data.editions[0].number,1);
+const rejectedEdition=await request(editionsPath,{method:'POST',cookie:outsider,body:{
+  confirm:'CREATE_EDITION_FROM_SAVED',expectedEditionId:firstEditionId,
+  expectedUpdatedAt:editionsBefore.data.expectedUpdatedAt
+}});
+assert.equal(rejectedEdition.status,404,'outsider cannot duplicate book edition');
+assert.equal((await request(editionsPath,{cookie:outsider})).status,404,
+  'outsider cannot list edition history');
+const badEditionOrigin=await request(editionsPath,{method:'POST',cookie:author,omitOrigin:true,body:{
+  confirm:'CREATE_EDITION_FROM_SAVED',expectedEditionId:firstEditionId,
+  expectedUpdatedAt:editionsBefore.data.expectedUpdatedAt
+}});
+assert.equal(badEditionOrigin.status,403,'new edition creation requires same origin');
+const invalidConfirm=await request(editionsPath,{method:'POST',cookie:author,body:{
+  confirm:'CREATE',expectedEditionId:firstEditionId,
+  expectedUpdatedAt:editionsBefore.data.expectedUpdatedAt
+}});
+assert.equal(invalidConfirm.status,400,'new edition requires explicit user confirmation');
+const duplicated=await request(editionsPath,{method:'POST',cookie:author,body:{
+  confirm:'CREATE_EDITION_FROM_SAVED',expectedEditionId:firstEditionId,
+  expectedUpdatedAt:editionsBefore.data.expectedUpdatedAt
+}});
+assert.equal(duplicated.status,201,'second edition created with saved content');
+assert.equal(duplicated.data.edition.number,2);
+assert.equal(duplicated.data.edition.chapterCount,1);
+const staleEdition=await request(editionsPath,{method:'POST',cookie:author,body:{
+  confirm:'CREATE_EDITION_FROM_SAVED',expectedEditionId:firstEditionId,
+  expectedUpdatedAt:editionsBefore.data.expectedUpdatedAt
+}});
+assert.equal(staleEdition.status,409,'stale edition creation rejected');
+const editionsAfter=await request(editionsPath,{cookie:author});
+assert.equal(editionsAfter.status,200);
+assert.equal(editionsAfter.data.editions.length,2);
+assert.equal(editionsAfter.data.currentEditionId,duplicated.data.edition.id);
+assert.equal(editionsAfter.data.editions[0].number,2);
+assert.equal(editionsAfter.data.editions[1].number,1);
+const oldEditionPath=editionsPath+'/'+firstEditionId;
+const historicalEdition=await request(oldEditionPath,{cookie:author});
+assert.equal(historicalEdition.status,200,'old edition stays readable');
+assert.equal(historicalEdition.data.edition.chapters.length,1);
+assert.equal(historicalEdition.data.edition.chapters[0].id,chapterId,
+  'original chapter ID is unchanged');
+const historicalChapterPath=oldEditionPath+'/chapters/'+chapterId;
+const historicalChapter=await request(historicalChapterPath,{cookie:author});
+assert.equal(historicalChapter.status,200,'old chapter available read-only');
+assert.equal(historicalChapter.data.chapter.revision,3);
+assert.ok(historicalChapter.data.chapter.text.includes('Premier paragraphe'),
+  'historic text still present after creating new edition');
+assert.equal((await request(historicalChapterPath,{cookie:outsider})).status,404,
+  'cross-tenant historical text hidden');
+assert.equal((await request(historicalChapterPath)).status,401,
+  'historical manuscript text requires auth');
+const currentEditionChapters=await request('/api/v1/books/'+bookId+'/chapters',{cookie:author});
+assert.equal(currentEditionChapters.status,200);
+assert.equal(currentEditionChapters.data.chapters.length,1);
+const copiedId=currentEditionChapters.data.chapters[0].id;
+assert.notEqual(copiedId,chapterId,'copied edition must use NEW chapter IDs');
+const copiedChapter=await request('/api/v1/books/'+bookId+'/chapters/'+copiedId,{cookie:author});
+assert.equal(copiedChapter.status,200);
+assert.equal(copiedChapter.data.chapter.revision,0,
+  'copied edition starts its own immutable revision sequence');
+assert.deepEqual(copiedChapter.data.chapter.content,doc,
+  'new edition starts with exactly the latest saved manuscript');
+assert.equal((await request(path,{cookie:author})).status,404,
+  'old edition is not implicitly editable as current edition');
+const editionSnapshotExport=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=md',
+  {headers:{Cookie:author}});
+assert.equal(editionSnapshotExport.status,200,
+  'old named snapshot remains exportable after creating new edition');
+assert.ok((await editionSnapshotExport.text()).includes('Premier paragraphe'),
+  'old snapshot bytes unchanged after new edition');
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
 assert.equal(logout.status,200,'logout');
 const revoked=await request('/api/v1/books',{cookie:author});
 assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
-console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, reversible book lifecycle, snapshots, restoration, exports and ACL');
+console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, reversible book lifecycle, snapshots, editions, historical read-only access, restoration, exports and ACL');
