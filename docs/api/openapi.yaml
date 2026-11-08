@@ -645,3 +645,11 @@ paths:
         '413': {description: Corps requête dépasse 4096 octets}
         '422': {description: Plafond 500 chapitres ou 2 MiB/20k nœuds, rien tronqué}
         '503': {description: Transaction interrompue et annulée sans copie partielle}
+
+# BookStudio AI v0.36.0-alpha / BS-005a #176 — no new API endpoints.
+# Chapter find/replace is intentionally client-side only in the open Tiptap
+# editor; all edits still use the existing revision-precondition PATCH
+# /books/{bookId}/chapters/{chapterId} after ProseMirror local validation,
+# with ordinary session/workspace ACL, Origin and optimistic concurrency.
+# No search phrase or draft is transmitted to a new API or AI provider.
+# Globally scoped /search remains read-only and unchanged in this release.

@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.35.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.36.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -232,3 +232,16 @@ La **fusion non destructive** permet de réunir les textes de deux chapitres dé
 ### English
 
 Open a chapter's **⋯ → Merge with another chapter…** (OWNER/EDITOR), search for a second active chapter and choose a new title. A completely **new chapter** is appended at the end of the current edition, joining the first source's **saved** ProseMirror blocks followed by the second's, with its own ID and revision 0. Both originals, their revision histories, comments and snapshots are untouched. No imports, files, scans or permissions are inherited. Save local drafts first. The book returns to Draft; stale source/edition returns 409, >2 MiB combined editor document or >500 active chapters returns 422 without truncation. Retry the identical operation safely.
+
+## 20. Rechercher et remplacer dans un chapitre du Studio (candidate v0.36.0-alpha)
+
+1. Ouvrez un chapitre dans le **Studio**. Dans l'en-tête, cliquez sur le bouton **⌕** ou utilisez **Ctrl/Cmd+F** : le panneau de recherche s'ouvre. Utilisez **Ctrl/Cmd+H** pour ouvrir directement le mode remplacement (si vous disposez des droits d'écriture). Les utilisateurs ayant uniquement un droit de lecture peuvent chercher et naviguer.
+2. Tapez le mot ou le passage souhaité : la recherche est **littérale** (un point `.` est un point, pas une expression régulière), insensible à la casse par défaut, et prend en charge les caractères Unicode. Cochez **Respecter la casse** au besoin. Le panneau affiche la position **i/N** et les boutons **Précédent/Suivant** ; Entrée et Shift+Entrée dans le champ permettent de naviguer également. Les occurrences sont sélectionnées dans le manuscrit sans le modifier.
+3. Cliquez sur **Remplacer…** pour saisir le nouveau texte (0–1000 caractères, une seule ligne, vide = supprimer seulement le terme trouvé). **Remplacer cette occurrence** ne touche qu'un seul passage. Pour la totalité des résultats, cliquez **Prévisualiser tout remplacer** : vérifiez le **nombre** puis cliquez **Confirmer N remplacements**. Le chapitre peut être modifié entre ces deux actions : dans ce cas, la confirmation expire et aucune substitution n'est faite sans révision.
+4. Le remplacement est appliqué **à votre éditeur local**, puis la sauvegarde automatique habituelle s'en charge. Vérifiez que l'indicateur passe finalement à **« Enregistré »** avant de quitter le chapitre. Vous pouvez annuler un remplacement, y compris l'opération globale, par **Ctrl/Cmd+Z** en une étape.
+5. Pour protéger la mise en forme, **une correspondance doit être entièrement dans un même nœud texte ProseMirror**. Un mot réparti entre « gras » et « non-gras » n'est pas proposé comme un seul résultat. Les titres/paragraphes/listes et les marques déjà en place **ne sont jamais aplatis automatiquement** ; une recherche globale à travers plusieurs segments stylistiques reste un chantier ultérieur.
+6. Au-delà de **500 résultats**, le panneau affiche une limite claire et **désactive Remplacer tout** plutôt que de changer silencieusement 500 passages sur un total supérieur. Affinez votre recherche. Si le document résultant dépasse la taille compatible avec l'éditeur (**2 Mio**) ou les bornes de complexité, l'opération entière est refusée **sans troncature ni écrasement du chapitre**. Les conflits d'autosave et les situations hors connexion bloquent le remplacement ; les autres livres et anciennes éditions sont intacts. Les termes recherchés restent dans le navigateur et ne sont pas envoyés à l'IA.
+
+### English
+
+Open a chapter in **Studio**, click **⌕** or press **Ctrl/Cmd+F** to find, **Ctrl/Cmd+H** to find and replace (editors only). Literal, Unicode-aware search is case-insensitive by default and can be made case-sensitive. Navigate with Previous/Next or Enter/Shift+Enter; replace one occurrence or **review and explicitly confirm** the total. All substitutions are applied in one fully validated ProseMirror transaction, undoable in one step, then saved through the existing autosave; wait for **Saved**. The initial version only searches within **one text node**, never across differently marked segments. More than 500 matches blocks Replace All; replacements cannot exceed 1000 characters or one line; documents over 2 MiB are refused without truncation. Nothing is sent to an AI or third-party search provider.
