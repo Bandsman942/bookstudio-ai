@@ -73,7 +73,7 @@ export default function BookPropertiesDialog({
      notify({tone:'error',title:locale==='fr'?'Modification interrompue':'Update interrupted',detail});
    }finally{setBusy(false);}
  }
- return <div className="modal-backdrop"
+ return <div className="modal-backdrop book-actions-overlay"
    onMouseDown={event=>{if(event.target===event.currentTarget&&!busy)onClose();}}>
    <form className="modal" role="dialog" aria-modal="true"
      aria-label={mode==='properties'?(locale==='fr'?'Propriétés du livre':'Book properties'):
