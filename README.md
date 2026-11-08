@@ -15,6 +15,8 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 
 - **Candidate v0.26.0-alpha** : progression détaillée et privée d'un livre, chapitre avec/sans texte, révisions et versions (#145), **non publiée avant validation E2E**. [Fiche v0.26](docs/releases/v0.26.0.md).
 
+- **Candidate v0.27.0-alpha** : éditions multiples, copie non destructive du manuscrit courant et historique en lecture seule (issue #148). **Non livrée** avant CI et E2E propriétaire. [Release v0.27](docs/releases/v0.27.0.md).
+
 ## Fonctionnalités déjà disponibles dans l'alpha privée
 
 - Monorepo Next.js, TypeScript, Tiptap, Prisma et Neon PostgreSQL isolé de DTSC Platform.

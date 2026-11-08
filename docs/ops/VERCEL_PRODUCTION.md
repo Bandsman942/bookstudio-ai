@@ -70,3 +70,7 @@ Après migration sur la base cible, utiliser `pnpm --filter @bookstudio/database
 ## Candidate v0.26.0-alpha — progression des ouvrages
 
 Aucune migration SQL ni variable Vercel pour ce lot. `GET /api/v1/books/{bookId}/progress` consulte des lignes de révision existantes et ne renvoie que des agrégats et identifiants autorisés ; surveiller la latence et les erreurs de lecture sous charge. En cas de panne des statistiques, la vue d'ensemble doit rester ouverte. Documentation et CI avant fusion, snapshot Neon puis publication main-only, Preview OFF, health/version et journal réel après READY. ClamAV demeure hors service.
+
+## Candidate v0.27.0-alpha — copies d'éditions
+
+Aucune migration Prisma ni variable Vercel : tables Book/Edition/Manuscript/Chapter/DocumentRevision et AuditEvent existantes. Vérifier transaction PostgreSQL Serializable, conflit P2034/P2002 et temps d'exécution de l'API de copie. Capacité synchronisée volontairement bornée à 500 chapitres actifs / 20 MiB ; les livres plus volumineux requièrent une future file worker sans altération des sources. Aucun nouveau mode ClamAV. Après documentation complète/CI/E2E propriétaire, snapshot Neon et production exclusivement depuis `main` ; ne pas publier une branche feature ni Preview.

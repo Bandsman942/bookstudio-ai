@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.27.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004f #148 — Éditions distinctes et manuscrit historique consultable
+- Catalogue privé des éditions d'un même ouvrage (numéro, langue, chapitres actifs et édition courante), accessible à tout membre autorisé.
+- OWNER/EDITOR : création atomique d'une nouvelle édition depuis les **dernières révisions enregistrées** des chapitres actifs. Nouveaux identifiants/versions initiales ; conservation intacte de l'ancienne édition, révisions, commentaires et snapshots historiques. Statut du livre réinitialisé à DRAFT.
+- Historique : consultation en **lecture seule** de la structure et du texte des chapitres d'éditions précédentes ; le routage de l'éditeur reste limité à l'édition courante.
+- Protection de concurrence `expectedEditionId` + `expectedUpdatedAt`, transaction Serializable, anti-CSRF, RBAC par workspace, audit sans prose, copie bornée à 500 chapitres et 20 MiB pour l'opération synchrone.
+- UI responsive FR/EN avec fenêtre de création explicite, historique défilant et toasts contextuels. Tests E2E vérifiant que le texte historique et les snapshots demeurent accessibles après création.
+- Aucun schéma SQL ni variable d'environnement nouvelle. Documentation complète dans la PR **avant** déploiement ; ClamAV réel non installé.
+
+
 ## [0.26.0] — alpha privée livrée le 8 novembre 2026 (PR #146, CI #196/#197)
 ### BS-004e #145 — Progression réelle du manuscrit dans la vue d'ensemble
 - Indicateurs par livre, lecture privée : chapitres actifs et retirés, chapitres avec texte / sans texte, proportion de chapitres contenant du texte, révisions enregistrées et versions nommées.

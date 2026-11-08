@@ -63,3 +63,9 @@ que `E2E v0.25.0-alpha BON` n'est pas reçu.
 ## Candidate v0.26.0-alpha — progression de l'ouvrage
 
 Documentation requise dans la PR avant fusion : `docs/releases/v0.26.0.md`, `docs/guides/CHAPITRES.md`, `docs/design/BOOK-PROGRESS.md`, `docs/api/openapi.yaml`, `docs/qa/E2E-BOOK-PROGRESS-0.26.0.md`, `docs/roadmap/BACKLOG.md`. Vérifier le calcul sur dernière révision et l'absence de prose dans l'API, les droits en lecture, les 320/375px, l'absence de régression éditeur et le fallback si les métriques ne sont pas disponibles. La CI doit être verte au SHA final documenté, puis E2E propriétaire BON. Aucun snapshot/déploiement avant cette validation. Scanner ClamAV réel non installé, flags OFF.
+
+## Candidate v0.27.0-alpha — éditions multiples
+
+**P0 intégrité :** copie synchrone transactionnelle de la dernière révision uniquement ; vérifier sauvegarde du texte AVANT création, nouvelles IDs, conservation du manuscrit ancien, commentaires et versions. Le bouton doit expliquer clairement la copie. Tests 409 concurrent, 403 CSRF, 404 cross-tenant, aucun transfert de sources ni « SCANNED_CLEAN » inventé.
+
+Manifeste prépublication : `docs/releases/v0.27.0.md`, `docs/guides/CHAPITRES.md`, `docs/design/MULTI-EDITIONS.md`, `docs/api/openapi.yaml`, `docs/qa/E2E-MULTI-EDITIONS-0.27.0.md`, `docs/roadmap/BACKLOG.md`. Toutes ces pièces doivent figurer dans la PR et passer `pnpm release:check` **avant** E2E/fusion. CI main, snapshot Neon pré-fusion, Vercel production main-only Preview OFF, journal réel après READY.

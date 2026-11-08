@@ -213,3 +213,71 @@ paths:
         '401': {description: Non authentifié}
         '404': {description: Livre absent, archivé ou extérieur au workspace}
         '503': {description: Statistiques indisponibles temporairement, édition du livre toujours possible}
+
+  /books/{bookId}/editions:
+    get:
+      summary: Catalogue des éditions privées d'un ouvrage non archivé
+      description: Session active et appartenance au workspace requises. Métadonnées seulement, sans prose manuscrite ni sources.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: 'editions[], currentEditionId, expectedUpdatedAt, status'}
+        '401': {description: Non authentifié}
+        '404': {description: Livre absent ou non autorisé}
+        '503': {description: Base temporairement indisponible}
+    post:
+      summary: Créer l'édition suivante à partir du dernier texte enregistré
+      description: >-
+        OWNER/EDITOR seulement, Origin CSRF strict, copie atomique Serializable
+        des chapitres actifs et dernières révisions en nouveaux identifiants.
+        Ne copie pas commentaires, imports ou scans, ne modifie jamais les anciennes
+        révisions ni snapshots. Le statut du livre revient à DRAFT. Capacité
+        synchrone maximale 500 chapitres et 20 MiB de contenu.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm,expectedEditionId,expectedUpdatedAt]
+              properties:
+                confirm: {type: string, const: CREATE_EDITION_FROM_SAVED}
+                expectedEditionId: {type: string, format: uuid}
+                expectedUpdatedAt: {type: string, format: date-time}
+      responses:
+        '201': {description: Nouvelle édition et nombre de chapitres copiés}
+        '400': {description: Confirmation ou corps invalide}
+        '401': {description: Non authentifié}
+        '403': {description: Origine non autorisée}
+        '404': {description: Livre inaccessible ou non modifiable}
+        '409': {description: Édition modifiée ou source incohérente}
+        '413': {description: Requête trop volumineuse}
+        '422': {description: Plus de 500 chapitres ou 20 MiB — traitement direct indisponible}
+        '503': {description: Erreur d'opération temporaire}
+  /books/{bookId}/editions/{editionId}:
+    get:
+      summary: Sommaire historique d'une édition (lecture seule)
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: editionId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: Édition et chapitres actifs avec métadonnées seulement}
+        '401': {description: Non authentifié}
+        '404': {description: Édition absente ou non autorisée}
+        '503': {description: Lecture indisponible}
+  /books/{bookId}/editions/{editionId}/chapters/{chapterId}:
+    get:
+      summary: Dernier texte enregistré d'un ancien chapitre (lecture seule)
+      description: Session et accès au livre réautorisés ; aucun HTML ni opération de mutation.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: editionId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: 'chapter: titre, révision, texte brut, date d’enregistrement'}
+        '401': {description: Non authentifié}
+        '404': {description: Chapitre/édition non autorisé ou absent}
+        '409': {description: Source du chapitre incohérente}
+        '503': {description: Lecture temporairement indisponible}

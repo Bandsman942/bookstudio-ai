@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.26.0-alpha.**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.27.0-alpha.**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -106,3 +106,18 @@ Si la lecture des indicateurs est indisponible, le livre et l'éditeur restent u
 ### English
 
 Open a book's **Overview → Manuscript progress**. The panel shows active, written and still-empty chapters, removed chapters, revision records (including initial revisions) and named snapshots. The percentage measures **chapters containing saved text**, not editorial completion. Each chapter shows a saved-text or empty label. The most recently changed chapter and most recent revision are separate timestamps. Refresh after saving to update the figures. The editor remains available even if progress analytics cannot load.
+
+## 10. Éditions d'un même ouvrage — v0.27.0-alpha (candidate)
+
+Sur la **Vue d'ensemble d'un livre**, repérez la section **Éditions de l'ouvrage**. Le catalogue présente les éditions numérotées, leur langue et leur nombre de chapitres actifs. Une seule édition est marquée **Courante** : c'est l'édition au numéro le plus élevé, sur laquelle travaille l'éditeur de manuscrit.
+
+- Tout membre ayant accès au livre peut **Consulter** une ancienne édition. Choisissez ensuite un chapitre : son dernier texte enregistré s'ouvre dans une fenêtre **en lecture seule**, sans réécriture ni modification de révision. L'aperçu restitue le texte ; il ne constitue pas un rendu Word fidèle des images/tableaux/formats riches.
+- Les rôles **OWNER/EDITOR** disposent de **Créer une nouvelle édition**. Une confirmation explique ce qui sera copié : les derniers contenus **enregistrés** de tous les chapitres actifs, avec leurs titres et leur ordre. Sauvegardez vos modifications en attente avant de confirmer. La copie génère de nouveaux identifiants de chapitres et de nouvelles révisions de départ ; les originaux restent inchangés.
+- Les commentaires, références de sources importées, verdicts antivirus et approbations **ne sont pas dupliqués automatiquement** vers la nouvelle édition. Les versions nommées historiques sont conservées au niveau du livre ; leur export reste possible.
+- Le statut éditorial du livre revient à **Brouillon** pour la nouvelle édition. La mention « Publié » sur l'ancienne n'est pas transférée.
+- Si un autre onglet ou collaborateur a modifié le livre, un conflit **409** demande l'actualisation de la page. Une copie directe supérieure à **500 chapitres actifs ou 20 MiB de données enregistrées** est refusée avec une explication : le livre original reste intact ; une procédure asynchrone pour très grands livres sera nécessaire.
+- Les anciennes éditions sont **strictement consultables** ; les opérations de rédaction, import et export courant suivent l'édition la plus récente. Pour un livre archivé, restaurez d'abord le livre avant de consulter ses éditions.
+
+### English
+
+On Book Overview, open **Book editions**. Members can view previous editions and read the saved text of historical chapters without changing them. OWNER/EDITOR can create a new edition from the latest **saved** text; unsaved local edits are not included. New chapter IDs and initial revisions are created; old editions, historical comments and snapshots remain intact. Editorial status returns to Draft. Earlier editions are read-only, with a plain-text preview rather than a faithful layout. Concurrent changes return 409; synchronous copies above 500 active chapters or 20 MiB are refused without touching the original.
