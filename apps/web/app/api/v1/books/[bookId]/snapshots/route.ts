@@ -19,9 +19,18 @@ export async function GET(_req: Request, {params}: Ctx) {
     take:100,
     select:{id:true,name:true,createdAt:true,contentHash:true,revisionManifest:true}
   });
+  const editionIds=versions.flatMap(v=> {
+    const raw=v.revisionManifest as {editionId?:unknown};
+    return typeof raw?.editionId==='string'?[raw.editionId]:[];
+  });
+  const editions=editionIds.length?await prisma.edition.findMany({
+    where:{bookId,id:{in:editionIds}},select:{id:true,number:true}
+  }):[];
+  const numberById=new Map(editions.map(e=>[e.id,e.number]));
   // Never expose manuscript contents through the versions listing.
   return Response.json({snapshots:versions.map(v=>({
     id:v.id,name:v.name,createdAt:v.createdAt,
+    editionNumber:numberById.get((v.revisionManifest as {editionId?:string})?.editionId??'')??null,
     chapterCount:Array.isArray((v.revisionManifest as any)?.chapters) ? (v.revisionManifest as any).chapters.length : 0,
     integrityHash:v.contentHash,
   }))}, {headers:{'Cache-Control':'no-store'}});

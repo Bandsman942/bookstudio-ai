@@ -31,15 +31,36 @@ export async function PATCH(req:Request,{params}:{params:Promise<{bookId:string;
   const contentHash=createHash('sha256').update(JSON.stringify(data.content)).digest('hex');
   try{
     const revision=await prisma.$transaction(async tx=>{
-      const changed=await tx.chapter.updateMany({where:{id:chapterId,revisionSeq:data.baseRevision,deletedAt:null},data:{revisionSeq:{increment:1}}});
+      // Lock book BEFORE resolving current edition. Otherwise a stale editor
+      // tab can write into a newly historical edition after a snapshot fork.
+      const lock=await tx.$queryRaw<{id:string}[]>`
+        SELECT id::text FROM books WHERE id=${bookId}::uuid
+          AND archived_at IS NULL FOR UPDATE
+      `;
+      if(!lock.length)throw new Error('REVISION_CONFLICT');
+      const current=await tx.edition.findFirst({where:{bookId},
+        orderBy:{number:'desc'},select:{manuscript:{select:{id:true}}}});
+      const membership=await tx.membership.findFirst({
+        where:{userId:user.id,role:{in:['OWNER','EDITOR']},
+          workspace:{books:{some:{id:bookId,archivedAt:null}}}},
+        select:{id:true}
+      });
+      if(!current?.manuscript||!membership)throw new Error('REVISION_CONFLICT');
+      const changed=await tx.chapter.updateMany({where:{
+        id:chapterId,manuscriptId:current.manuscript.id,
+        revisionSeq:data.baseRevision,deletedAt:null
+      },data:{revisionSeq:{increment:1}}});
       if(changed.count!==1)throw new Error('REVISION_CONFLICT');
       const next=data.baseRevision+1;
       await tx.documentRevision.create({data:{chapterId,sequence:next,content,text,contentHash,authorId:user.id}});
       return next;
-    });
+    },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,
+      maxWait:5000,timeout:15000});
     return Response.json({ok:true,revision,contentHash},{headers:{'Cache-Control':'private, no-store','Server-Timing':`save;dur=${(performance.now()-started).toFixed(1)}`}});
   }catch(e){
-    if(e instanceof Error&&(e.message==='REVISION_CONFLICT'||e.message.includes('Unique constraint')))return errorResponse('REVISION_CONFLICT',409);
+    if((e instanceof Error&&(e.message==='REVISION_CONFLICT'||e.message.includes('Unique constraint')))||
+      (e&&typeof e==='object'&&'code' in e&&e.code==='P2034'))
+      return errorResponse('REVISION_CONFLICT',409);
     return errorResponse('SAVE_FAILED',503);
   }
 }

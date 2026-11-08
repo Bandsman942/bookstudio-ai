@@ -5,7 +5,7 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 ## Version et état réel
 
 - Version de production **à vérifier dynamiquement** par `GET /api/version` et `GET /api/health` sur `https://bookstudio-ai.dtsc-platform.com` ; ne jamais déduire le déploiement du fichier `release.json`.
-- Dernière production **v0.27.0-alpha vérifiée le 8 novembre 2026**, commit `be13d7f37af0`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.27](docs/deployments/2026-11-08-v0.27.0.md).
+- Dernière production **v0.28.0-alpha vérifiée le 8 novembre 2026**, commit `ebdc4ea153b9`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.28](docs/deployments/2026-11-08-v0.28.0-alpha.md).
 - Version **v0.22.0-alpha livrée** : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, documentation prépublication contrôlée en CI #179 et main #180 SUCCESS. Prochain lot métier restant à développer : propriétés et pilotage des ouvrages.
 - Versionnement et politique : [VERSIONING](docs/ops/VERSIONING.md), [CHANGELOG](CHANGELOG.md), [fiche v0.22](docs/releases/v0.22.0.md).
 - **v0.23.0-alpha déployée en production privée le 5 novembre 2026**, propriétés du livre et statut éditorial (issue #136, PR #137), CI main #184 et Vercel READY au commit `531d21175d40`. Voir [fiche v0.23](docs/releases/v0.23.0.md) et [journal de production](docs/deployments/2026-11-05T18-51-19Z_v0.23.0.md).
@@ -13,11 +13,11 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 - **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
 - Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
 
-- **Candidate v0.26.0-alpha** : progression détaillée et privée d'un livre, chapitre avec/sans texte, révisions et versions (#145), **non publiée avant validation E2E**. [Fiche v0.26](docs/releases/v0.26.0.md).
+- **v0.26.0-alpha livrée** : progression détaillée et privée d'un livre, chapitres avec/sans texte et activité (#145), après validation E2E. [Fiche v0.26](docs/releases/v0.26.0.md).
 
 - **Version livrée v0.27.0-alpha** : éditions multiples, copie non destructive du manuscrit courant et historique en lecture seule (issue #148). **E2E propriétaire BON, CI #201/#202, Vercel READY.** [Release v0.27](docs/releases/v0.27.0.md).
 
-- **Candidate v0.28.0-alpha** : comparaison de deux éditions et correction des modales de menus contextuels des ouvrages (issues #152/#151), **non publiée** avant E2E propriétaire. [Fiche v0.28](docs/releases/v0.28.0.md).
+- **v0.28.0-alpha livrée** : comparaison de deux éditions et correction des modales de menus contextuels des ouvrages (issues #152/#151), après E2E propriétaire et CI #205. [Fiche v0.28](docs/releases/v0.28.0.md).
 
 ## Fonctionnalités déjà disponibles dans l'alpha privée
 
@@ -60,3 +60,7 @@ pnpm dev
 ```
 
 Avant PR/livraison : `pnpm release:check && pnpm test && pnpm typecheck && pnpm build`. Migrations production uniquement après snapshot et procédure validée. Cahier des charges : [document de référence](docs/CAHIER_DES_CHARGES_v1.md).
+
+
+## Prochaine version en recette (NON DÉPLOYÉE)
+- **v0.29.0-alpha** : restauration d'un snapshot historique dans une édition indépendante, sans écraser les précédentes, avec prévention des sauvegardes tardives sur des chapitres devenus historiques (#155). [Release candidate](docs/releases/v0.29.0.md) · [E2E](docs/qa/E2E-SNAPSHOT-FORK-0.29.0.md). Publication bloquée jusqu'à E2E propriétaire et CI verte ; ClamAV différé.
