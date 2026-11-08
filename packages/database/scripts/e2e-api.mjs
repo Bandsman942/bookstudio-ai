@@ -166,7 +166,7 @@ assert.equal((await request(progressPath,{cookie:outsider})).status,404,
   'foreign workspace cannot read book progress');
 assert.equal((await request(progressPath)).status,401,
   'book progress cannot be read without a session');
-const const archivePath='/api/v1/books/'+archiveBookId;
+const archivePath='/api/v1/books/'+archiveBookId;
 const initialBooks=await request('/api/v1/books',{cookie:author});
 assert.equal(initialBooks.status,200);
 // BS-004c: stable scoped pagination, server-side title/type/status filters.
