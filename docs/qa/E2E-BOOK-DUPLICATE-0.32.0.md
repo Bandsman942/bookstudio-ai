@@ -14,3 +14,5 @@
 10. Chrome mobile 320/375/768 px, desktop, thème clair/sombre, FR/EN, Tab/Escape, réseau faible : tester le dialogue, les toasts et la navigation sans débordement.
 
 **CI avant publication** : pnpm release:check, pnpm book-duplicate:check, pnpm test, E2E HTTP PostgreSQL multi-tenant, pnpm typecheck, pnpm build, manifeste documentaire dans la PR. **Après validation E2E uniquement** : snapshot Neon prod avant fusion main, Vercel production uniquement et Preview OFF, contrôles READY, santé et version, journal réel postpublication. ClamAV reste OFF.
+
+**Contrôle d'accès supplémentaire :** confirmer que les membres existants du **même workspace** peuvent accéder à la copie selon leur rôle, tandis qu'un utilisateur d'un workspace tiers reçoit 404. La copie ne doit pas créer de nouveau membership. En CI où Supabase Storage n'est pas configuré, GET /files peut répondre 503 : l'absence de fichier doit alors être vérifiée après configuration sur l'environnement concerné, et non déduite d'une erreur 503.

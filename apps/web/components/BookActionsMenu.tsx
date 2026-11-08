@@ -167,8 +167,8 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
         <div className="eyebrow">{locale==='fr'?'Nouvel ouvrage indépendant':'Independent new book'}</div>
         <h2>{locale==='fr'?'Dupliquer « '+title+' »':'Duplicate “'+title+'”'}</h2>
         <p className="source-note">{locale==='fr'?
-          'La copie reprend uniquement les chapitres actifs et leur dernière révision enregistrée dans l’édition courante. Votre livre initial reste inchangé. Les fichiers sources, commentaires, snapshots, autorisations et attestations antivirus ne seront pas transférés. Enregistrez d’abord vos brouillons ouverts.':
-          'Only active chapters and their latest saved revisions in the current edition are copied. Your original book remains unchanged. Source files, comments, snapshots, access rights and antivirus attestations are never transferred. Save open drafts first.'}</p>
+          'La copie reprend uniquement les chapitres actifs et leur dernière révision enregistrée dans l’édition courante. Votre livre initial reste inchangé. Les fichiers sources, commentaires, snapshots et attestations antivirus ne seront pas transférés. Les membres du même espace conservent leurs droits habituels d'accès au nouveau livre. Enregistrez d’abord vos brouillons ouverts.':
+          'Only active chapters and their latest saved revisions in the current edition are copied. Your original book remains unchanged. Source files, comments, snapshots and antivirus attestations are never transferred. Existing members of the same workspace retain their regular access rights to the new book. Save open drafts first.'}</p>
         <label>{locale==='fr'?'Titre du nouveau livre':'New book title'}
           <input required minLength={2} maxLength={180} autoFocus
             value={desired} onChange={event=>setDesired(event.target.value)}/></label>

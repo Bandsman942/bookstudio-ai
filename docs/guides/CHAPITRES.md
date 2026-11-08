@@ -186,3 +186,7 @@ Avant de confirmer, vérifiez que vos onglets d'édition indiquent **Enregistré
 ### English
 
 Open the **⋯** menu on a book card or overview, choose **Duplicate book…**, enter a title and confirm (OWNER/EDITOR only). A separate **Draft** book opens in the same workspace, with edition 1 and new chapter IDs/revision 0. Only the current edition's **saved active chapter content**, type/language and order are copied. Old snapshots, comments, sources, imports, scans, permissions and previous editions are **not** inherited. Save pending browser drafts first. Concurrent changes return 409; oversized requests return 422; retrying the same operation does not duplicate it.
+
+**Confidentialité de l'espace :** la copie est créée **dans le même workspace**. Les membres déjà autorisés dans cet espace conservent donc leurs droits habituels de lecture/modification sur le nouvel ouvrage, selon leur rôle : aucun nouveau membre n'est invité ni aucune permission créée. Pour isoler un livre des membres existants, il faudra une gestion d'espaces distincts (non incluse dans cette version).
+
+**Workspace access:** the duplicate stays in the **same workspace**, so its existing members keep their role-based access to the new book. No new membership is created. This feature does not create a private workspace.

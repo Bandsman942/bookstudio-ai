@@ -25,3 +25,7 @@ La commande Dupliquer le livre… utilise BookActionsMenu partagé par la Biblio
 ## Tests
 
 Tests unitaires du plan (révision exacte, positions et UUID source, limites, corruption, cas vide), et E2E HTTP PostgreSQL sur deux chapitres sauvegardés, snapshot/commentaire initial, nouvelles IDs, contenu exact, révision 0, statut DRAFT, absence de sources/commentaires/snapshots hérités, replay idempotent, 401/403/404/409 et source conservée. Ne pas annoncer de copie des fichiers Supabase.
+
+## Précision RBAC multi-tenant
+
+La propriété ownerId du nouveau livre est attribuée à l'acteur, **mais l'autorisation de consultation est fondée sur l'appartenance au workspace**. Puisque le livre est créé dans le **même espace**, les membres déjà autorisés peuvent consulter ou modifier la copie selon leurs rôles. L'API **n'ajoute aucune membership, aucun rôle ou invitation**, mais ne constitue PAS un mécanisme d'isolement privé entre membres du même workspace.
