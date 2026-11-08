@@ -81,10 +81,14 @@ test('rejects unsafe replacement and oversize without dispatch',()=>{
   /REPLACE_VALUE_INVALID/);
  assert.throws(()=>validateChapterReplacement('a\nb'),
   /REPLACE_VALUE_INVALID/);
- const tr=EditorState.create({schema,doc}).tr;
- const before=tr.doc.toJSON();
- assert.throws(()=>applyChapterTextReplacements(tr,[{from:1,to:2}],
-  'z'.repeat(1000)).doc.toJSON().content[0].content[0].text.length>1_000_000,
-  /./);
- assert.deepEqual(before,doc.toJSON());
+ const hugeDoc=make(p(schema.text('x'+'a'.repeat(2*1024*1024-120))));
+ const state=EditorState.create({schema,doc:hugeDoc});
+ const found=findChapterTextMatches(hugeDoc,'x');
+ assert.equal(found.matches.length,1);
+ assert.throws(()=>applyChapterTextReplacements(state.tr,
+   found.matches,'z'.repeat(1000)),/REPLACE_TOO_LARGE/,
+   'oversized replacement must fail before the caller dispatches any change');
+ assert.equal(state.doc.textContent[0],'x');
+ assert.equal(state.doc.textContent.length,2*1024*1024-119,
+   'live editor state unchanged on validation failure');
 });
