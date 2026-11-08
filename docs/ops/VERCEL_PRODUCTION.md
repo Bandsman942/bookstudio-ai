@@ -74,3 +74,7 @@ Aucune migration SQL ni variable Vercel pour ce lot. `GET /api/v1/books/{bookId}
 ## Candidate v0.27.0-alpha — copies d'éditions
 
 Aucune migration Prisma ni variable Vercel : tables Book/Edition/Manuscript/Chapter/DocumentRevision et AuditEvent existantes. Vérifier transaction PostgreSQL Serializable, conflit P2034/P2002 et temps d'exécution de l'API de copie. Capacité synchronisée volontairement bornée à 500 chapitres actifs / 20 MiB ; les livres plus volumineux requièrent une future file worker sans altération des sources. Aucun nouveau mode ClamAV. Après documentation complète/CI/E2E propriétaire, snapshot Neon et production exclusivement depuis `main` ; ne pas publier une branche feature ni Preview.
+
+## Candidate v0.28.0-alpha — correctif UI et comparaison
+
+Pas de migration SQL ni variable Vercel. La comparaison utilise les tables d'éditions, chapitres et dernières révisions existantes ; mesurez les latences de `GET /api/v1/books/{id}/editions/compare` et surveillez 422 pour les grandes éditions. La route renvoie seulement les changements de métadonnées/empreintes **sans** le texte ou le hash. Le correctif menu utilise un portail DOM côté client : vérifier la stabilité de l'overlay dans Chrome mobile/desktop, faible réseau, la fermeture et le focus. Livraison uniquement après la porte documentaire et E2E BON ; snapshot Neon puis main prod Vercel, Preview OFF, journal réel après READY. Scanner ClamAV non installé.

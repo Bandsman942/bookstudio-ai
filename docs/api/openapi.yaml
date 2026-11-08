@@ -281,3 +281,25 @@ paths:
         '404': {description: Chapitre/édition non autorisé ou absent}
         '409': {description: Source du chapitre incohérente}
         '503': {description: Lecture temporairement indisponible}
+
+  /books/{bookId}/editions/compare:
+    get:
+      summary: Comparaison privée des métadonnées et empreintes de deux éditions
+      description: >-
+        Membres autorisés du livre non archivé seulement. L'API lit les dernières
+        empreintes des chapitres actifs de deux éditions du MÊME ouvrage et ne
+        renvoie ni prose, ni JSON ProseMirror, ni hash de contenu. Elle rapporte
+        les rapprochements certains par preuves uniques et les ambiguïtés
+        sous forme d'ajouts et absences, sans inventer une filiation éditoriale.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: from, in: query, required: true, schema: {type: string, format: uuid}}
+        - {name: to, in: query, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200': {description: "fromEdition, toEdition, comparison avec counts/pairs/added/removed/limitations (sans texte, hash ni URL)"}
+        '400': {description: Edition absente ou identique / paramètre invalide}
+        '401': {description: Non authentifié}
+        '404': {description: Livre ou éditions absents/hors workspace}
+        '409': {description: Dernière révision d'un chapitre incohérente}
+        '422': {description: Plus de 350 chapitres actifs dans une édition}
+        '503': {description: Comparaison temporairement indisponible}

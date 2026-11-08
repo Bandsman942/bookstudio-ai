@@ -121,3 +121,17 @@ Sur la **Vue d'ensemble d'un livre**, repérez la section **Éditions de l'ouvra
 ### English
 
 On Book Overview, open **Book editions**. Members can view previous editions and read the saved text of historical chapters without changing them. OWNER/EDITOR can create a new edition from the latest **saved** text; unsaved local edits are not included. New chapter IDs and initial revisions are created; old editions, historical comments and snapshots remain intact. Editorial status returns to Draft. Earlier editions are read-only, with a plain-text preview rather than a faithful layout. Concurrent changes return 409; synchronous copies above 500 active chapters or 20 MiB are refused without touching the original.
+
+## 11. Comparer deux éditions et utiliser les menus des ouvrages (v0.28.0-alpha candidate)
+
+Dans **Vue d'ensemble du livre → Éditions → Comparer les éditions**, sélectionnez l'édition de départ et celle d'arrivée. Cliquez sur **Comparer** pour afficher les chapitres qui ont gardé les mêmes données, ceux dont le **titre, l'ordre ou le contenu enregistré** a changé, les nouveaux et ceux qui ne figurent plus dans la seconde édition.
+
+Cette comparaison est **non destructive** et ne modifie aucune révision. Elle analyse les **empreintes des dernières révisions enregistrées**, sans soumettre les manuscrits à une IA ni les publier. Les différences de rédaction ne sont pas détaillées phrase par phrase dans cette version. Si un chapitre a été **renommé et entièrement réécrit**, le rapprochement n'est pas toujours démontrable : il peut apparaître comme un ancien chapitre absent et un nouveau chapitre ajouté. Dans ce cas, vérifiez les textes en ouvrant chaque édition en lecture seule. La comparaison directe est limitée à **350 chapitres actifs par édition** ; au-delà, un traitement asynchrone sera nécessaire.
+
+### Menus contextuels des livres
+
+Les commandes **Renommer**, **Modifier les propriétés**, **Faire évoluer le statut éditorial** et **Archiver** ouvrent maintenant des fenêtres globales stables au-dessus de la bibliothèque, y compris lors du survol d'une carte et sur mobile. Le menu de la carte demeure accessible par **⋯**, le clic droit et le clavier. L'action ne doit jamais être contrainte par la largeur ou le défilement de la carte.
+
+### English
+
+In Book Overview → Editions → **Compare editions**, choose two different editions and compare their saved chapter title/order/content fingerprints. The result shows unchanged, changed, added and removed chapters. No content is modified, transmitted to AI or exposed through the comparison API. Ambiguous title-and-content rewrites are not automatically assumed to represent the same chapter. Max 350 active chapters per edition. Book ⋯ actions now open viewport-level dialogs outside transformed book cards, on desktop and mobile.

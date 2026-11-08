@@ -85,3 +85,11 @@ Progression par livre (issue #145) livrée via PR #146 : propriétaire E2E BON, 
 ## Livraison confirmée v0.27.0-alpha — 8 novembre 2026
 
 Sous-issue #148 : éditions multiples, copie non destructive et consultation historique livrées dans PR #149 ; E2E propriétaire BON ; CI #201/#202 SUCCESS, snapshot Neon `snap-rough-cake-bfs1ehep`, Vercel READY `dpl_E4x9gofu5oepnAW1y8C254fLzSRP`. La documentation prépublication était intégrée à la PR #149 ; preuves postproduction dans le journal `docs/deployments/2026-11-08-v0.27.0.md`. P0 parent #5 toujours ouvert pour comparaison des éditions et autres critères restants. Correction UI menu bibliothèque : signalement vidéo du 8 novembre 2026, modale initialement prisonnière d'une carte avec transform/overflow ; lot suivant à corriger.
+
+## Candidate v0.28.0-alpha — issues #151 et #152
+
+- **#151 (UI)** : anomalie filmée, modales contextuelles des livres tronquées par `transform` + `overflow:hidden` sur la carte ; correctif portail `document.body`, overlay sécurisé viewport et recette mobile/clavier. Aucun changement des règles métier/RBAC.
+- **#152 (BS-008b / BS-004g)** : comparaison privée de deux éditions (titres/positions/empreintes dernière révision), résultats inchangé/modifié/ajouté/absent, correspondances prudentes, aucune prose ou hash transmise dans le résumé. Limite 350 chapitres actifs/édition ; pas de prétention de diff mot à mot.
+- Tests unitaires, contrôle UI structurel, HTTP E2E multi-tenant et sauvegardes, documentation complète **dans la PR avant CI finale et publication**.
+- Non inclus : alignement certain d'anciens chapitres renommés et entièrement réécrits, diff riche caractère par caractère, copies asynchrones >350 chapitres, publication externe. À suivre via #9 et le reste du cahier des charges.
+- Sécurité ClamAV hôte dédié non installé ; #104/#126/#131/#133 restent ouvertes et flags OFF.
