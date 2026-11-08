@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.29.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.29.0] — alpha privée livrée le 8 novembre 2026 (PR #156, CI #210)
 ### BS-008c #155 — restaurer une version historique dans une nouvelle édition
 - Nouvelle commande « Restaurer dans une nouvelle édition » depuis Versions & historique : copie exacte des révisions référencées, y compris des chapitres retirés depuis ; nouvelles IDs, numéro d’édition croissant, ancien historique et snapshots intacts.
 - API POST privée transactionnelle, contrôle de manifeste/hash stockés, limitation 500 chapitres/20 Mio, RBAC et CSRF, préconditions 409, audit sans manuscrit ; UI FR/EN mobile et toasts contextuels.

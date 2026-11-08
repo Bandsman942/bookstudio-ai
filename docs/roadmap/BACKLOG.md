@@ -100,3 +100,7 @@ Sous-issue #148 : éditions multiples, copie non destructive et consultation his
 - Édition courante et mise à jour du livre protégées par préconditions et transaction sérialisable ; garde additionnel sur PATCH chapitre pour refuser l’écriture depuis un onglet d’une édition historique.
 - UI FR/EN, confirmation forte, provenance d’édition de la version, toasts 409/422, E2E négatifs, documentation *avant publication*.
 - **Non inclus** : merge bidirectionnel, diff mot à mot, >500 chapitres/20MiB, remise en place automatique des commentaires/ancres, restauration de source externe ni sécurité antivirus. Parent #9 reste ouvert, ClamAV différé.
+
+## Livraison confirmée v0.29.0-alpha — 8 novembre 2026
+
+BS-008c #155 livré via PR #156 : E2E propriétaire BON, CI #210 SUCCESS, snapshot Neon production `snap-twilight-morning-bfpcenut` créé avant fusion, SHA main `696a3b874a50`, déploiement Vercel `dpl_H4zQpRJJvMmR6mvNCqSm4PrV5Vpv` READY, `/api/health` DB ready et `/api/version` alpha 0.29.0 HTTP 200. Voir journal `docs/deployments/2026-11-08-v0.29.0-alpha.md`. Les P0 parents BS-004 #5 et BS-008 #9 demeurent ouverts pour autres critères ; sécurité ClamAV toujours différée.
