@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {createPortal} from 'react-dom';
 import ActionMenu from './ActionMenu';
@@ -25,10 +25,11 @@ type Props={
 export default function BookActionsMenu({bookId,title,bookType,language,status,updatedAt,editable,showOpen=false,onArchive='library'}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
-  const [mode,setMode]=useState<'rename'|'archive'|'properties'|'status'|null>(null);
+  const [mode,setMode]=useState<'rename'|'archive'|'properties'|'status'|'duplicate'|null>(null);
   const [desired,setDesired]=useState(title);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const router=useRouter();
+  const duplicateOperationRef=useRef<string|null>(null);
   useEffect(()=>{
     if(!mode)return;
     // A fixed dialog must be outside transformed/clipped book cards. Lock
@@ -44,8 +45,13 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
     return ()=>document.removeEventListener('keydown',esc);
   },[mode,busy]);
 
-  function open(mode:'rename'|'archive'|'properties'|'status'){
-    setError('');setDesired(title);setMode(mode);
+  function open(mode:'rename'|'archive'|'properties'|'status'|'duplicate'){
+    setError('');
+    if(mode==='duplicate'){
+      setDesired((locale==='fr'?'Copie de ':'Copy of ')+title.slice(0,140));
+      duplicateOperationRef.current=crypto.randomUUID();
+    }else setDesired(title);
+    setMode(mode);
   }
   async function commit(action:'rename'|'archive'){
     if(busy)return;
@@ -80,10 +86,68 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
     }finally{setBusy(false);}
   }
 
+
+  async function duplicateBook(event:React.FormEvent){
+    event.preventDefault();if(busy)return;
+    const operationId=duplicateOperationRef.current;
+    if(!operationId)return;
+    setBusy(true);setError('');
+    try{
+      // Current edition/optimistic clock are re-fetched at the confirmation
+      // boundary. Server rechecks the same values under a book-row lock.
+      const editionResponse=await fetch('/api/v1/books/'+bookId+'/editions',
+        {cache:'no-store'});
+      const editionBody=await editionResponse.json().catch(()=>({})) as {
+        currentEditionId?:string;expectedUpdatedAt?:string;error?:string};
+      if(!editionResponse.ok||!editionBody.currentEditionId||
+         !editionBody.expectedUpdatedAt){
+        const detail=explainActionError({locale,operation:'book-duplicate',
+          status:editionResponse.status,code:editionBody.error});
+        setError(detail);notify({tone:'error',
+          title:locale==='fr'?'Copie du livre indisponible':'Cannot duplicate book',detail});return;
+      }
+      const response=await fetch('/api/v1/books/'+bookId+'/duplicate',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({confirm:'DUPLICATE_BOOK_FROM_SAVED_EDITION',
+          title:desired,operationId,
+          expectedEditionId:editionBody.currentEditionId,
+          expectedUpdatedAt:editionBody.expectedUpdatedAt})
+      });
+      const data=await response.json().catch(()=>({})) as {
+        error?:string;book?:{id:string;title:string;chapterCount?:number};
+        replayed?:boolean};
+      if(!response.ok||!data.book?.id){
+        const detail=explainActionError({locale,operation:'book-duplicate',
+          status:response.status,code:data.error});
+        setError(detail);
+        notify({tone:response.status===409?'warning':'error',
+          title:locale==='fr'?'Copie du livre refusée':'Book duplication refused',detail});
+        return;
+      }
+      const name=data.book.title;
+      setMode(null);
+      notify({tone:'success',
+        title:locale==='fr'?'Livre dupliqué':'Book duplicated',
+        detail:locale==='fr'?
+          '« '+name+' » est un nouvel ouvrage indépendant, en brouillon, avec uniquement les chapitres enregistrés. Les sources, commentaires, versions et scans ne sont pas copiés.':
+          '“'+name+'” is a new independent draft book with saved chapters only. Sources, comments, snapshots and scans were not copied.'});
+      router.push('/books/'+data.book.id);
+      router.refresh();
+    }catch{
+      const detail=locale==='fr'?
+        'La connexion a été interrompue. Vérifiez la bibliothèque avant une nouvelle tentative : la même opération sera reconnue sans créer de deuxième livre.':
+        'The connection dropped. Check your library before retrying: the same operation is recognized without creating a second book.';
+      setError(detail);
+      notify({tone:'error',title:locale==='fr'?'Copie à vérifier':'Check duplication result',detail});
+    }finally{setBusy(false);}
+  }
+
   const actions=[
     ...(showOpen?[{label:t('book.openBook'),href:'/books/'+bookId}]:[]),
     ...(editable?[
       {label:t('common.rename'),onSelect:()=>open('rename'),separatorBefore:showOpen},
+      {label:locale==='fr'?'Dupliquer le livre…':'Duplicate book…',
+        onSelect:()=>open('duplicate')},
       {label:locale==='fr'?'Modifier les propriétés…':'Edit book properties…',
         onSelect:()=>open('properties')},
       {label:locale==='fr'?'Faire évoluer le statut éditorial…':'Change editorial status…',
@@ -94,8 +158,41 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
   return <>
     <ActionMenu label={t('book.actionsFor',{title})} actions={actions} disabled={busy}/>
     {mode&&typeof document!=='undefined'&&createPortal(<>
-    {(mode==='rename'||mode==='archive')&&<div className="modal-backdrop book-actions-overlay" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
-      {mode==='rename'?<form className="modal" onSubmit={event=>{event.preventDefault();void commit('rename');}}
+    {(mode==='rename'||mode==='archive'||mode==='duplicate')&&<div className="modal-backdrop book-actions-overlay" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
+      {mode==='duplicate'?<form className="modal"
+        onSubmit={event=>void duplicateBook(event)}
+        onKeyDown={event=>{
+          if(event.key!=='Tab')return;
+          const focusable=[...event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])'
+          )].filter(item=>item.getClientRects().length>0);
+          const first=focusable[0],last=focusable[focusable.length-1];
+          if(!first||!last)return;
+          if(event.shiftKey&&document.activeElement===first){
+            event.preventDefault();last.focus();
+          }else if(!event.shiftKey&&document.activeElement===last){
+            event.preventDefault();first.focus();
+          }
+        }}
+        role="dialog" aria-modal="true"
+        aria-label={locale==='fr'?'Dupliquer un ouvrage':'Duplicate book'}>
+        <button className="close" type="button" disabled={busy}
+          onClick={()=>setMode(null)} aria-label={t('common.close')}>×</button>
+        <div className="eyebrow">{locale==='fr'?'Nouvel ouvrage indépendant':'Independent new book'}</div>
+        <h2>{locale==='fr'?'Dupliquer « '+title+' »':'Duplicate “'+title+'”'}</h2>
+        <p className="source-note">{locale==='fr'?
+          'La copie reprend uniquement les chapitres actifs et leur dernière révision enregistrée dans l’édition courante. Votre livre initial reste inchangé. Les fichiers sources, commentaires, snapshots et attestations antivirus ne seront pas transférés. Les membres du même espace conservent leurs droits habituels d’accès au nouveau livre. Enregistrez d’abord vos brouillons ouverts.':
+          'Only active chapters and their latest saved revisions in the current edition are copied. Your original book remains unchanged. Source files, comments, snapshots and antivirus attestations are never transferred. Existing members of the same workspace retain their regular access rights to the new book. Save open drafts first.'}</p>
+        <label>{locale==='fr'?'Titre du nouveau livre':'New book title'}
+          <input required minLength={2} maxLength={180} autoFocus
+            value={desired} onChange={event=>setDesired(event.target.value)}/></label>
+        {error&&<p className="form-error" role="alert">{error}</p>}
+        <button type="submit" disabled={busy} className="button full">
+          {busy?(locale==='fr'?'Duplication en cours…':'Duplicating…'):
+            (locale==='fr'?'Créer la copie indépendante':'Create independent copy')}</button>
+        <button type="button" className="text-button" disabled={busy}
+          onClick={()=>setMode(null)}>{t('common.cancel')}</button>
+      </form>:mode==='rename'?<form className="modal" onSubmit={event=>{event.preventDefault();void commit('rename');}}
         role="dialog" aria-modal="true" aria-label={t('book.rename')}>
         <button className="close" type="button" aria-label={t('common.close')} disabled={busy} onClick={()=>setMode(null)}>×</button>
         <div className="eyebrow">{t('book.management')}</div><h2>{t('book.rename')}</h2>

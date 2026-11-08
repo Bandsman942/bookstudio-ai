@@ -72,3 +72,7 @@ Historique paginé de toutes les révisions sauvegardées d'un chapitre, aperçu
 ## v0.31.0-alpha — livrée en production privée
 
 Comparaison privée, précise et non destructive des textes enregistrés de deux révisions d'un chapitre (#161) : Historique → sélecteurs → Comparer ; ajouts, suppressions, parties inchangées, limites explicites sans troncature. [Fiche de release](docs/releases/v0.31.0.md) · [QA](docs/qa/E2E-CHAPTER-DIFF-0.31.0.md). CI/documentation obligatoires dans la PR ; E2E v0.31 propriétaire BON, CI #221 SUCCESS, snapshot Neon pré-fusion, Vercel READY. ClamAV toujours reporté.
+
+## Candidate v0.32.0-alpha — NON DÉPLOYÉE
+
+Issue BS-004f #164 : commande **Dupliquer un ouvrage** depuis les menus contextuels des livres. Un nouveau livre indépendant DRAFT est créé avec l'édition 1 et uniquement les chapitres actifs dans leur **dernière révision enregistrée**, sans transférer les fichiers sources, imports, scans, commentaires, snapshots, éditions historiques, droits ou publications. La copie est transactionnelle et les retries sont idempotents. [Release](docs/releases/v0.32.0.md) · [Recette E2E](docs/qa/E2E-BOOK-DUPLICATE-0.32.0.md). **Production actuelle : v0.31.0-alpha** ; aucune fusion ou Vercel avant CI verte et validation propriétaire E2E v0.32.0-alpha BON. ClamAV OFF.

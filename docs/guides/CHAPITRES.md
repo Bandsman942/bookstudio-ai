@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.31.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.32.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -172,3 +172,21 @@ In the chapter editor choose **History**. The revision timeline shows each saved
 ### English
 
 In the chapter editor open **History**, choose distinct **From revision / To revision** values and select **Compare**. Earlier revisions can be loaded progressively. Green/underlined segments were **added**, red/struck-through segments were **removed**, normal text is **unchanged**. The counts refer to word-like or punctuation units, not whitespace. Comparison is read-only and uses **saved plain text only**: unsaved edits are excluded; rich formatting is not compared. A warning may report structural changes with identical plain text. Very large diffs return 422 without truncating or modifying any saved content. Only revisions from this active chapter are accessible; other workspaces are denied.
+
+## 16. Dupliquer un ouvrage sans toucher à l'original (candidate v0.32.0-alpha)
+
+Depuis **Bibliothèque** ou la **fiche du livre**, ouvrez le menu **⋯**, puis cliquez sur **Dupliquer le livre…**. La commande nécessite un rôle OWNER ou EDITOR dans l'espace de travail. Choisissez le nouveau titre et confirmez **Créer la copie indépendante**. Vous serez dirigé vers un **nouveau livre** marqué **Brouillon**, avec sa propre édition n°1.
+
+**Repris :** le type et la langue du livre, la langue de l'édition courante, les titres et positions des chapitres actifs, leur **dernier texte et document structuré enregistrés sur le serveur**. Les chapitres ont chacun un nouvel identifiant et leur première révision est la n°0. Le livre et son historique d'origine demeurent inchangés.
+
+**Jamais repris :** anciens commentaires/annotations, versions historiques, snapshots nommés, sources physiques Supabase et importations associées, historiques de sécurité, attestations ClamAV, scans antivirus, droits/memberships ou états de publication. Les fichiers sources devront être rattachés séparément si nécessaire, avec contrôles de sécurité réels ; **le scanner ClamAV n'est pas installé**.
+
+Avant de confirmer, vérifiez que vos onglets d'édition indiquent **Enregistré** : les brouillons locaux non sauvegardés ne font pas partie de la copie. Si le livre ou son édition change pendant l'opération, le serveur répond 409 sans créer de livre incohérent ; si plus de 500 chapitres ou 20 MiB de contenus, 422 sans troncature. Si le réseau est interrompu, la même opération peut être répétée sans créer de deuxième livre.
+
+### English
+
+Open the **⋯** menu on a book card or overview, choose **Duplicate book…**, enter a title and confirm (OWNER/EDITOR only). A separate **Draft** book opens in the same workspace, with edition 1 and new chapter IDs/revision 0. Only the current edition's **saved active chapter content**, type/language and order are copied. Old snapshots, comments, sources, imports, scans, permissions and previous editions are **not** inherited. Save pending browser drafts first. Concurrent changes return 409; oversized requests return 422; retrying the same operation does not duplicate it.
+
+**Confidentialité de l'espace :** la copie est créée **dans le même workspace**. Les membres déjà autorisés dans cet espace conservent donc leurs droits habituels de lecture/modification sur le nouvel ouvrage, selon leur rôle : aucun nouveau membre n'est invité ni aucune permission créée. Pour isoler un livre des membres existants, il faudra une gestion d'espaces distincts (non incluse dans cette version).
+
+**Workspace access:** the duplicate stays in the **same workspace**, so its existing members keep their role-based access to the new book. No new membership is created. This feature does not create a private workspace.

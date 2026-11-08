@@ -446,3 +446,46 @@ paths:
         '409': {description: Révision source incomplète/incohérente}
         '422': {description: Texte ou travail de comparaison hors limites, aucune troncature}
         '503': {description: Indisponibilité de comparaison temporaire}
+
+
+  /books/{bookId}/duplicate:
+    post:
+      summary: Dupliquer un livre dans un ouvrage nouveau indépendant en Brouillon
+      description: >-
+        Session, rôle OWNER/EDITOR sur le workspace source et Origin anti-CSRF.
+        Uniquement les chapitres ACTIFS de la dernière édition et leur dernière
+        révision enregistrée, sans perte ni troncature. Nouveau Book DRAFT
+        dans le même workspace, même type/langue, nouvelle Edition numéro 1,
+        nouveaux identifiants de chapitres et DocumentRevision.sequence=0.
+        Ni fichiers Supabase Storage ni sources importées, résultats de scans,
+        commentaires, permissions, anciennes éditions ou snapshots sont copiés.
+        Confirmation, expectedEditionId, expectedUpdatedAt, operationId UUID
+        idempotent ; transaction Serializable et verrou sur le livre d'origine.
+        Source inchangée. Limites 500 chapitres, 20 MiB JSON et texte cumulés.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, expectedEditionId, expectedUpdatedAt, operationId, title]
+              properties:
+                confirm: {type: string, const: DUPLICATE_BOOK_FROM_SAVED_EDITION}
+                expectedEditionId: {type: string, format: uuid}
+                expectedUpdatedAt: {type: string, format: date-time}
+                operationId: {type: string, format: uuid}
+                title: {type: string, minLength: 2, maxLength: 180}
+      responses:
+        '201': {description: Création, book id/title/chapterCount/editionId et replayed false}
+        '200': {description: Reprise idempotente, book id/title et replayed true}
+        '400': {description: Requête, date, identifiant, confirmation ou titre invalides}
+        '401': {description: Session absente}
+        '403': {description: Origine interdite}
+        '404': {description: Livre absent, archivé ou rôle/workspace insuffisant}
+        '409': {description: Livre ou édition concurrente ou source invalide}
+        '413': {description: Corps JSON dépasse 4096 octets}
+        '422': {description: Taille excessive, pas de copie partielle ou tronquée}
+        '503': {description: Transaction échouée sans écriture partielle}

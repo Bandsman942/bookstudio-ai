@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.32.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004f #164 — dupliquer un ouvrage sans transférer les sources
+- Nouvelle commande « Dupliquer le livre… » sur la fiche et dans les menus contextuels de la bibliothèque. Titre personnalisable, explications sur les brouillons non enregistrés et le périmètre de la copie, FR/EN mobile et toasts contextualisés.
+- Nouveau livre indépendant créé en brouillon avec édition 1 et nouveaux IDs de chapitres à révision 0 ; contenu du dernier enregistrement des chapitres actifs de l'édition courante, type/langue/ordre conservés ; original intact.
+- Aucune reprise de fichiers Supabase Storage, sources importées, scans/attestations, anciens snapshots, commentaires, anciennes éditions, accès ou validations éditoriales.
+- API POST privée sous RBAC, Origin anti-CSRF, transaction Serializable + verrou livre, préconditions, audit sans prose, opération UUID idempotente (replay 200), limites 500 chapitres/20 MiB sans troncature. Tests unitaires et HTTP E2E multi-tenant, docs requises avant publication. ClamAV OFF.
+
+
 ## [0.31.0] — alpha privée livrée le 8 novembre 2026 (PR #162, CI #221)
 ### BS-008e #161 — comparaison de deux révisions enregistrées
 - Choix libre de deux versions d'un chapitre depuis Historique, comparaison réelle des mots et ponctuations avec segments conservés/ajoutés/supprimés, compteurs et auteurs/dates.

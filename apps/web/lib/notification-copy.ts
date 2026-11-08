@@ -1,7 +1,7 @@
 /** Localized action/error copy. Never pass raw API response text or manuscript contents. */
 export type Operation=
   'pdf'|'docx'|'markdown'|'snapshot-create'|'snapshot-restore'|'snapshot-list'|
-  'book-create'|'book-rename'|'book-properties'|'book-status'|'book-archive'|'book-restore'|'chapter-create'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
+  'book-create'|'book-duplicate'|'book-rename'|'book-properties'|'book-status'|'book-archive'|'book-restore'|'chapter-create'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
   'docx-import'|'comment-add'|'comment-change'|'comment-list'|'editor-save'|'authentication';
 export type Issue={locale:'fr'|'en';operation:Operation;status?:number;code?:string;
   codepoints?:string;chapterNumber?:number|null};
@@ -10,7 +10,7 @@ const actions={
   pdf:'l’export PDF',docx:'l’export Word',markdown:'l’export Markdown',
   'snapshot-create':'l’enregistrement de la version','snapshot-restore':'la restauration de la version',
   'snapshot-list':'le chargement de l’historique','book-create':'la création du livre',
-  'book-rename':'le renommage du livre',
+  'book-duplicate':'la duplication du livre','book-rename':'le renommage du livre',
   'book-properties':'la modification des propriétés du livre','book-status':'la modification du statut éditorial','book-archive':'l’archivage du livre','book-restore':'la restauration du livre',
   'chapter-rename':'le renommage du chapitre','chapter-reorder':'le déplacement du chapitre',
   'chapter-delete':'le retrait réversible du chapitre','chapter-restore':'la restauration du chapitre',
@@ -25,7 +25,7 @@ const actions={
   pdf:'PDF export',docx:'Word export',markdown:'Markdown export',
   'snapshot-create':'saving this version','snapshot-restore':'restoring this version',
   'snapshot-list':'loading version history','book-create':'creating this book',
-  'book-rename':'renaming this book',
+  'book-duplicate':'duplicating this book','book-rename':'renaming this book',
   'book-properties':'updating book properties','book-status':'updating editorial status','book-archive':'archiving this book','book-restore':'restoring this book',
   'chapter-rename':'renaming this chapter','chapter-reorder':'moving this chapter',
   'chapter-delete':'removing this chapter','chapter-restore':'restoring this chapter',
@@ -55,6 +55,14 @@ export function explainActionError(issue:Issue):string{
  if(code==='SOURCE_SCAN_REQUIRED'||status===423)return locale==='fr'?
    `Pour ${label}, le manuscrit doit d’abord disposer d’une analyse antivirus vérifiée. Le stockage seul ne prouve pas qu’il est sain.`:
    `Before ${label}, the manuscript requires a verified antivirus scan. Storage confirmation is not proof that it is safe.`;
+ if(operation==='book-duplicate'&&
+   (code==='BOOK_DUPLICATE_TOO_LARGE'||status===422))return locale==='fr'?
+   'Ce livre contient trop de chapitres ou trop de contenu pour une duplication immédiate. Les chapitres et la source n’ont pas été modifiés.':
+   'This book exceeds the safe chapter or content limit for immediate duplication. Neither source nor chapters were changed.';
+ if(operation==='book-duplicate'&&
+   (code==='BOOK_DUPLICATE_CONFLICT'||status===409))return locale==='fr'?
+   'L’ouvrage ou son édition a changé avant la duplication, ou les données d’origine doivent être vérifiées. Actualisez le livre et recommencez.':
+   'The book or its edition changed, or the source data needs verification. Refresh the book and retry.';
  if(code==='BOOK_STATUS_TRANSITION_INVALID')return locale==='fr'?
    'Ce changement de statut n’est pas autorisé depuis l’étape actuelle. Actualisez l’ouvrage et choisissez une transition proposée.':
    'This status change is not allowed from the current milestone. Refresh the book and choose an available transition.';
