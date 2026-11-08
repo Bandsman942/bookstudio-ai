@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.25.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.25.0] — alpha privée livrée le 8 novembre 2026 (PR #143, CI #192/#193)
 ### BS-004d #141 — Import indépendant et pilotage éditorial
 - Sélecteur d'import indépendant des 24 premières cartes : recherche de titre, pagination de 20, rôles OWNER/EDITOR exclusivement.
 - Paramètre d'API editable=1 avec filtre de permission dans Prisma, compteurs et curseurs liés aux critères.

@@ -58,3 +58,7 @@ La sous-tranche #138 est livrée dans PR #140 : E2E BON, CI #188/#189 SUCCESS, s
 ## BS-004d #141 — version candidate v0.25.0-alpha
 
 Sélecteur de destination indépendant de la page de bibliothèque, recherche serveur et accès OWNER/EDITOR. Tableau de bord à six statuts et archives sur tous les ouvrages autorisés. CI et documentation obligatoires avant E2E et publication. ClamAV non installé et différé.
+
+## v0.25.0-alpha — livraison vérifiée le 8 novembre 2026
+
+Import indépendant et tableau éditorial à six étapes (issue #141) livrés via PR #143. CI #192/#193 SUCCESS, E2E BON, snapshot Neon `snap-plain-lake-bfb2k071`, Vercel READY `dpl_C35ji6tLKDyprZNa2qc37xNVmn7g`. Prochaine tranche BS-004 : suivi détaillé de la progression d'un livre (mots, chapitres, historique) sans modifier le contenu ni fermer prématurément le parent #5. ClamAV serveur isolé non installé ; issues sécurité P0 ouvertes.
