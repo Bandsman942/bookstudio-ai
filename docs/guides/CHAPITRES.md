@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.32.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.33.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -190,3 +190,17 @@ Open the **⋯** menu on a book card or overview, choose **Duplicate book…**, 
 **Confidentialité de l'espace :** la copie est créée **dans le même workspace**. Les membres déjà autorisés dans cet espace conservent donc leurs droits habituels de lecture/modification sur le nouvel ouvrage, selon leur rôle : aucun nouveau membre n'est invité ni aucune permission créée. Pour isoler un livre des membres existants, il faudra une gestion d'espaces distincts (non incluse dans cette version).
 
 **Workspace access:** the duplicate stays in the **same workspace**, so its existing members keep their role-based access to the new book. No new membership is created. This feature does not create a private workspace.
+
+## 17. Dupliquer un seul chapitre (candidate v0.33.0-alpha)
+
+Dans un livre, ouvrez le menu **⋯** du chapitre désiré, depuis le **sommaire** ou le **Studio**, puis sélectionnez **Dupliquer ce chapitre…**. Seuls les membres ayant le droit OWNER/EDITOR peuvent effectuer cette action. Indiquez le **titre du nouveau chapitre** (suggestion automatique : Copie de…) et cliquez sur **Créer la copie du chapitre**.
+
+Un nouveau chapitre est **ajouté à la fin du sommaire**, sans supprimer, renommer ou déplacer celui d'origine. Il reprend **exclusivement la dernière version sauvegardée** du contenu structuré et du texte. Il possède son propre identifiant et commence à la **révision 0**. Vous pouvez ensuite le réorganiser manuellement dans le sommaire.
+
+**Ne sont pas copiés :** les anciennes révisions, commentaires, ancres de relecture, sources Supabase, journaux d'importation, anciennes pièces jointes, snapshots nommés et attestations antivirus. Les autres chapitres et snapshots restent inchangés. L'ajout d'un chapitre est une modification éditoriale : le statut du livre revient à **Brouillon**.
+
+⚠️ **Avant l'action, sauvegardez vos brouillons ouverts**. Les modifications locales non enregistrées ne font jamais partie de la copie. Si le chapitre ou l'édition a changé, HTTP 409 et aucun chapitre incohérent n'est créé. Les limites sont 500 chapitres actifs dans l'édition et 20 Mio pour le contenu copié : dépassement 422 **sans troncature**. En cas de connexion coupée, le même identifiant d'opération permet de retrouver la copie sans en créer une deuxième.
+
+### English
+
+On a chapter's **⋯** menu in the book outline or Studio, select **Duplicate this chapter…** (OWNER/EDITOR only), choose a new title and confirm. A fresh chapter is **appended at the end** of the current edition, with a new ID and revision 0 holding only the **latest saved source content**. The original chapter, older revisions, comments, source files, imports, snapshots and security attestations are not copied or changed. The book reverts to Draft. Save unsaved browser drafts before duplicating. Version conflicts return 409, over-limit copies 422 without truncation, network retry with the same operation ID is idempotent.
