@@ -38,6 +38,7 @@ export async function POST(request:Request,{params}:Ctx){
     typeof data.operationId!=='string'||!UUID.test(data.operationId)||
     typeof data.expectedUpdatedAt!=='string')
    return errorResponse('BOOK_DUPLICATE_INVALID',400);
+ const operationId=data.operationId as string;
  let title;
  try{title=normalizeTitle(data.title);}catch{
    return errorResponse('TITLE_INVALID',400);
@@ -74,7 +75,7 @@ export async function POST(request:Request,{params}:Ctx){
      // A prior successful request is replayed without creating a second book.
      const already=await tx.auditEvent.findFirst({where:{
        action:'BOOK_DUPLICATED',subjectId:bookId,workspaceId:book.workspaceId,
-       metadata:{path:['operationId'],equals:data.operationId}
+       metadata:{path:['operationId'],equals:operationId}
      },select:{metadata:true}});
      if(already){
        const metadata=already.metadata as Record<string,unknown>|null;
@@ -126,7 +127,7 @@ export async function POST(request:Request,{params}:Ctx){
      await tx.auditEvent.create({data:{
        actorId:user.id,workspaceId:book.workspaceId,subjectId:bookId,
        action:'BOOK_DUPLICATED',
-       metadata:{operationId:data.operationId,newBookId:created.id,
+       metadata:{operationId,newBookId:created.id,
          sourceEditionId:edition.id,newEditionId:newEdition.id,
          chapters:plan.length,mode:'CURRENT_SAVED_MANUSCRIPT_ONLY'}
      }});
