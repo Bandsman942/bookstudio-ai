@@ -80,8 +80,9 @@ export async function POST(request:Request,{params}:Ctx){
        }}
      });
      if(!book)return {kind:'NOT_FOUND'} as const;
-     const old=book.editions[0],chapters=old?.manuscript?.chapters;
-     if(!old||!chapters)return {kind:'INTEGRITY'} as const;
+     const old=book.editions[0],sourceManuscript=old?.manuscript;
+     const chapters=sourceManuscript?.chapters;
+     if(!old||!sourceManuscript||!chapters)return {kind:'INTEGRITY'} as const;
      if(book.updatedAt.getTime()!==expected.getTime()||
         old.id!==input.expectedEditionId)
        return {kind:'CONFLICT'} as const;
@@ -93,7 +94,7 @@ export async function POST(request:Request,{params}:Ctx){
          r.content_hash AS "contentHash"
        FROM document_revisions r
        JOIN chapters c ON c.id=r.chapter_id
-       WHERE c.manuscript_id=${old.manuscript.id}::uuid AND c.deleted_at IS NULL
+       WHERE c.manuscript_id=${sourceManuscript.id}::uuid AND c.deleted_at IS NULL
        ORDER BY r.chapter_id,r.sequence DESC
      `;
      if(latest.length!==chapters.length)return {kind:'INTEGRITY'} as const;
