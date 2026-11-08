@@ -182,7 +182,10 @@ export default function ChapterFindReplacePanel({
  }
  const count=scan.matches.length;
  const over=scan.limited;
- const valid=!!query.trim()&&!scanning&&!error;
+ // Errors describing a previous attempt must not permanently disable
+ // retries after connectivity or autosave state has recovered.
+ const valid=!!query.trim()&&!scanning&&query.length<=120&&
+   !/[\u0000-\u001f\u007f]/.test(query);
  return <div className="chapter-find-wrap">
    <button type="button" className="studio-shortcuts-trigger chapter-find-trigger"
      title={locale==='fr'?'Rechercher / remplacer (Ctrl+F / Ctrl+H)':
