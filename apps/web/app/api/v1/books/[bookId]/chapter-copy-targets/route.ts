@@ -1,6 +1,7 @@
 import {prisma} from '@bookstudio/database';
 import {activeUser} from '@/lib/auth';
 import {errorResponse} from '@/lib/security';
+import {parseChapterTargetSearch,CHAPTER_COPY_TARGET_PAGE_SIZE} from '@/lib/chapter-copy-targets';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -12,11 +13,11 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function GET(request:Request,{params}:Ctx){
  const user=await activeUser();if(!user)return errorResponse('UNAUTHENTICATED',401);
  const {bookId}=await params;
- const query=new URL(request.url).searchParams;
- const search=query.get('search')??'';
- if(!UUID.test(bookId)||[...query.keys()].some(k=>k!=='search')||
-    query.getAll('search').length>1||search.length>100)
-   return errorResponse('CHAPTER_DESTINATION_QUERY_INVALID',400);
+ let search:string;
+ try{
+   if(!UUID.test(bookId))throw Error('CHAPTER_DESTINATION_QUERY_INVALID');
+   search=parseChapterTargetSearch(new URL(request.url).searchParams);
+ }catch{return errorResponse('CHAPTER_DESTINATION_QUERY_INVALID',400);}
  try{
    const source=await prisma.book.findFirst({where:{
      id:bookId,archivedAt:null,
@@ -26,9 +27,9 @@ export async function GET(request:Request,{params}:Ctx){
    const books=await prisma.book.findMany({where:{
      workspaceId:source.workspaceId,id:{not:bookId},archivedAt:null,
      ...(search.trim()?{title:{contains:search.trim(),mode:'insensitive' as const}}:{})
-   },orderBy:[{title:'asc'},{id:'asc'}],take:51,
+   },orderBy:[{title:'asc'},{id:'asc'}],take:CHAPTER_COPY_TARGET_PAGE_SIZE+1,
      select:{id:true,title:true,bookType:true,language:true,status:true}});
-   return Response.json({targets:books.slice(0,50),hasMore:books.length>50},
+   return Response.json({targets:books.slice(0,CHAPTER_COPY_TARGET_PAGE_SIZE),hasMore:books.length>CHAPTER_COPY_TARGET_PAGE_SIZE},
      {headers:{'Cache-Control':'private, no-store'}});
  }catch{return errorResponse('CHAPTER_DESTINATION_LIST_FAILED',503);}
 }
