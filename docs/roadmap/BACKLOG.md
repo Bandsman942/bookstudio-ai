@@ -69,3 +69,7 @@ Import indépendant et tableau éditorial à six étapes (issue #141) livrés vi
 - API privée avec contrôle de workspace, dernière révision de l'édition active, réponse sans prose/source, secours UI non bloquant ; tests unitaires et HTTP E2E multi-tenant.
 - Documentation utilisateur, OpenAPI, architecture, exploitation, E2E et note de release complétée **avant** déploiement et vérifiée par `pnpm release:check`.
 - Parent #5 reste **ouvert** pour la gestion multi-éditions et les fonctionnalités métier non livrées. Les issues ClamAV #104/#126/#131/#133 restent différées sans fermeture ni activation.
+
+## v0.26.0-alpha — livraison vérifiée le 8 novembre 2026
+
+Progression par livre (issue #145) livrée via PR #146 : propriétaire E2E BON, CI #196/#197 SUCCESS, Neon snapshot snap-flat-brook-bfyi7mlm, Vercel READY dpl_3jLVENms5oSxET1WSP8YrKUpMXAo. Prochain jalon BS-004 : multi-éditions avec conservation de l’historique. ClamAV différé.
