@@ -1,0 +1,16 @@
+# E2E propriétaire v0.34.0-alpha — copier un chapitre entre deux livres (#170)
+
+**Candidate non déployée.** Aucune fusion main ni publication Vercel avant GitHub CI SUCCESS au dernier SHA et approbation explicite `E2E v0.34.0-alpha BON`.
+
+1. Dans le même espace de travail, créer les livres **A** et **B**. Dans A, créer un chapitre contenant plusieurs paragraphes, sauvegarder plusieurs révisions et ajouter un commentaire. Créer un snapshot nommé de A. Dans B, conserver un chapitre existant et vérifier son ordre initial.
+2. Sur le chapitre de A, ouvrir **⋯ → Copier dans un autre livre…** depuis la fiche livre puis le Studio. Le dialogue montre le titre de copie, le champ de recherche et le **sélecteur de destination**. Choisir B. B est proposé seulement si le rôle de l'utilisateur est OWNER/EDITOR dans son workspace.
+3. Vérifier la recherche de destination par titre, les messages de chargement et le message **plus de 50 résultats → affiner** pour un espace contenant beaucoup de livres. Les livres d'autres espaces, les ouvrages archivés et le livre A lui-même ne doivent jamais apparaître. Un utilisateur non autorisé doit recevoir 401/404.
+4. Avant la copie, laisser une modification du chapitre A non enregistrée ; vérifier que l'éditeur prévient la perte de cette modification. Sauvegarder, puis confirmer la copie.
+5. Vérifier dans B : **un nouveau chapitre** ajouté après les chapitres existants, nouveau UUID, titre choisi, texte et mise en forme de la **dernière révision enregistrée de A**, révision initiale **0**. Le livre B revient à **Brouillon** et ses anciens chapitres restent inchangés.
+6. Vérifier dans A : chapitre, anciennes révisions, commentaires, snapshot, statut et contenu **strictement inchangés**. Dans B, la nouvelle copie ne reprend aucun commentaire, snapshot, fichier source Supabase, historique d'import ou attestation de scan de A.
+7. Déclencher une interruption réseau après confirmation et répéter avec le **même `operationId` UUID** : la réponse doit être 200 replay et le nouvel ID identique, sans doublon dans B. Un autre livre cible avec le même UUID doit provoquer 409.
+8. Vérifier l'API : 400 pour destination identique à source/champs invalides, 401 sans session, 403 Origin absent, 404 en cross-tenant, 409 si la source ou la destination a changé/si édition obsolète, 413 corps >4KiB, 422 limite 500 chapitres ou 20 MiB ; aucune copie partielle.
+9. Créer une édition supplémentaire de A, puis tenter de copier un chapitre de son édition historique : accès refusé 404. Un chapitre retiré ou un livre archivé n'est pas copiable.
+10. QA interface : mobile 320/375/768px, FR/EN, clair/sombre, navigation clavier Tab/Escape, toasts contextualisés, recherche en connexion lente, zéro débordement du dialogue.
+
+Avant toute publication : `pnpm release:check`, `pnpm ui:check`, `pnpm perf:check`, `pnpm test` avec `chapter-targets:check`, HTTP E2E PostgreSQL, `pnpm typecheck`, `pnpm build`. Documents guide, conception, OpenAPI, ops, QA, release, changelog et roadmap **dans la PR fonctionnelle**. Après E2E propriétaire BON : snapshot Neon production protégé, merge `main`, Vercel production-only Preview OFF, sondes santé/version et journal postproduction. ClamAV reste OFF.
