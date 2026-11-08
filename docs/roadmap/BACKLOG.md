@@ -139,3 +139,7 @@ Copie interne à l'édition active d'un chapitre depuis le sommaire/éditeur ave
 ## Livraison vérifiée v0.33.0-alpha — 8 novembre 2026
 
 Issue BS-004g #167 livrée en PR #168 : E2E propriétaire BON, CI #235 SUCCESS dernier SHA, snapshot Neon `snap-shiny-salad-bfqogn47` créé **avant** fusion, main `ab236434d7c573408339ea9c12c15dc7d99534a9`, Vercel `dpl_8y53P6qxQafPLDPDFrToD3v4K6Ze` READY, sondes `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 v0.33.0-alpha. Journal `docs/deployments/2026-11-08-v0.33.0-alpha.md`. Le parent #5 reste ouvert ; ClamAV OFF.
+
+## Candidate P0 BS-004h #170 — copier un chapitre entre livres (v0.34.0-alpha)
+
+Action menu ⋯ **Copier dans un autre livre…** : sélecteur limité aux livres modifiables du même workspace, recherche insensible à la casse, max 50 résultats avec `hasMore`. Nouvel ID de chapitre à révision 0 ajouté en fin de l'édition courante de destination, texte/JSON du dernier enregistrement de source, original inchangé et cible DRAFT. Transaction verrouillant les deux livres dans l'ordre ID, membership OWNER/EDITOR sur les deux, contrôle concurrent des éditions, idempotence et audit sans prose. Aucune copie d'import, objet Supabase, commentaire, snapshot, preuve antivirus ni permission ; tests E2E anti-cross-tenant. ClamAV reporté, parent BS-004 #5 toujours ouvert pour critères restants ; publication seulement après gate documentaire + CI + E2E propriétaire.

@@ -533,3 +533,67 @@ paths:
         '413': {description: Corps de requête > 4096 octets}
         '422': {description: Plafond 500 chapitres ou 20 MiB atteint, sans troncature}
         '503': {description: Transaction échouée et annulée}
+
+
+  /books/{bookId}/chapter-copy-targets:
+    get:
+      summary: Lister uniquement les ouvrages de destination modifiables du même workspace
+      description: >-
+        Session, OWNER/EDITOR sur le livre source, liste du même espace sans
+        ouvrages archivés ni source, 50 maximum, recherche par titre insensible
+        à la casse (search <= 100 caractères), hasMore si plus de 50 résultats.
+        Ne renvoie ni prose de manuscrit ni URLs Supabase.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: search, in: query, required: false, schema: {type: string, maxLength: 100}}
+      responses:
+        '200': {description: targets avec id/title/bookType/language/status et hasMore}
+        '400': {description: Paramètre inconnu, dupliqué ou recherche trop longue}
+        '401': {description: Non connecté}
+        '404': {description: Livre source inaccessible ou droit insuffisant}
+        '503': {description: Destinations indisponibles}
+  /books/{bookId}/chapters/{chapterId}/copy-to-book:
+    post:
+      summary: Copier sans déplacer un chapitre enregistré dans un autre livre du même espace
+      description: >-
+        OWNER/EDITOR sur les deux livres du même workspace, session et Origin
+        anti-CSRF. Confirmation forte et operationId UUID idempotent. Versions
+        source et destination revérifiées sous deux verrous de livres ordonnés
+        par UUID, transaction Serializable. Crée un chapitre indépendant
+        à la fin de l'édition courante cible avec révision 0, contenu exact
+        du dernier texte/JSON enregistré de la source, cible remise à DRAFT.
+        Source intacte. Aucun commentaire, snapshot, source Supabase,
+        import, fichier, permission ou attestation antivirus copié.
+        Refus au-delà de 500 chapitres actifs destination ou 20 MiB de contenu.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, destinationBookId, expectedChapterUpdatedAt, expectedDestinationEditionId, expectedDestinationUpdatedAt, expectedRevision, expectedSourceEditionId, operationId, title]
+              properties:
+                confirm: {type: string, const: COPY_CHAPTER_TO_BOOK_SAVED_ONLY}
+                destinationBookId: {type: string, format: uuid}
+                expectedChapterUpdatedAt: {type: string, format: date-time}
+                expectedDestinationEditionId: {type: string, format: uuid}
+                expectedDestinationUpdatedAt: {type: string, format: date-time}
+                expectedRevision: {type: integer, minimum: 0}
+                expectedSourceEditionId: {type: string, format: uuid}
+                operationId: {type: string, format: uuid}
+                title: {type: string, minLength: 2, maxLength: 180}
+      responses:
+        '201': {description: Nouveau chapitre avec chapter id/title/revision/position, destinationBookId et replayed false}
+        '200': {description: Replay idempotent avec le même chapitre cible, replayed true}
+        '400': {description: Confirmation, titre, UUID, schéma ou destination identique invalides}
+        '401': {description: Non connecté}
+        '403': {description: Origin interdit}
+        '404': {description: Livre source/destination inaccessible, autre workspace ou chapitre hors édition actuelle}
+        '409': {description: Livres, révision ou éditions ont changé ; aucun effet partiel}
+        '413': {description: Corps de requête > 4096 octets}
+        '422': {description: Chapitres ou volume source hors limites, aucun texte tronqué}
+        '503': {description: Transaction indisponible}

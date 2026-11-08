@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.33.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.34.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -204,3 +204,16 @@ Un nouveau chapitre est **ajouté à la fin du sommaire**, sans supprimer, renom
 ### English
 
 On a chapter's **⋯** menu in the book outline or Studio, select **Duplicate this chapter…** (OWNER/EDITOR only), choose a new title and confirm. A fresh chapter is **appended at the end** of the current edition, with a new ID and revision 0 holding only the **latest saved source content**. The original chapter, older revisions, comments, source files, imports, snapshots and security attestations are not copied or changed. The book reverts to Draft. Save unsaved browser drafts before duplicating. Version conflicts return 409, over-limit copies 422 without truncation, network retry with the same operation ID is idempotent.
+
+## 18. Copier un chapitre dans un autre ouvrage du même espace (candidate v0.34.0-alpha)
+
+1. Dans le sommaire ou le Studio, ouvrez **⋯ → Copier dans un autre livre…** sur le chapitre source. La commande apparaît uniquement si vous disposez des droits OWNER/EDITOR.
+2. Dans le dialogue, modifiez si nécessaire le **titre du chapitre copié**, puis choisissez un **autre ouvrage modifiable** du **même espace de travail**. Le sélecteur propose au maximum 50 résultats : si plus de livres correspondent, un message vous invite à **rechercher par titre**, sans supprimer ni masquer définitivement aucun ouvrage. Les livres archivés, le livre source lui-même et ceux d'un autre workspace sont exclus.
+3. Vérifiez que le chapitre source est **Enregistré** : seule la version actuellement sauvegardée sur le serveur est copiée. Les brouillons locaux non enregistrés ne sont jamais repris. Le bouton **Copier vers cet ouvrage** confirme l'action et ouvre directement le nouveau chapitre dans l'ouvrage de destination.
+4. Dans l'ouvrage de destination, le nouveau chapitre apparaît **en dernière position**, avec son propre identifiant et sa **révision 0** ; son contenu est celui de la dernière révision sauvegardée du chapitre d'origine. Les autres chapitres du livre cible restent en place et le livre revient à **Brouillon**, car il a été modifié.
+5. Le chapitre source, sa version, les commentaires, les anciennes éditions et les snapshots sont **intacts**. Les commentaires, historiques, objets Supabase, importations, fichiers sources, scans et attestations ClamAV ne sont jamais copiés. Aucune nouvelle permission n'est créée : les membres existants de la destination conservent les droits normaux de son workspace.
+6. Un conflit de révision ou d'édition dans l'un des deux livres provoque **409**, sans copie partielle ; un nombre de chapitres trop élevé (>500) ou un contenu >20 MiB provoque **422**, sans troncature. En cas de connexion interrompue, vous pouvez répéter la même opération pour retrouver la copie déjà créée sans doublon.
+
+### English
+
+From a source chapter's **⋯** menu, choose **Copy to another book…** (OWNER/EDITOR). Search for a different editable destination in the **same workspace**, enter a title and confirm. At most 50 books are shown at once; refine the search if more match. A new chapter is appended to the target book with the **latest saved source content**, a new ID and revision 0; destination returns to Draft. The source, its comments, earlier revisions and snapshots remain unchanged. Sources, storage files, import and antivirus records are never transferred. Save local drafts first. Conflicts return 409, oversized copies 422 without truncation; the same operation ID can be safely retried.

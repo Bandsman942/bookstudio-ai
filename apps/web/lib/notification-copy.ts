@@ -1,7 +1,7 @@
 /** Localized action/error copy. Never pass raw API response text or manuscript contents. */
 export type Operation=
   'pdf'|'docx'|'markdown'|'snapshot-create'|'snapshot-restore'|'snapshot-list'|
-  'book-create'|'book-duplicate'|'book-rename'|'book-properties'|'book-status'|'book-archive'|'book-restore'|'chapter-create'|'chapter-duplicate'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
+  'book-create'|'book-duplicate'|'book-rename'|'book-properties'|'book-status'|'book-archive'|'book-restore'|'chapter-create'|'chapter-duplicate'|'chapter-copy-book'|'chapter-rename'|'chapter-reorder'|'chapter-delete'|'chapter-restore'|'source-upload'|'source-list'|'source-download'|'source-delete'|
   'docx-import'|'comment-add'|'comment-change'|'comment-list'|'editor-save'|'authentication';
 export type Issue={locale:'fr'|'en';operation:Operation;status?:number;code?:string;
   codepoints?:string;chapterNumber?:number|null};
@@ -12,7 +12,7 @@ const actions={
   'snapshot-list':'le chargement de l’historique','book-create':'la création du livre',
   'book-duplicate':'la duplication du livre','book-rename':'le renommage du livre',
   'book-properties':'la modification des propriétés du livre','book-status':'la modification du statut éditorial','book-archive':'l’archivage du livre','book-restore':'la restauration du livre',
-  'chapter-duplicate':'la duplication du chapitre','chapter-rename':'le renommage du chapitre','chapter-reorder':'le déplacement du chapitre',
+  'chapter-duplicate':'la duplication du chapitre','chapter-copy-book':'la copie du chapitre vers un autre livre','chapter-rename':'le renommage du chapitre','chapter-reorder':'le déplacement du chapitre',
   'chapter-delete':'le retrait réversible du chapitre','chapter-restore':'la restauration du chapitre',
   'chapter-create':'la création du chapitre','source-upload':'l’importation du manuscrit',
   'source-list':'le chargement des fichiers sources','source-download':'le téléchargement du manuscrit',
@@ -27,7 +27,7 @@ const actions={
   'snapshot-list':'loading version history','book-create':'creating this book',
   'book-duplicate':'duplicating this book','book-rename':'renaming this book',
   'book-properties':'updating book properties','book-status':'updating editorial status','book-archive':'archiving this book','book-restore':'restoring this book',
-  'chapter-duplicate':'duplicating this chapter','chapter-rename':'renaming this chapter','chapter-reorder':'moving this chapter',
+  'chapter-duplicate':'duplicating this chapter','chapter-copy-book':'copying this chapter into another book','chapter-rename':'renaming this chapter','chapter-reorder':'moving this chapter',
   'chapter-delete':'removing this chapter','chapter-restore':'restoring this chapter',
   'chapter-create':'creating this chapter','source-upload':'uploading the manuscript',
   'source-list':'loading source files','source-download':'downloading the manuscript',
@@ -55,6 +55,14 @@ export function explainActionError(issue:Issue):string{
  if(code==='SOURCE_SCAN_REQUIRED'||status===423)return locale==='fr'?
    `Pour ${label}, le manuscrit doit d’abord disposer d’une analyse antivirus vérifiée. Le stockage seul ne prouve pas qu’il est sain.`:
    `Before ${label}, the manuscript requires a verified antivirus scan. Storage confirmation is not proof that it is safe.`;
+ if(operation==='chapter-copy-book'&&
+   (code==='CHAPTER_TRANSFER_TOO_LARGE'||status===422))return locale==='fr'?
+   'Le livre de destination contient trop de chapitres ou le contenu est trop volumineux. Rien n’a été tronqué ou perdu.':
+   'The destination has too many chapters or the source is too large. Nothing was truncated or lost.';
+ if(operation==='chapter-copy-book'&&
+   (code==='CHAPTER_TRANSFER_CONFLICT'||status===409))return locale==='fr'?
+   'Le chapitre source ou le livre de destination a changé depuis votre sélection. Actualisez les livres et recommencez sans copie partielle.':
+   'The source chapter or destination book changed after selection. Refresh both books and retry; no partial copy was created.';
  if(operation==='chapter-duplicate'&&
    (code==='CHAPTER_COPY_TOO_LARGE'||status===422))return locale==='fr'?
    'Le nombre de chapitres ou la taille du contenu dépasse la limite de duplication immédiate. Votre chapitre original n’a pas été modifié.':

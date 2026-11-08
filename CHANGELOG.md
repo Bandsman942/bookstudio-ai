@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.34.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004h #170 — copier le dernier chapitre sauvegardé dans un autre livre du même espace
+- Commande « Copier dans un autre livre… » sur le menu contextuel de chapitre. Sélecteur privé des ouvrages modifiables du **même workspace**, recherche titre bornée, réponse limitée à 50 résultats avec signal hasMore, refus des destinations hors espace ou archivées.
+- Nouveau chapitre indépendant en fin de l'édition courante du livre choisi, révision 0 reproduisant exactement le JSON/texte/hash de la dernière version enregistrée du chapitre source. Source, snapshots et commentaires intacts ; destination repasse en DRAFT.
+- API privée GET de destinations et POST transactionnelle, membership OWNER/EDITOR sur les deux livres, Origin CSRF, deux verrous livres dans l'ordre UUID et transaction Serializable, contrôles concurrents, idempotence operationId, audit sans prose, plafonds 500 chapitres et 20 MiB sans troncature.
+- Modale FR/EN mobile/clavier, avertissements brouillons, sélection par recherche, toasts contextualisés et navigation vers la copie ; **aucune** source Supabase, fichier, commentaire, historique, permission ou attestation antivirus recopiés. Tests unitaires et E2E PostgreSQL multi-tenant, docs prépublication. ClamAV OFF.
+
+
 ## [0.33.0] — alpha privée livrée le 8 novembre 2026 (PR #168, CI #235)
 ### BS-004g #167 — duplication sûre d'un chapitre courant
 - Menu ⋯ des chapitres : **Dupliquer ce chapitre…**, nouveau titre, confirmation des exclusions, FR/EN, mobile et clavier. La copie indépendante est ajoutée à la fin du manuscrit avec un nouveau UUID et révision 0.
