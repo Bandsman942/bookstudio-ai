@@ -135,3 +135,7 @@ Issue BS-004f #164 livrée en PR #165 : propriétaire E2E BON, CI #229 SUCCESS d
 ## Candidate BS-004g P0 #167 — duplication du chapitre (v0.33.0-alpha)
 
 Copie interne à l'édition active d'un chapitre depuis le sommaire/éditeur avec titre personnalisé : **dernière révision enregistrée**, nouvel UUID, séquence 0, en fin de manuscrit, original intact, statut DRAFT. API sous contrôle RBAC/Origin, lock livre + Serializable, idempotence `operationId`, 409 conflicts, 422 limites, audit sans prose, HTTP E2E réel. Pas de transfert de commentaires, imports, fichiers Supabase, snapshots, attestations de sécurité ou permissions. Documents complets avant publication. Suivant BS-004 #5 : copie ciblée entre ouvrages, contrôles d'organisation et ergonomie longue liste ; ClamAV toujours reporté.
+
+## Livraison vérifiée v0.33.0-alpha — 8 novembre 2026
+
+Issue BS-004g #167 livrée en PR #168 : E2E propriétaire BON, CI #235 SUCCESS dernier SHA, snapshot Neon `snap-shiny-salad-bfqogn47` créé **avant** fusion, main `ab236434d7c573408339ea9c12c15dc7d99534a9`, Vercel `dpl_8y53P6qxQafPLDPDFrToD3v4K6Ze` READY, sondes `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 v0.33.0-alpha. Journal `docs/deployments/2026-11-08-v0.33.0-alpha.md`. Le parent #5 reste ouvert ; ClamAV OFF.
