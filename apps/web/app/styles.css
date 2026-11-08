@@ -1073,3 +1073,71 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
  .chapter-history-comparison-controls>.button{grid-column:1/-1;width:100%}
  .chapter-history-diff-text{max-height:30dvh}
 }
+
+
+/* Chapter local find/replace — no network, platform-native selection.
+ * Always visible in the Studio header (desktop and mobile) with one small
+ * independent floating panel. Use semantic surface tokens in dark mode. */
+.chapter-find-wrap{position:relative;flex:0 0 auto}
+.chapter-find-trigger.studio-shortcuts-trigger{
+ display:inline-flex!important;align-items:center;justify-content:center;
+ width:36px;height:36px;min-height:36px;flex:0 0 auto;
+ font-size:22px;font-weight:700;border:1px solid var(--line);
+ border-radius:9px;background:var(--surface);color:var(--ink);
+ padding:4px 7px
+}
+.chapter-find-trigger[aria-expanded="true"]{
+ border-color:var(--green);background:var(--surface-hover)
+}
+.chapter-find-panel{
+ position:absolute;right:0;top:calc(100% + 12px);
+ z-index:1550;display:grid;gap:13px;
+ width:min(490px,calc(100vw - 22px));
+ max-height:min(74dvh,690px);overflow:auto;overscroll-behavior:contain;
+ padding:16px;border:1px solid var(--line);
+ border-radius:15px;background:var(--surface);color:var(--ink);
+ box-shadow:0 16px 54px #172b3d30
+}
+.chapter-find-heading,.chapter-find-nav,.chapter-find-actions{
+ display:flex;align-items:center;flex-wrap:wrap;gap:9px
+}
+.chapter-find-heading{justify-content:space-between}
+.chapter-find-heading strong{font-size:14px}
+.chapter-find-heading .text-button{font-size:22px;min-width:34px}
+.chapter-find-row,.chapter-find-replace{
+ display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:0
+}
+.chapter-find-row label,.chapter-find-replace label{
+ display:flex;flex-direction:column;gap:5px;min-width:0;
+ font-size:12px;font-weight:700
+}
+.chapter-find-row input[type=search],
+.chapter-find-replace input[type=text]{
+ width:100%;min-width:0;min-height:39px;
+ border:1px solid var(--input-border,var(--line));
+ border-radius:8px;padding:8px 10px;
+ color:var(--ink);background:var(--surface)
+}
+.chapter-find-case{
+ display:flex!important;flex-direction:row!important;
+ align-items:center!important;gap:9px!important;
+ font-weight:600!important;cursor:pointer
+}
+.chapter-find-case input{width:17px;height:17px;accent-color:var(--green)}
+.chapter-find-nav>span{font-size:12px;font-weight:700;color:var(--muted);
+ margin-right:auto}
+.chapter-find-nav .button,.chapter-find-actions .button{
+ flex:0 0 auto;min-height:35px;padding:7px 11px;white-space:normal;
+ text-align:center;font-size:12px
+}
+.chapter-find-replace{padding-top:10px;border-top:1px solid var(--line)}
+.chapter-find-note{font-size:11px;line-height:1.55;margin:0;color:var(--muted)}
+.chapter-find-panel .form-error{margin:0}
+@media(max-width:760px){
+ .chapter-find-panel{
+  position:fixed;left:8px;right:8px;top:76px;
+  width:auto;max-height:calc(100dvh - 88px);
+  padding:13px;border-radius:12px
+ }
+ .chapter-find-nav .button,.chapter-find-actions .button{flex:1 1 auto}
+}
