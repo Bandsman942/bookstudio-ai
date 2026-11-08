@@ -685,6 +685,52 @@ assert.equal(copiedChapter.data.chapter.revision,0,
   'copied edition starts its own immutable revision sequence');
 assert.deepEqual(copiedChapter.data.chapter.content,doc,
   'new edition starts with exactly the latest saved manuscript');
+// BS-008b: compare distinct editions without exposing private prose/hashes.
+const comparePath=editionsPath+'/compare?from='+firstEditionId+
+  '&to='+duplicated.data.edition.id;
+const unchangedEditions=await request(comparePath,{cookie:author});
+assert.equal(unchangedEditions.status,200,'comparison of authorized editions');
+assert.equal(unchangedEditions.data.comparison.counts.unchanged,1,
+  'newly duplicated edition is unchanged despite new chapter IDs');
+assert.equal(unchangedEditions.data.comparison.counts.changed,0);
+assert.equal(unchangedEditions.data.comparison.counts.added,0);
+assert.equal(unchangedEditions.data.comparison.counts.removed,0);
+assert.equal(JSON.stringify(unchangedEditions.data).includes('Premier paragraphe'),false,
+  'comparison API does not expose any manuscript prose');
+assert.equal(JSON.stringify(unchangedEditions.data).includes('contentHash'),false,
+  'comparison API does not expose revision hashes');
+assert.equal((await request(comparePath,{cookie:outsider})).status,404,
+  'cross-workspace edition comparison rejected');
+assert.equal((await request(comparePath)).status,401,
+  'edition comparison requires active session');
+assert.equal((await request(editionsPath+'/compare?from='+firstEditionId+
+  '&to='+firstEditionId,{cookie:author})).status,400,
+  'cannot compare an edition with itself');
+assert.equal((await request(editionsPath+'/compare?from=wrong&to='+
+  duplicated.data.edition.id,{cookie:author})).status,400,
+  'invalid comparison input rejected');
+const secondEditionDoc={type:'doc',content:[{type:'paragraph',content:[
+  {type:'text',text:'Texte de la seconde édition modifié et sauvegardé.'}]}]};
+const secondEditionSave=await request('/api/v1/books/'+bookId+'/chapters/'+copiedId,{
+  method:'PATCH',cookie:author,body:{baseRevision:0,content:secondEditionDoc}
+});
+assert.equal(secondEditionSave.status,200,'current edition saved independently');
+const modifiedEditions=await request(comparePath,{cookie:author});
+assert.equal(modifiedEditions.status,200);
+assert.equal(modifiedEditions.data.comparison.counts.contentChanged,1,
+  'comparison detects changed saved revision by unique chapter title');
+assert.equal(modifiedEditions.data.comparison.counts.changed,1);
+assert.equal((await request(historicalChapterPath,{cookie:author})).data.chapter.revision,3,
+  'changing current edition must not modify historical revisions');
+const extraChapter=await request('/api/v1/books/'+bookId+'/chapters',{
+  method:'POST',cookie:author,body:{title:'Annexe nouvelle édition'}
+});
+assert.equal(extraChapter.status,201,'new chapter in the current edition');
+const withAddition=await request(comparePath,{cookie:author});
+assert.equal(withAddition.status,200);
+assert.equal(withAddition.data.comparison.counts.added,1,
+  'new chapter is counted as an addition and not a historical modification');
+assert.equal(withAddition.data.comparison.counts.removed,0);
 assert.equal((await request(path,{cookie:author})).status,404,
   'old edition is not implicitly editable as current edition');
 const editionSnapshotExport=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=md',
@@ -699,4 +745,4 @@ const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
 assert.equal(logout.status,200,'logout');
 const revoked=await request('/api/v1/books',{cookie:author});
 assert.equal(revoked.status,401,'revoked sessions cannot access manuscripts');
-console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, reversible book lifecycle, snapshots, editions, historical read-only access, restoration, exports and ACL');
+console.log('E2E API PASS: auth, throttle, CSRF, private search, revision-safe comments, reversible book lifecycle, snapshots, edition comparisons, editions, historical read-only access, restoration, exports and ACL');
