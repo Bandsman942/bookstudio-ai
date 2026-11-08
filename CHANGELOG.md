@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.32.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.32.0] — alpha privée livrée le 8 novembre 2026 (PR #165, CI #229)
 ### BS-004f #164 — dupliquer un ouvrage sans transférer les sources
 - Nouvelle commande « Dupliquer le livre… » sur la fiche et dans les menus contextuels de la bibliothèque. Titre personnalisable, explications sur les brouillons non enregistrés et le périmètre de la copie, FR/EN mobile et toasts contextualisés.
 - Nouveau livre indépendant créé en brouillon avec édition 1 et nouveaux IDs de chapitres à révision 0 ; contenu du dernier enregistrement des chapitres actifs de l'édition courante, type/langue/ordre conservés ; original intact.
