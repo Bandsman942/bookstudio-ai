@@ -23,14 +23,20 @@ export async function GET(_request:Request,{params}:Ctx){
      select:{updatedAt:true,status:true,editions:{
        orderBy:{number:'desc'},
        select:{id:true,number:true,language:true,
-         manuscript:{select:{_count:{select:{chapters:true}}}}
+         manuscript:{select:{id:true}}
        }
      }}
    });
    if(!book)return errorResponse('NOT_FOUND',404);
+   const manuscriptIds=book.editions.flatMap(e=>e.manuscript?[e.manuscript.id]:[]);
+   const groups=manuscriptIds.length?await prisma.chapter.groupBy({
+     by:['manuscriptId'],where:{manuscriptId:{in:manuscriptIds},deletedAt:null},
+     _count:{_all:true}
+   }):[];
+   const countByManuscript=new Map(groups.map(g=>[g.manuscriptId,g._count._all]));
    const editions=book.editions.map(e=>({
      id:e.id,number:e.number,language:e.language,
-     chapterCount:e.manuscript?._count.chapters??0,
+     chapterCount:countByManuscript.get(e.manuscript?.id??'')??0,
      isCurrent:e.id===book.editions[0]?.id
    }));
    return Response.json({
