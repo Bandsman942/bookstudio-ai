@@ -1,0 +1,16 @@
+# E2E v0.35.0-alpha — Fusionner deux chapitres sans détruire les sources (#173)
+
+**CANDIDATE NON DÉPLOYÉE**. Fusion main et Vercel interdites avant CI SUCCESS sur SHA final et votre validation explicite `E2E v0.35.0-alpha BON`.
+
+1. Dans un ouvrage de type essai ou médecine, créer **au moins deux chapitres** A et B. Rédiger puis enregistrer plusieurs révisions de chacun. Mettre du **gras**, un **lien HTTP sûr**, des titres et des paragraphes Unicode. Ajouter des commentaires aux sources et créer un snapshot nommé du livre.
+2. Dans le sommaire ou le Studio, ouvrir **⋯ → Fusionner avec un autre chapitre…** sur A. Vérifier qu'un REVIEWER/VIEWER ne peut pas déclencher cette commande. Vérifier le dialogue portalisé en cas d'overflow CSS.
+3. Lire l'avertissement : **aucune source ne sera effacée** ; les blocs enregistrés de A viendront avant ceux de B dans un **nouveau** chapitre, sans titre automatique. Les commentaires, snapshots, fichiers sources et attestations antivirus ne suivent pas. Enregistrer d'abord tout brouillon ouvert.
+4. Filtrer la liste des chapitres par titre, choisir B (A ne doit pas être proposé comme deuxième chapitre), donner un nouveau titre et confirmer. La source A + B et le livre restent visibles ; un troisième chapitre C, avec **nouvel ID**, est ajouté à la **fin du sommaire**. Le dialogue s'est fermé et C s'ouvre dans le Studio.
+5. Vérifier précisément que le document de C a conservé **tous les blocs dans l'ordre A puis B**, les mises en forme prises en charge et les retours à la ligne, sans réécriture. Vérifier une unique **révision 0** pour C, A et B conservant toutes leurs révisions historiques. Si le livre avait le statut WRITING, vérifier qu'il revient à DRAFT.
+6. Vérifier que les **commentaires, ancres et snapshots des sources** sont inchangés. C n'a aucun commentaire hérité, aucune importation ni preuve de scan ClamAV inventée. Aucun chapitre retiré n'apparaît dans le sélecteur de B.
+7. Couper le réseau après confirmation et répéter l'**identique** instruction : **HTTP 200 replay**, même ID de C et aucun second C créé. Changer le titre ou B avec le même UUID doit produire 409. Un double clic ne crée pas deux copies.
+8. Tester 400 (UUID invalides/second chapitre A/confirmation incorrecte), 401 (sans cookie), 403 (Origin absent), 404 (hors workspace/ancien chapitre/chapitre supprimé), 409 (révision ou horodatage périmé), 413 (payload >4KiB), 422 (>500 chapitres actifs ou >2 MiB/20 000 nœuds), 503 (DB indisponible) : **aucune copie partielle, aucun texte tronqué**.
+9. Créer une **deuxième édition**, puis tenter une fusion à partir des chapitres de la première édition : 404, sans déplacement de contenu.
+10. Tester FR/EN, thèmes clair/sombre, clavier Tab/Shift+Tab/Escape, Chrome mobile 320/375/768px, réseau faible, toasts localisés, navigation et état de sauvegarde dans Studio.
+
+**Prépublication obligatoire** : `pnpm release:check`, `pnpm chapter-merge:check`, `pnpm test`, `pnpm ui:check`, `pnpm perf:check`, E2E HTTP PostgreSQL multi-tenant, Prisma, TypeScript, build ; guide, conception, OpenAPI, QA, ops, release, changelog et backlog présents dans la PR. **Après E2E propriétaire BON seulement** : snapshot Neon production AVANT fusion main, Vercel prod-only Preview OFF, contrôles READY/health/version et journal réel postproduction. ClamAV toujours OFF.

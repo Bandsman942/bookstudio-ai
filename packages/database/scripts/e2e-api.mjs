@@ -800,6 +800,149 @@ assert.equal(snapshotRecheck.status,200);
 assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
  'fork leaves historical snapshot byte content/export intact');
 
+// BS-004i: merge two saved ProseMirror chapters into an independent NEW
+// chapter, preserving every original revision/comment/snapshot and order.
+const mergeBook=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Mémoire pour fusion non destructive',bookType:'SCIENCE',language:'fr'}});
+assert.equal(mergeBook.status,201);
+const mergeBookId=mergeBook.data.book.id;
+const mergeFirstId=mergeBook.data.book.chapterId;
+const mergeFirstPath='/api/v1/books/'+mergeBookId+'/chapters/'+mergeFirstId;
+const mergeSecondCreate=await request('/api/v1/books/'+mergeBookId+'/chapters',{
+ method:'POST',cookie:author,body:{title:'Chapitre original deuxième'}});
+assert.equal(mergeSecondCreate.status,201);
+const mergeSecondId=mergeSecondCreate.data.chapter.id;
+const mergeSecondPath='/api/v1/books/'+mergeBookId+'/chapters/'+mergeSecondId;
+const mergeFirstDoc={type:'doc',content:[
+ {type:'heading',attrs:{level:2},content:[{type:'text',text:'Chapitre introductif'}]},
+ {type:'paragraph',content:[{type:'text',text:'Règle éditoriale '},
+   {type:'text',text:'importante',marks:[{type:'bold'}]}]}
+]};
+const mergeSecondDoc={type:'doc',content:[
+ {type:'paragraph',content:[{type:'text',text:'Approche complémentaire été 2026.'}]},
+ {type:'paragraph',content:[{type:'text',text:'Référence sûre',marks:[{
+   type:'link',attrs:{href:'https://example.org/medicine'}}]}]}
+]};
+assert.equal((await request(mergeFirstPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:mergeFirstDoc}})).status,200);
+assert.equal((await request(mergeSecondPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:mergeSecondDoc}})).status,200);
+const mergeComment=await request(mergeFirstPath+'/comments',{method:'POST',
+ cookie:author,body:{baseRevision:1,body:'Note conservée sur la source.'}});
+assert.equal(mergeComment.status,201);
+const mergeSnap=await request('/api/v1/books/'+mergeBookId+'/snapshots',{
+ method:'POST',cookie:author,body:{name:'Deux sources avant fusion'}});
+assert.equal(mergeSnap.status,201);
+const mergeEditionBefore=await request('/api/v1/books/'+mergeBookId+'/editions',
+ {cookie:author});
+assert.equal(mergeEditionBefore.status,200);
+const mergeWriting=await request('/api/v1/books/'+mergeBookId,{
+ method:'PATCH',cookie:author,body:{action:'status',status:'WRITING',
+ expectedUpdatedAt:mergeEditionBefore.data.expectedUpdatedAt}});
+assert.equal(mergeWriting.status,200,'set source book to WRITING before merge');
+const mergeChaptersBefore=await request('/api/v1/books/'+mergeBookId+'/chapters',
+ {cookie:author});
+assert.equal(mergeChaptersBefore.status,200);
+const mergeOne=mergeChaptersBefore.data.chapters.find(c=>c.id===mergeFirstId);
+const mergeTwo=mergeChaptersBefore.data.chapters.find(c=>c.id===mergeSecondId);
+assert.equal(mergeOne.revision,1);
+assert.equal(mergeTwo.revision,1);
+const mergePath=mergeFirstPath+'/merge';
+const mergeOp=randomUUID();
+const mergeBody={
+ confirm:'MERGE_SAVED_CHAPTERS_AS_NEW',
+ secondChapterId:mergeSecondId,title:'Fusion proposée et indépendante',
+ operationId:mergeOp,expectedEditionId:mergeEditionBefore.data.currentEditionId,
+ expectedFirstRevision:mergeOne.revision,
+ expectedFirstUpdatedAt:mergeOne.updatedAt,
+ expectedSecondRevision:mergeTwo.revision,
+ expectedSecondUpdatedAt:mergeTwo.updatedAt
+};
+assert.equal((await request(mergePath,{method:'POST',body:mergeBody})).status,401);
+assert.equal((await request(mergePath,{method:'POST',cookie:outsider,
+ body:mergeBody})).status,404);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ omitOrigin:true,body:mergeBody})).status,403);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,confirm:'UNSAFE'}})).status,400);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,secondChapterId:mergeFirstId}})).status,400);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,operationId:'not-uuid'}})).status,400);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,secondChapterId:randomUUID()}})).status,404);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,expectedFirstRevision:0}})).status,409);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,expectedSecondUpdatedAt:'2020-01-01T00:00:00.000Z'}})).status,409);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,expectedEditionId:randomUUID()}})).status,409);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,title:'A'.repeat(5000)}})).status,413);
+const merged=await request(mergePath,{method:'POST',cookie:author,body:mergeBody});
+assert.equal(merged.status,201,'merge creates one new independent chapter');
+assert.equal(merged.data.replayed,false);
+assert.equal(merged.data.bookId,mergeBookId);
+const mergedId=merged.data.chapter.id;
+assert.notEqual(mergedId,mergeFirstId);
+assert.notEqual(mergedId,mergeSecondId);
+assert.equal(merged.data.chapter.revision,0);
+const sameMerge=await request(mergePath,{method:'POST',cookie:author,body:mergeBody});
+assert.equal(sameMerge.status,200,'retry has no second new chapter');
+assert.equal(sameMerge.data.replayed,true);
+assert.equal(sameMerge.data.chapter.id,mergedId);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:{...mergeBody,title:'Different title but same operation ID'}})).status,409,
+ 'reusing an operation UUID for another instruction is rejected');
+const mergeChaptersAfter=await request('/api/v1/books/'+mergeBookId+'/chapters',
+ {cookie:author});
+assert.equal(mergeChaptersAfter.data.chapters.length,3);
+assert.deepEqual(mergeChaptersAfter.data.chapters.map(c=>c.id),
+ [mergeFirstId,mergeSecondId,mergedId],'append only; both sources keep their positions');
+const mergedRead=await request('/api/v1/books/'+mergeBookId+'/chapters/'+mergedId,
+ {cookie:author});
+assert.equal(mergedRead.status,200);
+assert.deepEqual(mergedRead.data.chapter.content,{type:'doc',content:[
+ ...mergeFirstDoc.content,...mergeSecondDoc.content]},
+ 'rich-text blocks joined exactly in selected order without dropping marks');
+assert.equal(mergedRead.data.chapter.revision,0);
+const sourceFirstAfter=await request(mergeFirstPath,{cookie:author});
+const sourceSecondAfter=await request(mergeSecondPath,{cookie:author});
+assert.deepEqual(sourceFirstAfter.data.chapter.content,mergeFirstDoc);
+assert.deepEqual(sourceSecondAfter.data.chapter.content,mergeSecondDoc);
+assert.equal(sourceFirstAfter.data.chapter.revision,1);
+assert.equal(sourceSecondAfter.data.chapter.revision,1);
+const mergedComments=await request('/api/v1/books/'+mergeBookId+'/chapters/'+
+ mergedId+'/comments',{cookie:author});
+assert.equal(mergedComments.status,200);
+assert.deepEqual(mergedComments.data.comments,[],
+ 'old comments and anchors not inherited by merged copy');
+const mergedRevisions=await request('/api/v1/books/'+mergeBookId+'/chapters/'+
+ mergedId+'/revisions',{cookie:author});
+assert.equal(mergedRevisions.status,200);
+assert.deepEqual(mergedRevisions.data.revisions.map(c=>c.sequence),[0],
+ 'new chapter has one initial revision');
+const mergedSnapshotAfter=await request('/api/v1/books/'+mergeBookId+'/snapshots',
+ {cookie:author});
+assert.equal(mergedSnapshotAfter.data.snapshots.length,1);
+assert.equal(mergedSnapshotAfter.data.snapshots[0].id,mergeSnap.data.snapshot.id,
+ 'snapshot manifest remains intact');
+const mergeEditionAfter=await request('/api/v1/books/'+mergeBookId+'/editions',
+ {cookie:author});
+assert.equal(mergeEditionAfter.data.status,'DRAFT',
+ 'new editorial merged copy invalidates WRITING status');
+assert.equal((await request('/api/v1/books/'+mergeBookId+
+ '/chapters/'+mergedId,{cookie:outsider})).status,404);
+const mergedNextEdition=await request('/api/v1/books/'+mergeBookId+'/editions',{
+ method:'POST',cookie:author,body:{
+ confirm:'CREATE_EDITION_FROM_SAVED',
+ expectedEditionId:mergeEditionAfter.data.currentEditionId,
+ expectedUpdatedAt:mergeEditionAfter.data.expectedUpdatedAt
+ }});
+assert.equal(mergedNextEdition.status,201);
+assert.equal((await request(mergePath,{method:'POST',cookie:author,
+ body:mergeBody})).status,404,'old edition chapters cannot be merged into current');
+
 // BS-004h: copy exact saved text across TWO different books of SAME workspace.
 // Access to source or destination in a different workspace must fail closed.
 const crossSource=await request('/api/v1/books',{method:'POST',cookie:author,

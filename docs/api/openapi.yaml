@@ -597,3 +597,51 @@ paths:
         '413': {description: Corps de requête > 4096 octets}
         '422': {description: Chapitres ou volume source hors limites, aucun texte tronqué}
         '503': {description: Transaction indisponible}
+
+
+  /books/{bookId}/chapters/{chapterId}/merge:
+    post:
+      summary: Créer un troisième chapitre depuis deux révisions sauvegardées sans supprimer les sources
+      description: >-
+        Session, workspace OWNER/EDITOR et Origin anti-CSRF. Deux chapitres
+        actifs et distincts de la dernière édition, premier toujours chapitre
+        de l'URL, second explicite. Verrou du livre puis transaction Serializable.
+        Préconditions de l'édition et des deux révisions/updatedAt. Concaténation
+        exacte des blocs ProseMirror racines, sans HTML ni intervention IA,
+        nouveau UUID, révision 0, dernière position et livre DRAFT. Source,
+        commentaires, versions, snapshots, imports, Storage et preuves antivirus
+        inchangés ; aucune permission ajoutée. Idempotence operationId UUID
+        et audit sans prose avec hash de paramètres. Max 500 chapitres actifs,
+        2 MiB JSON ProseMirror + complexité validateur, aucun texte tronqué.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, expectedEditionId, expectedFirstRevision, expectedFirstUpdatedAt, expectedSecondRevision, expectedSecondUpdatedAt, operationId, secondChapterId, title]
+              properties:
+                confirm: {type: string, const: MERGE_SAVED_CHAPTERS_AS_NEW}
+                secondChapterId: {type: string, format: uuid}
+                operationId: {type: string, format: uuid}
+                title: {type: string, minLength: 2, maxLength: 180}
+                expectedEditionId: {type: string, format: uuid}
+                expectedFirstRevision: {type: integer, minimum: 0}
+                expectedFirstUpdatedAt: {type: string, format: date-time}
+                expectedSecondRevision: {type: integer, minimum: 0}
+                expectedSecondUpdatedAt: {type: string, format: date-time}
+      responses:
+        '201': {description: Nouveau chapitre id/title/revision/position, bookId et replayed false}
+        '200': {description: Replay idempotent du même operationId et de la même instruction, replayed true}
+        '400': {description: Schéma, titre, confirmation, UUID invalides ou deux chapitres identiques}
+        '401': {description: Session absente}
+        '403': {description: Origine non autorisée}
+        '404': {description: Livre/chapitre inaccessible ou ancienne édition}
+        '409': {description: Révision, date ou édition obsolète, source invalide ou operationId repris avec autre instruction}
+        '413': {description: Corps requête dépasse 4096 octets}
+        '422': {description: Plafond 500 chapitres ou 2 MiB/20k nœuds, rien tronqué}
+        '503': {description: Transaction interrompue et annulée sans copie partielle}

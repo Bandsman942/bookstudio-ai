@@ -4,6 +4,7 @@ import {createPortal} from 'react-dom';
 import {usePathname,useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
 import ChapterCopyToBookDialog from './ChapterCopyToBookDialog';
+import ChapterMergeDialog from './ChapterMergeDialog';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
@@ -13,7 +14,7 @@ type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revisio
 
 export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable,beforeNavigate,reorder}:Props){
  const {t,locale}=useAppPreferences(),{notify}=useToast();
- const [mode,setMode]=useState<'create'|'rename'|'delete'|'duplicate'|'copy-book'|null>(null);
+ const [mode,setMode]=useState<'create'|'rename'|'delete'|'duplicate'|'copy-book'|'merge'|null>(null);
  const [desired,setDesired]=useState(title),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const router=useRouter(),pathname=usePathname();
  const duplicateOperationRef=useRef<string|null>(null);
@@ -155,8 +156,8 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      notify({tone:'error',title:locale==='fr'?'Copie à vérifier':'Check chapter duplication',detail:msg});
    }finally{setBusy(false);}
  }
- const start=(next:'create'|'rename'|'delete'|'duplicate'|'copy-book')=>{
-   if((next==='create'||next==='delete'||next==='duplicate'||next==='copy-book')&&
+ const start=(next:'create'|'rename'|'delete'|'duplicate'|'copy-book'|'merge')=>{
+   if((next==='create'||next==='delete'||next==='duplicate'||next==='copy-book'||next==='merge')&&
       beforeNavigate?.()===false)return;
    if(next==='duplicate'){
      duplicateOperationRef.current=crypto.randomUUID();
@@ -173,6 +174,8 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
          onSelect:()=>start('duplicate')},
        {label:locale==='fr'?'Copier dans un autre livre…':'Copy to another book…',
          onSelect:()=>start('copy-book')},
+       {label:locale==='fr'?'Fusionner avec un autre chapitre…':'Merge with another chapter…',
+         onSelect:()=>start('merge')},
        ...(reorder?[{label:locale==='fr'?'Monter d’une position':'Move up one position',
          disabled:reorder.index<=0,onSelect:()=>void move('up')},
          {label:locale==='fr'?'Descendre d’une position':'Move down one position',
@@ -183,7 +186,10 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
    {mode==='copy-book'&&<ChapterCopyToBookDialog
      bookId={bookId} chapterId={chapterId} chapterTitle={title}
      beforeNavigate={beforeNavigate} onClose={()=>setMode(null)}/>}
-   {mode&&mode!=='copy-book'&&typeof document!=='undefined'&&createPortal(<div className="modal-backdrop" style={{zIndex:2200}} onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
+   {mode==='merge'&&<ChapterMergeDialog
+     bookId={bookId} firstChapterId={chapterId} firstTitle={title}
+     beforeNavigate={beforeNavigate} onClose={()=>setMode(null)}/>}
+   {mode&&mode!=='copy-book'&&mode!=='merge'&&typeof document!=='undefined'&&createPortal(<div className="modal-backdrop" style={{zIndex:2200}} onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
      <form className="modal" role="dialog" aria-modal="true"
        onKeyDown={event=>{
          if(mode!=='duplicate'||event.key!=='Tab')return;
