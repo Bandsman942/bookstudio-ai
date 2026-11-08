@@ -800,6 +800,140 @@ assert.equal(snapshotRecheck.status,200);
 assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
  'fork leaves historical snapshot byte content/export intact');
 
+// BS-004h: copy exact saved text across TWO different books of SAME workspace.
+// Access to source or destination in a different workspace must fail closed.
+const crossSource=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Source entre deux livres',bookType:'SCIENCE',language:'fr'}});
+const crossTarget=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Destination pour un chapitre',bookType:'MEDICINE',language:'en'}});
+const outsiderTarget=await request('/api/v1/books',{method:'POST',cookie:outsider,
+ body:{title:'Destination autre espace privée',bookType:'SCIENCE',language:'fr'}});
+assert.equal(crossSource.status,201);
+assert.equal(crossTarget.status,201);
+assert.equal(outsiderTarget.status,201);
+const fromBook=crossSource.data.book.id,toBook=crossTarget.data.book.id;
+const fromChapter=crossSource.data.book.chapterId,toOriginalChapter=crossTarget.data.book.chapterId;
+const fromPath='/api/v1/books/'+fromBook+'/chapters/'+fromChapter;
+const transferDoc={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Texte scientifique transférable sans perte, été 2026.'}]}]};
+assert.equal((await request(fromPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:transferDoc}})).status,200);
+const crossComment=await request(fromPath+'/comments',{method:'POST',cookie:author,
+ body:{baseRevision:1,body:'Commentaire privé du chapitre d’origine.'}});
+const crossSnapshot=await request('/api/v1/books/'+fromBook+'/snapshots',{
+ method:'POST',cookie:author,body:{name:'Snapshot original non transférable'}});
+assert.equal(crossComment.status,201);
+assert.equal(crossSnapshot.status,201);
+const targetsPath='/api/v1/books/'+fromBook+'/chapter-copy-targets';
+const targets=await request(targetsPath,{cookie:author});
+assert.equal(targets.status,200);
+assert.ok(targets.data.targets.some(x=>x.id===toBook),
+ 'same-workspace editable destination appears');
+assert.equal(targets.data.targets.some(x=>x.id===fromBook),false,
+ 'source is not offered as its own destination');
+assert.equal(targets.data.targets.some(x=>x.id===outsiderTarget.data.book.id),
+ false,'no target in unrelated workspace exposed');
+assert.equal((await request(targetsPath)).status,401);
+assert.equal((await request(targetsPath,{cookie:outsider})).status,404);
+assert.equal((await request(targetsPath+'?search=Destination%20pour',{cookie:author}))
+ .data.targets.some(x=>x.id===toBook),true,'search by title finds destination');
+assert.equal((await request(targetsPath+'?search=Destination%20autre',{cookie:author}))
+ .data.targets.length,0,'search never reveals outsider title');
+assert.equal((await request(targetsPath+'?search=x&search=y',{cookie:author}))
+ .status,400,'repeated query param rejected');
+const fromEdition=await request('/api/v1/books/'+fromBook+'/editions',{cookie:author});
+const toEdition=await request('/api/v1/books/'+toBook+'/editions',{cookie:author});
+const fromList=await request('/api/v1/books/'+fromBook+'/chapters',{cookie:author});
+assert.equal(fromEdition.status,200);
+assert.equal(toEdition.status,200);
+assert.equal(fromList.status,200);
+const fromRow=fromList.data.chapters.find(x=>x.id===fromChapter);
+assert.equal(fromRow.revision,1);
+const transferPath=fromPath+'/copy-to-book';
+const op=randomUUID();
+const transferBody={
+ confirm:'COPY_CHAPTER_TO_BOOK_SAVED_ONLY',operationId:op,
+ title:'Méthodologie reprise indépendamment',destinationBookId:toBook,
+ expectedSourceEditionId:fromEdition.data.currentEditionId,
+ expectedDestinationEditionId:toEdition.data.currentEditionId,
+ expectedDestinationUpdatedAt:toEdition.data.expectedUpdatedAt,
+ expectedRevision:fromRow.revision,expectedChapterUpdatedAt:fromRow.updatedAt
+};
+assert.equal((await request(transferPath,{method:'POST',body:transferBody})).status,401);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ omitOrigin:true,body:transferBody})).status,403);
+assert.equal((await request(transferPath,{method:'POST',cookie:outsider,
+ body:transferBody})).status,404);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,destinationBookId:outsiderTarget.data.book.id}})).status,404,
+ 'cross-workspace destination rejected before writing');
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,destinationBookId:fromBook}})).status,400,
+ 'same-book transfer refused (use chapter duplicate instead)');
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,confirm:'UNSAFE'}})).status,400);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,operationId:'wrong'}})).status,400);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,expectedRevision:0}})).status,409);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,expectedDestinationEditionId:randomUUID()}})).status,409);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:{...transferBody,expectedDestinationUpdatedAt:'2020-01-01T00:00:00.000Z'}}))
+ .status,409);
+const moved=await request(transferPath,{method:'POST',cookie:author,body:transferBody});
+assert.equal(moved.status,201,'saved cross-book copy creates new chapter');
+assert.equal(moved.data.destinationBookId,toBook);
+assert.equal(moved.data.replayed,false);
+const copiedInto=moved.data.chapter.id;
+assert.notEqual(copiedInto,fromChapter);
+assert.notEqual(copiedInto,toOriginalChapter);
+assert.equal(moved.data.chapter.revision,0);
+const sameTransfer=await request(transferPath,{method:'POST',cookie:author,
+ body:transferBody});
+assert.equal(sameTransfer.status,200,'retry exact operation is idempotent');
+assert.equal(sameTransfer.data.replayed,true);
+assert.equal(sameTransfer.data.chapter.id,copiedInto);
+const toList=await request('/api/v1/books/'+toBook+'/chapters',{cookie:author});
+assert.equal(toList.data.chapters.length,2);
+assert.equal(toList.data.chapters[0].id,toOriginalChapter);
+assert.equal(toList.data.chapters[1].id,copiedInto,
+ 'new chapter appended without moving existing destination chapters');
+const newCrossText=await request('/api/v1/books/'+toBook+'/chapters/'+copiedInto,
+ {cookie:author});
+assert.equal(newCrossText.status,200);
+assert.deepEqual(newCrossText.data.chapter.content,transferDoc);
+assert.equal(newCrossText.data.chapter.revision,0);
+assert.deepEqual((await request(fromPath,{cookie:author})).data.chapter.content,
+ transferDoc,'source chapter content untouched');
+const crossCopyComments=await request('/api/v1/books/'+toBook+
+ '/chapters/'+copiedInto+'/comments',{cookie:author});
+assert.deepEqual(crossCopyComments.data.comments,[],'source comments are not copied');
+const crossCopyRevisions=await request('/api/v1/books/'+toBook+
+ '/chapters/'+copiedInto+'/revisions',{cookie:author});
+assert.deepEqual(crossCopyRevisions.data.revisions.map(x=>x.sequence),[0]);
+const targetSnapshotsAfter=await request('/api/v1/books/'+toBook+'/snapshots',
+ {cookie:author});
+assert.equal(targetSnapshotsAfter.data.snapshots.length,0);
+const sourceSnapshotsAfter=await request('/api/v1/books/'+fromBook+'/snapshots',
+ {cookie:author});
+assert.equal(sourceSnapshotsAfter.data.snapshots.some(x=>x.id===crossSnapshot.data.snapshot.id),true);
+const destinationAfter=await request('/api/v1/books/'+toBook+'/editions',
+ {cookie:author});
+assert.equal(destinationAfter.data.status,'DRAFT',
+ 'target returns to editorial draft after copying a chapter');
+assert.equal((await request('/api/v1/books/'+toBook+'/chapters/'+copiedInto,
+ {cookie:outsider})).status,404);
+const nextFrom=await request('/api/v1/books/'+fromBook+'/editions',
+ {method:'POST',cookie:author,body:{
+ confirm:'CREATE_EDITION_FROM_SAVED',
+ expectedEditionId:fromEdition.data.currentEditionId,
+ expectedUpdatedAt:fromEdition.data.expectedUpdatedAt}});
+assert.equal(nextFrom.status,201);
+assert.equal((await request(transferPath,{method:'POST',cookie:author,
+ body:transferBody})).status,404,
+ 'historical-edition source chapter cannot be copied');
+
 // BS-004g: duplicate a saved chapter into a NEW independent chapter at the
 // end of its CURRENT edition. Never copy comments, provenance or snapshots.
 const chapterDupBook=await request('/api/v1/books',{method:'POST',cookie:author,
