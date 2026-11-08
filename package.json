@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",
@@ -11,7 +11,7 @@
     "dev": "pnpm --filter @bookstudio/web dev",
     "build": "pnpm --filter @bookstudio/web build",
     "typecheck": "pnpm --filter @bookstudio/web typecheck",
-    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check && pnpm manuscript-ui:check && pnpm docx:check && pnpm reviewed-docx:check && pnpm docx-split:check && pnpm docx-batch:check && pnpm docx-full:check && pnpm source-scan:check && pnpm scan-queue:check && pnpm scan-worker:check && pnpm toasts:check && pnpm chapter-order:check && pnpm library-paging:check && pnpm book-progress:check && pnpm edition-diff:check && pnpm snapshot-fork:check && pnpm chapter-history:check && pnpm chapter-diff:check && pnpm chapters-ux:check",
+    "test": "node --experimental-strip-types --test packages/domain/tests/*.test.mjs && pnpm prefs:check && pnpm test:export && pnpm editor:check && pnpm storage:check && pnpm manuscript-ui:check && pnpm docx:check && pnpm reviewed-docx:check && pnpm docx-split:check && pnpm docx-batch:check && pnpm docx-full:check && pnpm source-scan:check && pnpm scan-queue:check && pnpm scan-worker:check && pnpm toasts:check && pnpm chapter-order:check && pnpm library-paging:check && pnpm book-progress:check && pnpm edition-diff:check && pnpm snapshot-fork:check && pnpm chapter-history:check && pnpm chapter-diff:check && pnpm book-duplicate:check && pnpm chapters-ux:check",
     "test:worker": "python -m unittest discover -s apps/worker-documents/tests -v",
     "db:generate": "pnpm --filter @bookstudio/database generate",
     "db:migrate": "pnpm --filter @bookstudio/database migrate",
@@ -41,6 +41,7 @@
     "library-paging:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/library-paging.test.mjs",
     "chapter-order:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/chapter-order.test.mjs",
     "chapters-ux:check": "node tools/check-chapters-ux.mjs",
-    "toasts:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/notification-copy.test.mjs && node tools/check-notification-system.mjs"
+    "toasts:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/notification-copy.test.mjs && node tools/check-notification-system.mjs",
+    "book-duplicate:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/book-duplicate.test.mjs"
   }
 }
