@@ -73,3 +73,7 @@ Manifeste prépublication : `docs/releases/v0.27.0.md`, `docs/guides/CHAPITRES.m
 ## v0.28.0-alpha — menus vidéo et comparaison d'éditions
 
 Preuve documentaire requise avant tout déploiement : `docs/releases/v0.28.0.md`, guide, conception `docs/design/EDITION-COMPARISON.md` et `docs/design/ACTIONS-CONTEXTUELLES.md`, OpenAPI, exploitation, recette `docs/qa/E2E-EDITION-COMPARE-MENU-0.28.0.md` et roadmap. Exécuter `pnpm release:check`, `pnpm edition-diff:check`, `pnpm ui:check`, HTTP E2E multi-tenant, typecheck et build sur le dernier SHA. Le film utilisateur documente la régression : vérifier **toutes les modales de livre** après ouverture depuis une carte survolée ; pas de modale limitée à la carte. L'API de comparaison ne doit jamais renvoyer de prose ni de hashes. Attendre E2E propriétaire `v0.28.0-alpha BON`, snapshot Neon, fusion main et Vercel production-only Preview OFF. ClamAV OFF.
+
+## Candidate v0.29.0-alpha — restauration non destructive historique
+
+Ajouter **avant déploiement** les six pièces du manifeste `docs/releases/v0.29.0.md`, y compris design `docs/design/SNAPSHOT-FORK-0.29.0.md`, QA `docs/qa/E2E-SNAPSHOT-FORK-0.29.0.md`, OpenAPI, guide, exploitation et roadmap. Contrôles CI : `pnpm release:check`, `pnpm snapshot-fork:check`, E2E HTTP, sécurité ACL/CSRF, typecheck et build. Aucun déploiement sans **E2E propriétaire v0.29 BON** et CI du dernier commit, snapshot Neon protégé avant fusion, puis Vercel production uniquement depuis main. ClamAV OFF.

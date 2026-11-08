@@ -1,0 +1,18 @@
+# BS-008c — restauration d’un snapshot en **nouvelle édition** (v0.29.0-alpha)
+
+## Intention et invariants
+La restauration en place `POST .../restore` existait mais ne pouvait rétablir un snapshot **d’une édition historique** (mismatch editionId), et n’ajoutait pas de nouveaux chapitres disparus. Le nouvel itinéraire `POST /api/v1/books/{bookId}/snapshots/{snapshotId}/restore-as-edition` choisit explicitement **de créer une édition**, sans modifier aucune ancienne révision. L’ancienne restauration en place reste disponible séparément ; la nouvelle commande est préférée pour un snapshot ancien.
+
+- Réutilise le manifeste immutable `bookstudio.snapshot.v1` (édition source, ID, titre, ordre, séquence et empreinte stockée de chaque chapitre actif au moment de la version).
+- Revalidation du SHA256 du manifeste par `manifestHash` et de l’empreinte *stockée* de chaque révision historique ; chaque chapitre doit appartenir au manuscrit de l’édition source du même livre. Les révisions peuvent provenir de chapitres depuis retirés : leur état courant ne change pas.
+- Les anciens `contentHash` représentent le JSON sérialisé **avant** stockage JSONB. PostgreSQL peut réordonner les clés : ne pas recalculer naïvement l’empreinte sur la relecture JSONB. Les limites de vérification sont explicites ; pas de promesse d’intégrité cryptographique indépendante des données déjà stockées.
+- Préflight de 500 chapitres / 20 MiB JSON + texte ; positions uniques et non négatives, titres non vides, révisions présentes. Pas de troncature ni succès partiel. La copie atomique alloue des UUID neufs et révisions `sequence=0` ; le numéro d’édition croît strictement, langue héritée de l’édition source.
+- Transaction PostgreSQL `Serializable`, double token client `expectedUpdatedAt` et `expectedEditionId`, `updateMany` conditionnel sur le livre, contrainte unique `(bookId,number)`, erreurs de conflits en 409. Audit `BOOK_SNAPSHOT_FORKED_TO_EDITION` sans prose/hash.
+- La nouvelle édition devient courante avec statut `DRAFT` ; ni commentaires, ni ancres, ni provenance Supabase, ni verdict antivirus, ni approbations ne sont transférés. L’édition précédente, les sources, révisions et snapshots restent inchangés.
+- Sessions et RBAC `OWNER/EDITOR` revérifiés dans la transaction, Origin exact (CSRF), corps limité, cache `private,no-store` ; les outsiders ont 404 et aucun manuscrit n’est renvoyé dans la réponse.
+
+## Correction préventive d’un conflit multi-onglets
+Le PATCH de sauvegarde des chapitres vérifiait le chapitre courant *avant* sa transaction, puis écrivait uniquement par ID et séquence. Après changement d’édition, un ancien onglet déjà ouvert pouvait théoriquement éditer un chapitre de l’édition précédente. Désormais, la transaction de sauvegarde acquiert `FOR UPDATE` sur la ligne livre avant de résoudre l’édition courante, revalide RBAC et exige `manuscriptId` courant dans l’UPDATE. Une écriture déphasée échoue (409 ou 404 si déjà historique), jamais silencieusement.
+
+## Exploitation et rollback
+Aucune migration Prisma, variable secrète, nouveau worker, objet Storage ou appel IA. L’activation du scanner ClamAV reste interdite. En cas d’échec d’une copie, l’intégralité de la transaction est annulée ; aucun nettoyage manuel ni rollback de données n’est nécessaire. Pour rollback de code après publication, vérifier avant tout l’évolution des éditions et conserver les nouvelles éditions créées : ne jamais revenir à un schéma qui les supprimerait. Surveiller latence transactionnelle, taux de 409/422/503, erreurs PostgreSQL P2034, conflits d’autosauvegarde, survol/mobile, et absence de données sources dans logs/API.

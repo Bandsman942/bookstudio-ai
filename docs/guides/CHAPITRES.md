@@ -135,3 +135,15 @@ Les commandes **Renommer**, **Modifier les propriétés**, **Faire évoluer le s
 ### English
 
 In Book Overview → Editions → **Compare editions**, choose two different editions and compare their saved chapter title/order/content fingerprints. The result shows unchanged, changed, added and removed chapters. No content is modified, transmitted to AI or exposed through the comparison API. Ambiguous title-and-content rewrites are not automatically assumed to represent the same chapter. Max 350 active chapters per edition. Book ⋯ actions now open viewport-level dialogs outside transformed book cards, on desktop and mobile.
+
+## 12. Restaurer une ancienne version dans une nouvelle édition (candidate v0.29.0-alpha)
+
+1. Dans **Vue d'ensemble → Versions & historique**, repérez la version nommée à réutiliser (l’étiquette d’**édition source** précise si elle est historique).
+2. Sur son menu **⋯**, choisissez **Restaurer dans une nouvelle édition**. Cette action diffère de **Restaurer** qui remet des révisions dans l’édition actuelle et ne convient pas aux snapshots d’une ancienne édition.
+3. Lisez la confirmation. **Enregistrez d’abord vos éventuelles modifications non sauvegardées**. La création reprend uniquement les textes/titres/ordres **mémorisés lors du snapshot**, et non les dernières révisions du livre. Elle crée une édition avec ses nouveaux identifiants et statut **Brouillon**.
+4. Vérifiez la nouvelle édition dans le catalogue. Les anciennes éditions, commentaires, révisions et snapshots restent consultables et exportables. Les commentaires, sources importées et approbations ne sont **pas copiés** vers la nouvelle édition.
+5. Si vous recevez un 409, rechargez : un autre onglet a pu modifier le livre ou la version est incohérente. Au-delà de 500 chapitres/20 Mio, aucune copie partielle n’est faite. Cette opération nécessite OWNER/EDITOR.
+
+### English
+
+From **Book overview → Versions & history → ⋯ → Restore into a new edition**, select a named snapshot, including one from an earlier edition. After confirmation, BookStudio creates independent chapter IDs and initial revisions containing **exactly the saved snapshot content**; old editions and history remain untouched. The book returns to Draft. Unsaved edits, comments, imported sources and approvals are not copied. Existing **Restore** is a separate in-place action for the current edition. Stale tabs receive conflicts and must refresh. This direct copy supports at most 500 chapters / 20 MiB. Only OWNER/EDITOR may execute.

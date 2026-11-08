@@ -303,3 +303,42 @@ paths:
         '409': {description: Dernière révision d'un chapitre incohérente}
         '422': {description: Plus de 350 chapitres actifs dans une édition}
         '503': {description: Comparaison temporairement indisponible}
+
+
+  /books/{bookId}/snapshots/{snapshotId}/restore-as-edition:
+    post:
+      summary: Recréer un snapshot nommé (même ancien) dans une édition indépendante
+      description: >-
+        Crée atomiquement des chapitres et révisions 0 dans une nouvelle édition
+        courante sans écraser aucun manuscrit existant. OWNER/EDITOR uniquement,
+        Origin CSRF, double précondition sur le livre et son édition courante,
+        manifeste SHA256 et révisions référencées contrôlés. Le statut revient à
+        DRAFT, aucune source externe/commentaire/validation copiée. Les versions
+        historiques restent accessibles et exportables. Sans prose dans la réponse.
+        Limites synchrones 500 chapitres et 20 MiB. L'ancienne restauration en
+        place reste séparée et requiert les numéros de révision courants.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: snapshotId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, expectedEditionId, expectedUpdatedAt]
+              properties:
+                confirm: {type: string, const: RESTORE_SNAPSHOT_AS_NEW_EDITION}
+                expectedEditionId: {type: string, format: uuid}
+                expectedUpdatedAt: {type: string, format: date-time}
+      responses:
+        '201': {description: 'edition: id, number, language, chapterCount ; sourceSnapshotId'}
+        '400': {description: Confirmation, ID, date ou propriété invalide}
+        '401': {description: Session absente}
+        '403': {description: Origine CSRF invalide}
+        '404': {description: Livre/snapshot absent, archivé ou non autorisé}
+        '409': {description: Edition modifiée ou snapshot/source incomplet ou corrompu}
+        '413': {description: Corps JSON supérieur à 2048 octets}
+        '422': {description: Snapshot trop volumineux pour copie synchrone}
+        '503': {description: Indisponibilité temporaire sans écriture partielle}

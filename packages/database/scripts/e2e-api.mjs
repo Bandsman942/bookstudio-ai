@@ -739,6 +739,67 @@ assert.equal(editionSnapshotExport.status,200,
   'old named snapshot remains exportable after creating new edition');
 assert.ok((await editionSnapshotExport.text()).includes('Premier paragraphe'),
   'old snapshot bytes unchanged after new edition');
+// BS-008c: restore the OLD snapshot into a completely new current edition.
+const forkPath=versionsPath+'/'+snapshotId+'/restore-as-edition';
+const beforeFork=await request(editionsPath,{cookie:author});
+const forkBody={confirm:'RESTORE_SNAPSHOT_AS_NEW_EDITION',
+ expectedEditionId:beforeFork.data.currentEditionId,
+ expectedUpdatedAt:beforeFork.data.expectedUpdatedAt};
+const snapshotInventory=await request(versionsPath,{cookie:author});
+assert.equal(snapshotInventory.data.snapshots.find(s=>s.id===snapshotId).editionNumber,1,
+  'snapshot source edition number disclosed without manuscript prose');
+assert.equal((await request(forkPath,{method:'POST',body:forkBody})).status,401,
+  'fork requires authenticated session');
+assert.equal((await request(forkPath,{method:'POST',cookie:outsider,body:forkBody})).status,404,
+  'fork cannot cross workspace membership');
+assert.equal((await request(forkPath,{method:'POST',cookie:author,omitOrigin:true,
+ body:forkBody})).status,403,'snapshot fork requires Origin');
+assert.equal((await request(forkPath,{method:'POST',cookie:author,body:{
+ ...forkBody,confirm:'RESTORE'}})).status,400,'fork requires explicit mode confirmation');
+assert.equal((await request(versionsPath+'/'+randomUUID()+'/restore-as-edition',{
+ method:'POST',cookie:author,body:forkBody})).status,404,'unknown snapshot rejected');
+assert.equal((await request(forkPath,{method:'POST',cookie:author,body:{
+ ...forkBody,expectedEditionId:firstEditionId}})).status,409,
+ 'fork refuses outdated current edition ID');
+const forked=await request(forkPath,{method:'POST',cookie:author,body:forkBody});
+assert.equal(forked.status,201,'historical snapshot fork created a new edition');
+assert.equal(forked.data.edition.number,3);
+assert.equal(forked.data.edition.chapterCount,1,
+ 'only chapters in named snapshot are restored');
+assert.equal(forked.data.sourceSnapshotId,snapshotId);
+assert.equal(JSON.stringify(forked.data).includes('Premier paragraphe'),false,
+ 'fork response never exposes source manuscript prose');
+const afterFork=await request(editionsPath,{cookie:author});
+assert.equal(afterFork.data.editions.length,3);
+assert.equal(afterFork.data.currentEditionId,forked.data.edition.id);
+assert.equal(afterFork.data.status,'DRAFT');
+const newForkChapters=await request('/api/v1/books/'+bookId+'/chapters',{cookie:author});
+assert.equal(newForkChapters.data.chapters.length,1);
+const forkChapterId=newForkChapters.data.chapters[0].id;
+assert.notEqual(forkChapterId,chapterId,'snapshot chapter gets a distinct ID');
+assert.notEqual(forkChapterId,copiedId,'second edition ID is not reused');
+const forkedDocument=await request('/api/v1/books/'+bookId+'/chapters/'+forkChapterId,{cookie:author});
+assert.equal(forkedDocument.status,200);
+assert.equal(forkedDocument.data.chapter.revision,0);
+assert.deepEqual(forkedDocument.data.chapter.content,doc,
+ 'exact old snapshot content restored, NOT newer edition content');
+assert.equal((await request('/api/v1/books/'+bookId+'/chapters/'+copiedId,{cookie:author})).status,404,
+ 'old editor tab cannot access historical chapter as current');
+const secondEditionHistory=await request(editionsPath+'/'+duplicated.data.edition.id+
+ '/chapters/'+copiedId,{cookie:author});
+assert.equal(secondEditionHistory.status,200);
+assert.ok(secondEditionHistory.data.chapter.text.includes('seconde édition'),
+ 'second edition content preserved after snapshot fork');
+const retryFork=await request(forkPath,{method:'POST',cookie:author,body:forkBody});
+assert.equal(retryFork.status,409,'repeated submission cannot duplicate a new edition');
+const afterRetry=await request(editionsPath,{cookie:author});
+assert.equal(afterRetry.data.editions.length,3,'stale retry produced no side effects');
+const snapshotRecheck=await fetch(base+versionsPath+'/'+snapshotId+'/export?format=md',
+ {headers:{Cookie:author}});
+assert.equal(snapshotRecheck.status,200);
+assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
+ 'fork leaves historical snapshot byte content/export intact');
+
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});

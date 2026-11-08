@@ -93,3 +93,10 @@ Sous-issue #148 : éditions multiples, copie non destructive et consultation his
 - Tests unitaires, contrôle UI structurel, HTTP E2E multi-tenant et sauvegardes, documentation complète **dans la PR avant CI finale et publication**.
 - Non inclus : alignement certain d'anciens chapitres renommés et entièrement réécrits, diff riche caractère par caractère, copies asynchrones >350 chapitres, publication externe. À suivre via #9 et le reste du cahier des charges.
 - Sécurité ClamAV hôte dédié non installé ; #104/#126/#131/#133 restent ouvertes et flags OFF.
+
+## P0 BS-008c #155 — restauration historique conservatrice (candidate v0.29.0-alpha)
+
+- Snapshot v1 d’une ancienne édition → création d’une édition indépendante à partir des révisions réellement mémorisées, même si certains chapitres sources ont été retirés ; pas de modification des anciens manuscrits.
+- Édition courante et mise à jour du livre protégées par préconditions et transaction sérialisable ; garde additionnel sur PATCH chapitre pour refuser l’écriture depuis un onglet d’une édition historique.
+- UI FR/EN, confirmation forte, provenance d’édition de la version, toasts 409/422, E2E négatifs, documentation *avant publication*.
+- **Non inclus** : merge bidirectionnel, diff mot à mot, >500 chapitres/20MiB, remise en place automatique des commentaires/ancres, restauration de source externe ni sécurité antivirus. Parent #9 reste ouvert, ClamAV différé.

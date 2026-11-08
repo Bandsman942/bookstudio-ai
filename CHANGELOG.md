@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.29.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-008c #155 — restaurer une version historique dans une nouvelle édition
+- Nouvelle commande « Restaurer dans une nouvelle édition » depuis Versions & historique : copie exacte des révisions référencées, y compris des chapitres retirés depuis ; nouvelles IDs, numéro d’édition croissant, ancien historique et snapshots intacts.
+- API POST privée transactionnelle, contrôle de manifeste/hash stockés, limitation 500 chapitres/20 Mio, RBAC et CSRF, préconditions 409, audit sans manuscrit ; UI FR/EN mobile et toasts contextuels.
+- Garde de concurrence sur l’autosauvegarde : impossible d’écrire sur un chapitre qui a basculé dans une édition historique via un onglet ouvert.
+- Guide, architecture, OpenAPI, exploitation, QA et roadmap actualisés **avant tout déploiement**. ClamAV toujours désactivé.
+
 ## [0.28.0] — alpha candidate (NON DÉPLOYÉE)
 ### BS-008b #152 et UI #151 — comparaison non destructive et menus d'ouvrages
 - Comparaison de deux éditions d'un livre sur le titre, la position et l'empreinte de la **dernière révision enregistrée** de chaque chapitre actif : nombre de chapitres inchangés, modifiés, renommés, déplacés, ajoutés et absents ; aucun texte manuscrit ni hash brut exposé par cette API.
