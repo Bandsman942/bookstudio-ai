@@ -123,3 +123,7 @@ Comparaison lecture seule de deux révisions enregistrées **d'un chapitre de l'
 ## Livraison confirmée v0.31.0-alpha — 8 novembre 2026
 
 BS-008e issue #161 / PR #162 livrée après E2E propriétaire BON et CI #221 SUCCESS au dernier SHA, snapshot Neon protégé `snap-patient-resonance-bf5rw81g` avant fusion, main `6a4814e6c1ca3056c382294c6e27cf8804835225` ; Vercel production `dpl_8zRQx6evd9nZc51cFsXD5kRpCJQf` READY, santé/version HTTP 200 et DB ready. Voir `docs/deployments/2026-11-08-v0.31.0-alpha.md`. Parent #9 ouvert pour fonctionnalités restantes. ClamAV OFF.
+
+## Candidate P0 BS-004f #164 — duplication d'un ouvrage (v0.32.0-alpha)
+
+Créer un livre DRAFT indépendant à partir des chapitres actifs de l'édition courante et de leur dernière révision **sauvegardée**. Duplication via menu ⋯ FR/EN et API privée transactionnelle, idempotente, bornée, multi-tenant, sans modifier l'original. Ne **pas** copier les sources/objets Supabase, historique des imports, antivirus et jobs de scan, commentaires, snapshots, anciennes éditions, autorisations ou publication. UI mobile, toasts contextualisés et parcours E2E. P0 principal #5 encore ouvert après cette tranche, autres critères de gestion des livres à poursuivre ; sécurité ClamAV reportée.
