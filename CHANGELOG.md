@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.33.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.33.0] — alpha privée livrée le 8 novembre 2026 (PR #168, CI #235)
 ### BS-004g #167 — duplication sûre d'un chapitre courant
 - Menu ⋯ des chapitres : **Dupliquer ce chapitre…**, nouveau titre, confirmation des exclusions, FR/EN, mobile et clavier. La copie indépendante est ajoutée à la fin du manuscrit avec un nouveau UUID et révision 0.
 - JSON structuré, texte et hash exacts de la dernière révision **sauvegardée** ; original et snapshots inchangés. Aucun héritage de commentaires, ancrages, imports, source Supabase, historiques, droits ou attestations antivirus. Statut du livre réinitialisé à DRAFT.
