@@ -12,7 +12,7 @@ export default async function ChapterPage({params}:{params:Promise<{bookId:strin
   const revision=await prisma.documentRevision.findUnique({where:{chapterId_sequence:{chapterId,sequence:chapter.revisionSeq}}});
   if(!revision)notFound();
   const canEdit=canWriteBook(book);
-  return <StudioEditor key={chapterId} bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
+  return <StudioEditor key={chapterId+':'+chapter.revisionSeq} bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
     revision={chapter.revisionSeq} initialContent={revision.content as Record<string,unknown>}
     chapters={chapters.map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} orderToken={chapterOrderToken(chapters)} canEdit={canEdit}/>;
 }

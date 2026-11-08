@@ -342,3 +342,75 @@ paths:
         '413': {description: Corps JSON supérieur à 2048 octets}
         '422': {description: Snapshot trop volumineux pour copie synchrone}
         '503': {description: Indisponibilité temporaire sans écriture partielle}
+
+
+  /books/{bookId}/chapters/{chapterId}/revisions:
+    get:
+      summary: Historique privé paginé des révisions enregistrées du chapitre courant
+      description: >-
+        Appartenance au workspace requise. Ne retourne aucun manuscrit ni hash ;
+        séquence, date et nom de l'auteur uniquement. Navigation keyset décroissante,
+        limite 20 par défaut/50 maximum. Pas de lecture d'un chapitre d'édition historique
+        par ce chemin : utiliser l'API historique d'éditions distincte.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 50, default: 20}}
+        - {name: before, in: query, schema: {type: integer, minimum: 0}}
+      responses:
+        '200': {description: 'chapterId, title, currentRevision, revisions[] (sequence, createdAt, authorName), nextBefore'}
+        '400': {description: Paramètre de pagination ou identifiant invalide}
+        '401': {description: Non connecté}
+        '404': {description: Livre ou chapitre courant inaccessible}
+        '503': {description: Erreur de consultation du registre}
+  /books/{bookId}/chapters/{chapterId}/revisions/{sequence}:
+    get:
+      summary: Aperçu en texte brut de la révision historique enregistrée
+      description: >-
+        Lecture sur demande, après contrôle session/workspace/édition courante,
+        texte brut rendu échappé par le client. Cache private/no-store.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: sequence, in: path, required: true, schema: {type: integer, minimum: 0}}
+      responses:
+        '200': {description: 'revision: sequence, title, authorName, recordedAt, text, isCurrent'}
+        '400': {description: Numéro de révision invalide}
+        '401': {description: Session absente}
+        '404': {description: Révision hors du chapitre/édition courante, introuvable}
+        '409': {description: Source de révision manquante ou incohérente}
+        '503': {description: Lecture temporairement indisponible}
+    post:
+      summary: Restaurer une ancienne révision dans une NOUVELLE révision courante
+      description: >-
+        OWNER/EDITOR, confirmation RESTORE_CHAPTER_REVISION, expectedRevision exact,
+        Origin anti-CSRF. Verrou livre FOR UPDATE puis contrôle de l'édition courante
+        sous transaction Serializable. Copie sans mutation de la révision source,
+        incrément de séquence, audit auteur/date/fromSequence/toSequence (sans prose),
+        statut livre DRAFT. Ancien onglet déphasé refuse 404/409. Rejet du numéro
+        courant 422. Historique original intact; pas de réécriture IA.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: sequence, in: path, required: true, schema: {type: integer, minimum: 0}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, expectedRevision]
+              properties:
+                confirm: {type: string, const: RESTORE_CHAPTER_REVISION}
+                expectedRevision: {type: integer, minimum: 0}
+      responses:
+        '200': {description: 'ok=true, revision=nouvelle séquence, restoredFrom=ancienne séquence'}
+        '400': {description: Confirmation/champs/numéro incorrect}
+        '401': {description: Session absente}
+        '403': {description: Origine de requête interdite}
+        '404': {description: Livre/chapitre courant absent ou droits insuffisants}
+        '409': {description: Conflit de version ou source de révision invalide}
+        '413': {description: Corps JSON dépasse 2048 octets}
+        '422': {description: La révision choisie est déjà la révision courante}
+        '503': {description: Incident DB, aucun état partiel enregistré}

@@ -64,3 +64,7 @@ Avant PR/livraison : `pnpm release:check && pnpm test && pnpm typecheck && pnpm 
 
 ## Prochaine version en recette (NON DÉPLOYÉE)
 - **v0.29.0-alpha livrée** : restauration d'un snapshot historique dans une édition indépendante, sans écraser les précédentes, avec prévention des sauvegardes tardives sur des chapitres devenus historiques (#155). [Release candidate](docs/releases/v0.29.0.md) · [E2E](docs/qa/E2E-SNAPSHOT-FORK-0.29.0.md). Livrée après CI #210, validation propriétaire, snapshot Neon et déploiement Vercel READY ; ClamAV différé.
+
+## Prochaine candidate v0.30.0-alpha — NON DÉPLOYÉE
+
+Historique paginé de toutes les révisions sauvegardées d'un chapitre, aperçus privés et restauration non destructive vers une nouvelle révision depuis le Studio (#158). Tests unitaires/HTTP E2E et documentation obligatoires dans la PR ; ne pas fusionner ni déployer avant `E2E v0.30.0-alpha BON`, snapshot Neon et CI finale. Les versions précédentes restent immuables et ClamAV reste OFF. [Documentation QA](docs/qa/E2E-CHAPTER-HISTORY-0.30.0.md).
