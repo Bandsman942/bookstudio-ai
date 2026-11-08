@@ -127,3 +127,7 @@ BS-008e issue #161 / PR #162 livrée après E2E propriétaire BON et CI #221 SUC
 ## Candidate P0 BS-004f #164 — duplication d'un ouvrage (v0.32.0-alpha)
 
 Créer un livre DRAFT indépendant à partir des chapitres actifs de l'édition courante et de leur dernière révision **sauvegardée**. Duplication via menu ⋯ FR/EN et API privée transactionnelle, idempotente, bornée, multi-tenant, sans modifier l'original. Ne **pas** copier les sources/objets Supabase, historique des imports, antivirus et jobs de scan, commentaires, snapshots, anciennes éditions, autorisations ou publication. UI mobile, toasts contextualisés et parcours E2E. P0 principal #5 encore ouvert après cette tranche, autres critères de gestion des livres à poursuivre ; sécurité ClamAV reportée.
+
+## Livraison vérifiée v0.32.0-alpha — 8 novembre 2026
+
+Issue BS-004f #164 livrée en PR #165 : propriétaire E2E BON, CI #229 SUCCESS dernier SHA, snapshot Neon protégé `snap-withered-cherry-bf4adqt3` créé **avant** fusion, main `1407b6b0912573466da6957342a1a1636080a994`, Vercel `dpl_AqPhxQQFwMDdVSY1tj1RR1q3d7ix` READY, sondes `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 0.32.0-alpha. Voir journal `docs/deployments/2026-11-08-v0.32.0-alpha.md`. Le parent #5 reste ouvert ; ClamAV OFF.
