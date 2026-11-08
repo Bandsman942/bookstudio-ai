@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.26.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.26.0] — alpha privée livrée le 8 novembre 2026 (PR #146, CI #196/#197)
 ### BS-004e #145 — Progression réelle du manuscrit dans la vue d'ensemble
 - Indicateurs par livre, lecture privée : chapitres actifs et retirés, chapitres avec texte / sans texte, proportion de chapitres contenant du texte, révisions enregistrées et versions nommées.
 - Dernier chapitre modifié et dernière révision enregistrée, liens directs vers les chapitres et versions. Badges « Texte enregistré » / « Pas encore de texte » sur chaque chapitre.
