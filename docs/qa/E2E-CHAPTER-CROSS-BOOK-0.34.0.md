@@ -14,3 +14,5 @@
 10. QA interface : mobile 320/375/768px, FR/EN, clair/sombre, navigation clavier Tab/Escape, toasts contextualisés, recherche en connexion lente, zéro débordement du dialogue.
 
 Avant toute publication : `pnpm release:check`, `pnpm ui:check`, `pnpm perf:check`, `pnpm test` avec `chapter-targets:check`, HTTP E2E PostgreSQL, `pnpm typecheck`, `pnpm build`. Documents guide, conception, OpenAPI, ops, QA, release, changelog et roadmap **dans la PR fonctionnelle**. Après E2E propriétaire BON : snapshot Neon production protégé, merge `main`, Vercel production-only Preview OFF, sondes santé/version et journal postproduction. ClamAV reste OFF.
+
+**Idempotence UX supplémentaire :** après une copie dont la réponse est perdue, rechercher à nouveau le même titre, conserver la même destination, puis réessayer : aucun deuxième chapitre. Passer de B à C puis revenir à B dans la même modale doit conserver l'identifiant de tentative de B, tandis que C possède un identifiant différent. Tester une recherche qui échoue puis réussit sans perte du contexte.

@@ -27,3 +27,7 @@ Un `AuditEvent.action=CHAPTER_COPIED_TO_BOOK` sans prose associe acteur, IDs des
 ## Tests et limites
 
 Tests unitaires `chapter-copy:check`, `chapter-targets:check` et HTTP E2E PostgreSQL privé : deux ouvrages du même espace, source à révision 1, destination existante, autre espace invisible et refusé, titre recherché, ambiguïté paramètre rejetée, création 201, retry 200 même ID, copie exact JSON, nouvelle révision 0, aucun commentaire/snapshot hérité, source intacte, destination DRAFT, 401/403/404/409 et ancienne édition inaccessible. Contrôle `release:check`, UI/perf, typecheck/build dans la PR avant déploiement. Aucune migration ni variable d'environnement supplémentaire. Cette tranche ne déplace ni ne supprime la source, ne réconcilie pas les styles entre ouvrages de langues différentes et ne transfère aucun objet externe.
+
+### Continuité d'idempotence dans le sélecteur
+
+Le dialogue mémorise **un operationId UUID par livre de destination** pendant sa session. Une nouvelle recherche qui conserve la même destination ou une coupure/reconnexion réseau ne change pas cet identifiant ; basculer vers un autre livre crée (ou retrouve) son propre UUID. Si la destination précédente est sélectionnée de nouveau dans la même fenêtre, son UUID est retrouvé pour éviter la duplication accidentelle d'une requête dont la réponse avait été perdue. À la fermeture, les identifiants ne sont plus conservés. Le serveur garde sa propre garantie sous verrou et audit.
