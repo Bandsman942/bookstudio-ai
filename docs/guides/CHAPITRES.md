@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.34.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.35.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -217,3 +217,18 @@ On a chapter's **⋯** menu in the book outline or Studio, select **Duplicate th
 ### English
 
 From a source chapter's **⋯** menu, choose **Copy to another book…** (OWNER/EDITOR). Search for a different editable destination in the **same workspace**, enter a title and confirm. At most 50 books are shown at once; refine the search if more match. A new chapter is appended to the target book with the **latest saved source content**, a new ID and revision 0; destination returns to Draft. The source, its comments, earlier revisions and snapshots remain unchanged. Sources, storage files, import and antivirus records are never transferred. Save local drafts first. Conflicts return 409, oversized copies 422 without truncation; the same operation ID can be safely retried.
+
+## 19. Fusionner deux chapitres en conservant les originaux (candidate v0.35.0-alpha)
+
+La **fusion non destructive** permet de réunir les textes de deux chapitres déjà sauvegardés **dans un troisième chapitre indépendant**. Elle ne supprime jamais les deux sources.
+
+1. Dans le sommaire ou le Studio, ouvrez **⋯ → Fusionner avec un autre chapitre…** sur le chapitre que vous souhaitez voir **en premier** (A). La commande nécessite OWNER/EDITOR.
+2. Dans le dialogue, recherchez et sélectionnez le **deuxième chapitre (B)**, distinct et actif dans l'édition courante, puis choisissez le **titre du nouveau chapitre** (C). Lisez la confirmation : aucun titre de section n'est ajouté automatiquement et aucune suppression des originaux n'a lieu.
+3. **Enregistrez tous vos brouillons ouverts** avant de fusionner. Seules les **dernières révisions sauvegardées sur le serveur** de A et B sont utilisées. Les blocs riches ProseMirror (titres, paragraphes, listes, marques, liens autorisés) sont réunis **dans l'ordre A puis B**, sans analyse IA ni troncature.
+4. Confirmez **Créer un nouveau chapitre fusionné**. Le chapitre **C** s'ouvre, avec un **nouvel identifiant** et une **révision 0**, placé **à la fin du sommaire**, sans déplacer A et B. Le statut de l'ouvrage revient à **Brouillon**. Vous pourrez retoucher et réorganiser C normalement dans le Studio.
+5. Vérifiez que **A et B conservent** leurs versions anciennes, commentaires/ancres, snapshots du livre, imports et sources éventuelles. C ne reçoit **aucun** commentaire, ancien historique, fichier Supabase, attestation antivirus ou permission supplémentaire. ClamAV isolé n'est pas installé et aucune preuve de sécurité n'est déduite.
+6. Si l'édition ou l'un des deux chapitres a changé, **409** sans aucun résultat partiel ; si le document combiné dépasse **2 Mio** ou la complexité de l'éditeur, ou si le livre compte déjà **500 chapitres actifs**, **422 sans troncature**. Après une coupure réseau, répéter strictement la **même opération** avec son identifiant évite les doublons.
+
+### English
+
+Open a chapter's **⋯ → Merge with another chapter…** (OWNER/EDITOR), search for a second active chapter and choose a new title. A completely **new chapter** is appended at the end of the current edition, joining the first source's **saved** ProseMirror blocks followed by the second's, with its own ID and revision 0. Both originals, their revision histories, comments and snapshots are untouched. No imports, files, scans or permissions are inherited. Save local drafts first. The book returns to Draft; stale source/edition returns 409, >2 MiB combined editor document or >500 active chapters returns 422 without truncation. Retry the identical operation safely.

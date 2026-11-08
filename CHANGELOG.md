@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.35.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004i #173 — fusion NON destructive de deux chapitres courants
+- Action « Fusionner avec un autre chapitre… » depuis les menus ⋯ du sommaire et Studio, choix/recherche d'un deuxième chapitre actif, titre personnalisable, confirmation sur les originaux conservés, toasts FR/EN, mobile et clavier.
+- Un chapitre **nouveau** est ajouté en dernière position, révision 0, contenant les blocs ProseMirror complets des **dernières révisions sauvegardées** du premier chapitre suivi du deuxième. Attributs/marques/lignes pris en charge préservés, contenu non tronqué, empreinte recalculée, statut du livre revient DRAFT.
+- Les deux sources, leurs historiques, commentaires, snapshots, imports, objets Supabase et attestations antivirus ne sont jamais supprimés, déplacés ni copiés vers le chapitre fusionné. API sécurisée session/workspace OWNER/EDITOR, Origin anti-CSRF, transaction Serializable et verrou livre, préconditions d'édition et des deux révisions, operationId idempotent et audit IDs + hash seulement.
+- Plafonds du validateur réel : 500 chapitres et document combiné ≤2 MiB / 20 000 nœuds, refus 422 sans troncature. Tests unitaires et HTTP E2E PostgreSQL, guide/design/OpenAPI/QA/ops/release/roadmap mis à jour AVANT publication. ClamAV OFF.
+
+
 ## [0.34.0] — alpha privée livrée le 8 novembre 2026 (PR #171, CI #243)
 ### BS-004h #170 — copier le dernier chapitre sauvegardé dans un autre livre du même espace
 - Commande « Copier dans un autre livre… » sur le menu contextuel de chapitre. Sélecteur privé des ouvrages modifiables du **même workspace**, recherche titre bornée, réponse limitée à 50 résultats avec signal hasMore, refus des destinations hors espace ou archivées.
