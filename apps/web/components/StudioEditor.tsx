@@ -5,6 +5,7 @@ import {EditorContent,useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {safeExternalHref} from '@bookstudio/domain';
 import EditorRibbon from './EditorRibbon';
+import ChapterFindReplacePanel from './ChapterFindReplacePanel';
 import AppIcon from './AppIcon';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
@@ -294,6 +295,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
       </div>
       <div className="studio-actions">
         <span className={'save-state save-'+state}>{!canEdit?t('common.readOnly'):state==='saved'?'✓ '+t('editor.saved'):state==='editing'?'● '+t('editor.modified'):state==='saving'?'◌ '+t('editor.saving'):state==='conflict'?'⚠ '+t('editor.conflict'):state==='offline'?'◌ '+t('editor.offlineDraft'):'⚠ '+t('editor.unsaved')}</span>
+        <ChapterFindReplacePanel editor={editor} chapterTitle={chapterTitle} canEdit={canEdit}
+          canReplaceNow={()=>canEdit&&!conflictRef.current&&!recovery&&
+            state!=='conflict'&&state!=='offline'&&state!=='error'&&
+            (typeof navigator==='undefined'||navigator.onLine)}/>
         <button type="button" className="studio-shortcuts-trigger" title={locale==='fr'?'Raccourcis clavier (?)':'Keyboard shortcuts (?)'}
           aria-label={locale==='fr'?'Aide des raccourcis clavier':'Keyboard shortcuts help'}
           onClick={()=>document.dispatchEvent(new Event('bookstudio-shortcuts-open'))}>?</button>
