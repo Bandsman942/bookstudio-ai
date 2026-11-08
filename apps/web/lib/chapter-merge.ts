@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {Buffer} from 'node:buffer';
 import {assertValidDocument,plainText,MAX_CHAPTER_BYTES} from '@bookstudio/domain';
-import {nextChapterPosition,CHAPTER_COPY_MAX_ACTIVE_CHAPTERS} from './chapter-copy';
+import {nextChapterPosition,CHAPTER_COPY_MAX_ACTIVE_CHAPTERS} from './chapter-copy.ts';
 
 export const CHAPTER_MERGE_MAX_ACTIVE_CHAPTERS=CHAPTER_COPY_MAX_ACTIVE_CHAPTERS;
 export const CHAPTER_MERGE_MAX_BYTES=MAX_CHAPTER_BYTES; // editor's actual max: 2 MiB

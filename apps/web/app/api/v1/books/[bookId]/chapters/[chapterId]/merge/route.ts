@@ -164,6 +164,8 @@ export async function POST(request:Request,{params}:Ctx){
      replayed:outcome.kind==='REPLAY'},
      {status:outcome.kind==='REPLAY'?200:201,headers:HEADERS});
  }catch(error){
+   if(error instanceof Error&&error.message==='CHAPTER_COPY_TOO_LARGE')
+     return errorResponse('CHAPTER_MERGE_TOO_LARGE',422,EMPTY_DETAIL);
    if(error instanceof Error&&error.message==='CHAPTER_MERGE_TOO_LARGE')
      return errorResponse('CHAPTER_MERGE_TOO_LARGE',422,EMPTY_DETAIL);
    if(error instanceof Error&&error.message==='CHAPTER_MERGE_SOURCE_INVALID')
