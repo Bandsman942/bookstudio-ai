@@ -25,6 +25,7 @@ export default function ChapterCopyToBookDialog({
  const [error,setError]=useState('');
  const seqRef=useRef(0),operationRef=useRef<string|null>(null);
  const selectedRef=useRef('');
+ const operationByDestinationRef=useRef(new Map<string,string>());
 
  async function loadDestinations(query:string){
    const seq=++seqRef.current;
@@ -47,12 +48,15 @@ export default function ChapterCopyToBookDialog({
      // the operationId so an interrupted request can replay without duplicates.
      if(next!==selectedRef.current){
        selectedRef.current=next;
-       operationRef.current=window.crypto.randomUUID();
+       const operation=operationByDestinationRef.current.get(next)??
+         window.crypto.randomUUID();
+       if(next)operationByDestinationRef.current.set(next,operation);
+       operationRef.current=operation;
      }
      setSelected(next);
    }catch{
      if(seq!==seqRef.current)return;
-     setTargets([]);setSelected('');selectedRef.current='';setHasMore(false);
+     setTargets([]);setSelected('');setHasMore(false);
      const detail=locale==='fr'?
        'Impossible de charger les ouvrages modifiables de cet espace. Vérifiez votre connexion.':
        'Could not load editable destination books in this workspace. Check your connection.';
@@ -195,7 +199,11 @@ export default function ChapterCopyToBookDialog({
            onChange={event=>{
              selectedRef.current=event.target.value;
              setSelected(event.target.value);
-             operationRef.current=window.crypto.randomUUID();
+             const operation=operationByDestinationRef.current.get(event.target.value)??
+               window.crypto.randomUUID();
+             if(event.target.value)
+               operationByDestinationRef.current.set(event.target.value,operation);
+             operationRef.current=operation;
            }}>
            {targets.length===0&&<option value="">{loading?
              (locale==='fr'?'Chargement…':'Loading…'):
