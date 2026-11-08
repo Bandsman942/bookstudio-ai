@@ -800,6 +800,120 @@ assert.equal(snapshotRecheck.status,200);
 assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
  'fork leaves historical snapshot byte content/export intact');
 
+// BS-004f: a book copy is an independent draft with only the latest saved
+// chapters of the current edition, never the source/comments/snapshots/scans.
+const dupSource=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Ouvrage scientifique à dupliquer',bookType:'SCIENCE',language:'fr'}});
+assert.equal(dupSource.status,201);
+const dupBookId=dupSource.data.book.id,dupChapter1=dupSource.data.book.chapterId;
+const dupFirstPath='/api/v1/books/'+dupBookId+'/chapters/'+dupChapter1;
+const dupText1='Texte original soigneusement sauvegardé.';
+const dupDoc1={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:dupText1}]}]};
+assert.equal((await request(dupFirstPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:dupDoc1}})).status,200);
+const dupAdd=await request('/api/v1/books/'+dupBookId+'/chapters',{
+ method:'POST',cookie:author,body:{title:'Bibliographie détaillée'}});
+assert.equal(dupAdd.status,201);
+const dupChapter2=dupAdd.data.chapter.id;
+const dupDoc2={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Deuxième chapitre de la copie du livre, sans perte.'}]}]};
+assert.equal((await request('/api/v1/books/'+dupBookId+'/chapters/'+dupChapter2,{
+ method:'PATCH',cookie:author,body:{baseRevision:0,content:dupDoc2}})).status,200);
+const dupComment=await request(dupFirstPath+'/comments',{method:'POST',cookie:author,
+ body:{baseRevision:1,body:'Commentaire réservé au livre initial.'}});
+assert.equal(dupComment.status,201);
+const dupSnapshot=await request('/api/v1/books/'+dupBookId+'/snapshots',
+ {method:'POST',cookie:author,body:{name:'Version privée originale'}});
+assert.equal(dupSnapshot.status,201);
+const duplicateMetadata=await request('/api/v1/books/'+dupBookId+'/editions',{cookie:author});
+assert.equal(duplicateMetadata.status,200);
+const dupPath='/api/v1/books/'+dupBookId+'/duplicate';
+const dupOperation=randomUUID();
+const dupBody={confirm:'DUPLICATE_BOOK_FROM_SAVED_EDITION',
+ title:'Copie scientifique indépendante E2E',operationId:dupOperation,
+ expectedEditionId:duplicateMetadata.data.currentEditionId,
+ expectedUpdatedAt:duplicateMetadata.data.expectedUpdatedAt};
+assert.equal((await request(dupPath,{method:'POST',body:dupBody})).status,401);
+assert.equal((await request(dupPath,{method:'POST',cookie:outsider,body:dupBody})).status,404);
+assert.equal((await request(dupPath,{method:'POST',cookie:author,body:dupBody,
+ omitOrigin:true})).status,403);
+assert.equal((await request(dupPath,{method:'POST',cookie:author,body:{...dupBody,
+ confirm:'DUPLICATE_UNSAFE'}})).status,400);
+assert.equal((await request(dupPath,{method:'POST',cookie:author,body:{...dupBody,
+ operationId:'not-a-uuid'}})).status,400);
+assert.equal((await request(dupPath,{method:'POST',cookie:author,body:{...dupBody,
+ expectedEditionId:randomUUID()}})).status,409);
+assert.equal((await request(dupPath,{method:'POST',cookie:author,body:{...dupBody,
+ expectedUpdatedAt:'2020-01-01T00:00:00.000Z'}})).status,409);
+const dupe=await request(dupPath,{method:'POST',cookie:author,body:dupBody});
+assert.equal(dupe.status,201,'create entirely independent duplicate book');
+assert.ok(dupe.data.book.id!==dupBookId);
+assert.equal(dupe.data.book.chapterCount,2);
+assert.equal(dupe.data.replayed,false);
+const copyId=dupe.data.book.id;
+const idempotent=await request(dupPath,{method:'POST',cookie:author,body:dupBody});
+assert.equal(idempotent.status,200,'same requestId retries without duplication');
+assert.equal(idempotent.data.book.id,copyId);
+assert.equal(idempotent.data.replayed,true);
+const dupBooks=await request('/api/v1/books?limit=100',{cookie:author});
+assert.equal(dupBooks.status,200);
+const copySummary=dupBooks.data.books.find(item=>item.id===copyId);
+assert.equal(copySummary.title,'Copie scientifique indépendante E2E');
+assert.equal(copySummary.status,'DRAFT');
+assert.equal(copySummary.bookType,'SCIENCE');
+assert.equal(copySummary.language,'fr');
+assert.equal(dupBooks.data.books.filter(b=>b.id===copyId).length,1);
+const dupNewEditions=await request('/api/v1/books/'+copyId+'/editions',{cookie:author});
+assert.equal(dupNewEditions.status,200);
+assert.equal(dupNewEditions.data.editions.length,1);
+assert.equal(dupNewEditions.data.editions[0].number,1);
+assert.notEqual(dupNewEditions.data.currentEditionId,
+ duplicateMetadata.data.currentEditionId,'different edition identifier');
+const dupOriginalChapters=await request('/api/v1/books/'+dupBookId+'/chapters',{cookie:author});
+const copiedChapters=await request('/api/v1/books/'+copyId+'/chapters',{cookie:author});
+assert.equal(dupOriginalChapters.status,200);
+assert.equal(copiedChapters.status,200);
+assert.equal(copiedChapters.data.chapters.length,2);
+assert.deepEqual(copiedChapters.data.chapters.map(c=>c.title),
+ dupOriginalChapters.data.chapters.map(c=>c.title));
+assert.deepEqual(copiedChapters.data.chapters.map(c=>c.position),
+ dupOriginalChapters.data.chapters.map(c=>c.position));
+for(let i=0;i<2;i++){
+ const originalChapter=dupOriginalChapters.data.chapters[i];
+ const clonedChapter=copiedChapters.data.chapters[i];
+ assert.notEqual(clonedChapter.id,originalChapter.id);
+ assert.equal(clonedChapter.revision,0,'copied chapter starts at revision zero');
+ const from=await request('/api/v1/books/'+dupBookId+'/chapters/'+originalChapter.id,
+  {cookie:author});
+ const to=await request('/api/v1/books/'+copyId+'/chapters/'+clonedChapter.id,
+  {cookie:author});
+ assert.equal(from.status,200);assert.equal(to.status,200);
+ assert.deepEqual(to.data.chapter.content,from.data.chapter.content);
+ assert.equal(to.data.chapter.revision,0);
+}
+const dupNoComments=await request('/api/v1/books/'+copyId+'/chapters/'+
+ copiedChapters.data.chapters[0].id+'/comments',{cookie:author});
+assert.equal(dupNoComments.status,200);
+assert.deepEqual(dupNoComments.data.comments,[],
+ 'editorial comments stay attached only to the source book');
+const dupNoSnapshots=await request('/api/v1/books/'+copyId+'/snapshots',{cookie:author});
+assert.equal(dupNoSnapshots.status,200);
+assert.deepEqual(dupNoSnapshots.data.snapshots,[],
+ 'named snapshots are never inherited by a new book');
+const dupNoFiles=await request('/api/v1/books/'+copyId+'/files',{cookie:author});
+assert.equal(dupNoFiles.status,200);
+assert.deepEqual(dupNoFiles.data.files,[],
+ 'new book has no inherited source object or scan attestation');
+const preservedSnapshot=await request('/api/v1/books/'+dupBookId+'/snapshots',{cookie:author});
+assert.ok(preservedSnapshot.data.snapshots.some(s=>s.id===dupSnapshot.data.snapshot.id),
+ 'original immutable named snapshot unchanged');
+assert.equal((await request('/api/v1/books/'+copyId,{cookie:outsider})).status,404,
+ 'new duplicate is also private to original workspace');
+const origAfterDup=await request('/api/v1/books/'+dupBookId+'/editions',{cookie:author});
+assert.equal(origAfterDup.data.currentEditionId,
+ duplicateMetadata.data.currentEditionId,'original edition remains unchanged');
+
 // BS-008d: historical chapter revisions remain readable and restorable
 // without replacing prior rows or allowing stale editor tabs.
 const historyBook=await request('/api/v1/books',{method:'POST',cookie:author,
