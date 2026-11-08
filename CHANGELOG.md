@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.31.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.31.0] — alpha privée livrée le 8 novembre 2026 (PR #162, CI #221)
 ### BS-008e #161 — comparaison de deux révisions enregistrées
 - Choix libre de deux versions d'un chapitre depuis Historique, comparaison réelle des mots et ponctuations avec segments conservés/ajoutés/supprimés, compteurs et auteurs/dates.
 - Algorithme LCS borné, optimisé par préfixe/suffixe communs : aucune troncature ou estimation fallacieuse ; HTTP 422 pour les très grands changements. Aperçu reste possible indépendamment.
