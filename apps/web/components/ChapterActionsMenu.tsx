@@ -96,13 +96,24 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
    if(!operationId)return;
    setBusy(true);setError('');
    try{
-     const metadataResponse=await fetch('/api/v1/books/'+bookId+'/editions',
-       {cache:'no-store'});
+     // The editor sidebar may hold initial revision metadata while autosave
+     // advances the chapter. Fetch latest SERVER metadata just before POST,
+     // while the API still revalidates everything under the book-row lock.
+     const [metadataResponse,chaptersResponse]=await Promise.all([
+       fetch('/api/v1/books/'+bookId+'/editions',{cache:'no-store'}),
+       fetch('/api/v1/books/'+bookId+'/chapters',{cache:'no-store'})
+     ]);
      const metadata=await metadataResponse.json().catch(()=>({})) as {
        currentEditionId?:string;error?:string};
-     if(!metadataResponse.ok||!metadata.currentEditionId){
+     const chaptersResult=await chaptersResponse.json().catch(()=>({})) as {
+       chapters?:{id:string;revision:number;updatedAt:string}[];error?:string};
+     const liveChapter=chaptersResult.chapters?.find(c=>c.id===chapterId);
+     if(!metadataResponse.ok||!metadata.currentEditionId||
+        !chaptersResponse.ok||!liveChapter){
+       const status=!metadataResponse.ok?metadataResponse.status:
+         !chaptersResponse.ok?chaptersResponse.status:404;
        const msg=explainActionError({locale,operation:'chapter-duplicate',
-         status:metadataResponse.status,code:metadata.error});
+         status,code:metadata.error||chaptersResult.error});
        setError(msg);
        notify({tone:'error',title:locale==='fr'?'Copie du chapitre indisponible':
          'Chapter duplication unavailable',detail:msg});return;
@@ -113,7 +124,8 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
          confirm:'DUPLICATE_CHAPTER_FROM_SAVED',
          operationId,title:desired,
          expectedEditionId:metadata.currentEditionId,
-         expectedRevision:revision,expectedChapterUpdatedAt:updatedAt
+         expectedRevision:liveChapter.revision,
+         expectedChapterUpdatedAt:liveChapter.updatedAt
        })
      });
      const body=await response.json().catch(()=>({})) as {
