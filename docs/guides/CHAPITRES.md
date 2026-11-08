@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Candidate v0.22.0-alpha.**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.26.0-alpha.**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -92,3 +92,17 @@ Search the title and load more results, even if the book is absent from the
 current library page. Server permissions are checked again when uploading.
 The editorial overview counts all authorized books by six stages plus archives;
 select a stage to filter. Published is a manual milestone, not public publishing.
+
+## 9. Progression réelle d'un livre (candidate v0.26.0)
+
+Ouvrir **Bibliothèque → un ouvrage → Vue d'ensemble**. La section **Progression du manuscrit** présente les chapitres actifs, ceux qui contiennent du **texte réellement enregistré**, les chapitres encore vides, les chapitres retirés, le nombre d'enregistrements de révisions (y compris les révisions initiales) et les versions nommées.
+
+La barre en pourcentage indique **la proportion de chapitres avec du texte**, pas le pourcentage de travail achevé. Un chapitre contenant une seule phrase n'est pas « terminé » pour autant. Chaque chapitre affiche « Texte enregistré » ou « Pas encore de texte ». Un chapitre vidé puis sauvegardé redevient vide dans les indicateurs, même s'il comportait du texte auparavant.
+
+Le lien vers le **dernier chapitre modifié** permet de reprendre la lecture/rédaction ; un renommage ou un changement de structure peut également être la dernière modification de chapitre. Le dernier enregistrement d'une révision est affiché séparément. Les liens conduisent vers la structure et les versions. Actualiser la page après une sauvegarde, suppression ou restauration pour recalculer les chiffres.
+
+Si la lecture des indicateurs est indisponible, le livre et l'éditeur restent utilisables ; aucun texte n'est supprimé. Les autres espaces de travail ne peuvent pas consulter vos résultats.
+
+### English
+
+Open a book's **Overview → Manuscript progress**. The panel shows active, written and still-empty chapters, removed chapters, revision records (including initial revisions) and named snapshots. The percentage measures **chapters containing saved text**, not editorial completion. Each chapter shows a saved-text or empty label. The most recently changed chapter and most recent revision are separate timestamps. Refresh after saving to update the figures. The editor remains available even if progress analytics cannot load.

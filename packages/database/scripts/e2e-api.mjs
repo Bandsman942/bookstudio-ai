@@ -151,6 +151,21 @@ const archival=await request('/api/v1/books',{method:'POST',cookie:author,body:{
 assert.equal(archival.status,201,'create secondary book for lifecycle testing');
 const archiveBookId=archival.data.book.id;
 const archiveChapterId=archival.data.book.chapterId;
+const progressPath='/api/v1/books/'+bookId+'/progress';
+const progressInitial=await request(progressPath,{cookie:author});
+assert.equal(progressInitial.status,200,'author can read book progress');
+assert.ok(progressInitial.data.progress.activeChapters>=1,'current edition contains chapters');
+assert.equal(
+  progressInitial.data.progress.activeChapters,
+  progressInitial.data.progress.writtenChapters+progressInitial.data.progress.emptyChapters,
+  'writing indicators must partition active chapters'
+);
+assert.equal(typeof progressInitial.data.progress.writingCoveragePercent,'number');
+assert.equal(progressInitial.data.progress.editionNumber,1);
+assert.equal((await request(progressPath,{cookie:outsider})).status,404,
+  'foreign workspace cannot read book progress');
+assert.equal((await request(progressPath)).status,401,
+  'book progress cannot be read without a session');
 const archivePath='/api/v1/books/'+archiveBookId;
 const initialBooks=await request('/api/v1/books',{cookie:author});
 assert.equal(initialBooks.status,200);
@@ -433,6 +448,14 @@ const doc={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'Pre
 const save=await request(path,{method:'PATCH',cookie:author,body:{baseRevision:0,content:doc}});
 assert.equal(save.status,200,'revision write');
 assert.equal(save.data.revision,1);
+const progressAfterSave=await request(progressPath,{cookie:author});
+assert.equal(progressAfterSave.status,200);
+assert.ok(progressAfterSave.data.progress.writtenChapters>=1,
+  'nonblank latest saved revision should count as written');
+assert.ok(progressAfterSave.data.progress.revisionRecords>=2,
+  'revision records include initial and newly saved revisions');
+assert.equal(JSON.stringify(progressAfterSave.data).includes('Premier paragraphe rédigé'),false,
+  'book progress API must not expose manuscript prose');
 const conflict=await request(path,{method:'PATCH',cookie:author,body:{baseRevision:0,content:doc}});
 assert.equal(conflict.status,409,'stale revision rejected');
 const after=await request(path,{cookie:author});
@@ -495,6 +518,10 @@ const versionsPath='/api/v1/books/'+bookId+'/snapshots';
 const firstVersion=await request(versionsPath,{method:'POST',cookie:author,body:{name:'Avant la révision'}});
 assert.equal(firstVersion.status,201,'create snapshot');
 assert.equal(firstVersion.data.snapshot.chapterCount,1);
+const progressWithSnapshot=await request(progressPath,{cookie:author});
+assert.equal(progressWithSnapshot.status,200);
+assert.ok(progressWithSnapshot.data.progress.snapshots>=1,
+  'book progress should include immutable saved snapshots');
 const snapshotId=firstVersion.data.snapshot.id;
 const listedVersions=await request(versionsPath,{cookie:author});
 assert.equal(listedVersions.status,200);

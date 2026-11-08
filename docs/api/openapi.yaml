@@ -194,3 +194,22 @@ paths:
         '413': {description: Corps de requête trop grand}
         '422': {description: Transition éditoriale non autorisée}
         '503': {description: Échec transactionnel temporaire}
+
+  /books/{bookId}/progress:
+    get:
+      summary: Indicateurs privés de progression de l'ouvrage actif
+      description: >-
+        Réautorise la session et l'appartenance au workspace. Utilise la dernière
+        révision enregistrée de chaque chapitre actif de l'édition courante et
+        ne renvoie aucun texte ni fichier source. Le pourcentage signifie
+        « chapitres contenant du texte », pas « achèvement éditorial ».
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: 'progress: editionNumber, activeChapters, writtenChapters, emptyChapters, writingCoveragePercent, removedChapters, revisionRecords, snapshots, lastRevisionAt, latestChapter, chapterStates'}
+        '401': {description: Non authentifié}
+        '404': {description: Livre absent, archivé ou extérieur au workspace}
+        '503': {description: Statistiques indisponibles temporairement, édition du livre toujours possible}

@@ -13,19 +13,24 @@ import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
+import type {BookProgress} from '@/lib/book-progress';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
   bookId:string;title:string;status:string;kind:string;language:string;
-  chapters:Chapter[];updatedAt:string;editable:boolean;orderToken:string
+  chapters:Chapter[];updatedAt:string;editable:boolean;orderToken:string;
+  progress:BookProgress|null
 };
 
-export default function BookOverview({bookId,title,status,kind,language,chapters,updatedAt,editable,orderToken}:Props){
+export default function BookOverview({bookId,title,status,kind,language,chapters,updatedAt,editable,orderToken,progress}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
         [error,setError]=useState(''),[busy,setBusy]=useState(false);
   const router=useRouter();
+  const chapterText=new Map(progress?.chapterStates.map(s=>[s.chapterId,s.hasText])??[]);
+  const formatDate=(value:string)=>new Intl.DateTimeFormat(locale==='fr'?'fr-FR':'en-US',
+    {dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
   useEffect(()=>{
     const key=(event:KeyboardEvent)=>{
       const target=event.target instanceof Element?event.target:null;
@@ -72,13 +77,68 @@ export default function BookOverview({bookId,title,status,kind,language,chapters
       <div><span>{t('book.status')}</span><strong className="status-label">{status==='DRAFT'?t('library.draft'):status==='WRITING'?t('library.writing'):status==='REVIEW'?t('library.review'):status}</strong><small>{t('book.historySaved')}</small></div>
       <div><span>{t('book.type')}</span><strong className="status-label">{kind==='NOVEL'?t('library.kindNovel'):kind==='MEDICINE'?t('library.kindMedicine'):kind==='SCIENCE'?t('library.kindScience'):kind==='EDUCATION'?t('library.kindEducation'):kind==='ESSAY'?t('library.kindEssay'):t('library.kindGeneral')}</strong><small>{language.toUpperCase()} · {t('book.customizable')}</small></div>
     </div>
+    <section className="book-progress-panel" id="book-progress" aria-label={
+      locale==='fr'?'Progression rédactionnelle du livre':'Book writing activity'}>
+      <div className="section-header">
+        <h2><AppIcon name="chart"/>{locale==='fr'?'Progression du manuscrit':'Manuscript progress'}</h2>
+        <span>{locale==='fr'?'Données enregistrées':'Saved data only'}</span>
+      </div>
+      {progress?<>
+        <div className="book-progress-meter">
+          <div className="book-progress-meter-label">
+            <strong>{progress.writingCoveragePercent}%</strong>
+            <span>{locale==='fr'?'de chapitres contenant du texte':'of chapters containing text'}</span>
+          </div>
+          <progress value={progress.writingCoveragePercent} max={100}
+            aria-label={locale==='fr'?'Proportion de chapitres contenant du texte':
+              'Proportion of chapters with text'}/>
+          <p className="source-note">{locale==='fr'?
+            'Cette proportion mesure la présence de texte enregistré, pas la qualité ni l’achèvement éditorial.':
+            'This measures saved text presence, not writing quality or editorial completion.'}</p>
+        </div>
+        <div className="book-progress-stats">
+          <div><strong>{progress.activeChapters}</strong><span>{locale==='fr'?'Chapitres actifs':'Active chapters'}</span></div>
+          <div><strong>{progress.writtenChapters}</strong><span>{locale==='fr'?'Avec texte':'With text'}</span></div>
+          <div><strong>{progress.emptyChapters}</strong><span>{locale==='fr'?'Encore vides':'Still empty'}</span></div>
+          <div><strong>{progress.revisionRecords}</strong><span>{locale==='fr'?'Enregistrements de révision':'Revision records'}</span></div>
+          <div><strong>{progress.snapshots}</strong><span>{locale==='fr'?'Versions nommées':'Named snapshots'}</span></div>
+          <div><strong>{progress.removedChapters}</strong><span>{locale==='fr'?'Chapitres retirés':'Removed chapters'}</span></div>
+        </div>
+        {progress.latestChapter&&<p className="book-progress-activity">
+          <span>{locale==='fr'?'Dernier chapitre modifié':'Last changed chapter'} :</span>
+          <Link href={'/books/'+bookId+'/chapters/'+progress.latestChapter.id}>
+            {progress.latestChapter.title}
+          </Link>
+          <time dateTime={progress.latestChapter.updatedAt}>
+            {formatDate(progress.latestChapter.updatedAt)}
+          </time>
+        </p>}
+        {progress.lastRevisionAt&&<p className="source-note">
+          {locale==='fr'?'Dernière révision enregistrée : ':'Last saved revision: '}
+          <time dateTime={progress.lastRevisionAt}>{formatDate(progress.lastRevisionAt)}</time>
+        </p>}
+        <div className="book-progress-links">
+          <a href="#book-structure">{locale==='fr'?'Voir les chapitres':'See chapters'}</a>
+          <a href="#book-versions">{locale==='fr'?'Ouvrir les versions':'Open versions'}</a>
+        </div>
+      </>:<p className="source-note" role="status">
+        {locale==='fr'?'Les indicateurs sont temporairement indisponibles. Votre manuscrit reste accessible et modifiable.':
+          'Progress figures are temporarily unavailable. Your manuscript remains accessible and editable.'}
+      </p>}
+    </section>
     <div className="section-header" id="book-structure"><h2><AppIcon name="chapter"/>{t('book.structure')}</h2>
       {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}><AppIcon name="plus"/>{t('book.chapterAdd')}</button>}
     </div>
     <div className="chapter-list">{chapters.map((chapter,index)=><div key={chapter.id} className="chapter-item">
       <Link href={'/books/'+bookId+'/chapters/'+chapter.id} className="chapter-item-link">
         <span className="chapter-num">{String(index+1).padStart(2,'0')}</span>
-        <div><strong>{chapter.title}</strong><small>{t('book.chapterRevision',{count:chapter.revision})}</small></div>
+        <div><strong>{chapter.title}</strong><small>{t('book.chapterRevision',{count:chapter.revision})}</small>
+          {progress&&<small className={'chapter-text-badge '+(chapterText.get(chapter.id)?'has-text':'is-empty')}>
+            {chapterText.get(chapter.id)?
+              (locale==='fr'?'Texte enregistré':'Saved text'):
+              (locale==='fr'?'Pas encore de texte':'No text yet')}
+          </small>}
+        </div>
         <AppIcon name="chevronRight" className="chapter-arrow"/>
       </Link>
       <ChapterActionsMenu bookId={bookId} chapterId={chapter.id} title={chapter.title}

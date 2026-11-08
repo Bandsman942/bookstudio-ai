@@ -59,3 +59,7 @@ version doivent être présents dans la PR avant CI/E2E et production.
 Aucun worker ClamAV n'est installé sur son hôte dédié ; ne pas activer
 les flags de scan ni le mode strict. La version doit rester candidate tant
 que `E2E v0.25.0-alpha BON` n'est pas reçu.
+
+## Candidate v0.26.0-alpha — progression de l'ouvrage
+
+Documentation requise dans la PR avant fusion : `docs/releases/v0.26.0.md`, `docs/guides/CHAPITRES.md`, `docs/design/BOOK-PROGRESS.md`, `docs/api/openapi.yaml`, `docs/qa/E2E-BOOK-PROGRESS-0.26.0.md`, `docs/roadmap/BACKLOG.md`. Vérifier le calcul sur dernière révision et l'absence de prose dans l'API, les droits en lecture, les 320/375px, l'absence de régression éditeur et le fallback si les métriques ne sont pas disponibles. La CI doit être verte au SHA final documenté, puis E2E propriétaire BON. Aucun snapshot/déploiement avant cette validation. Scanner ClamAV réel non installé, flags OFF.
