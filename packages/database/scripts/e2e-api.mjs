@@ -800,6 +800,120 @@ assert.equal(snapshotRecheck.status,200);
 assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
  'fork leaves historical snapshot byte content/export intact');
 
+// BS-004g: duplicate a saved chapter into a NEW independent chapter at the
+// end of its CURRENT edition. Never copy comments, provenance or snapshots.
+const chapterDupBook=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Livre source pour copie de chapitre',bookType:'SCIENCE',language:'fr'}});
+assert.equal(chapterDupBook.status,201);
+const chapterDupBookId=chapterDupBook.data.book.id;
+const chapterDupSourceId=chapterDupBook.data.book.chapterId;
+const chapterDupSrc='/api/v1/books/'+chapterDupBookId+'/chapters/'+chapterDupSourceId;
+const firstCopyDoc={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Première rédaction du chapitre source.'}]}]};
+const latestCopyDoc={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Version finale enregistrée pour copie, avec son texte entier.'}]}]};
+assert.equal((await request(chapterDupSrc,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:firstCopyDoc}})).status,200);
+assert.equal((await request(chapterDupSrc,{method:'PATCH',cookie:author,
+ body:{baseRevision:1,content:latestCopyDoc}})).status,200);
+const anchoredCopyComment=await request(chapterDupSrc+'/comments',{
+ method:'POST',cookie:author,body:{baseRevision:2,body:'Commentaire source non copié.'}});
+assert.equal(anchoredCopyComment.status,201);
+const chapterDupSnap=await request('/api/v1/books/'+chapterDupBookId+'/snapshots',{
+ method:'POST',cookie:author,body:{name:'Snapshot du chapitre original'}});
+assert.equal(chapterDupSnap.status,201);
+const sourceChaptersBeforeCopy=await request('/api/v1/books/'+chapterDupBookId+'/chapters',
+ {cookie:author});
+assert.equal(sourceChaptersBeforeCopy.status,200);
+const sourceCopyChapter=sourceChaptersBeforeCopy.data.chapters.find(c=>c.id===chapterDupSourceId);
+assert.equal(sourceCopyChapter.revision,2);
+const chapterDupEdition=await request('/api/v1/books/'+chapterDupBookId+'/editions',
+ {cookie:author});
+assert.equal(chapterDupEdition.status,200);
+const chapterDupApi=chapterDupSrc+'/duplicate';
+const chapterDupOp=randomUUID();
+const copyChapterBody={confirm:'DUPLICATE_CHAPTER_FROM_SAVED',
+ title:'Copie indépendante du premier chapitre',operationId:chapterDupOp,
+ expectedEditionId:chapterDupEdition.data.currentEditionId,
+ expectedRevision:2,expectedChapterUpdatedAt:sourceCopyChapter.updatedAt};
+assert.equal((await request(chapterDupApi,{method:'POST',body:copyChapterBody})).status,401);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:outsider,
+ body:copyChapterBody})).status,404);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ omitOrigin:true,body:copyChapterBody})).status,403);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:{...copyChapterBody,confirm:'DUPLICATE_UNSAFE'}})).status,400);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:{...copyChapterBody,operationId:'malformed'}})).status,400);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:{...copyChapterBody,expectedRevision:1}})).status,409);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:{...copyChapterBody,expectedEditionId:randomUUID()}})).status,409);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:{...copyChapterBody,expectedChapterUpdatedAt:'2020-01-01T00:00:00.000Z'}})).status,409);
+const chapterCopied=await request(chapterDupApi,{method:'POST',cookie:author,
+ body:copyChapterBody});
+assert.equal(chapterCopied.status,201,'chapter copied independently from saved data');
+assert.equal(chapterCopied.data.replayed,false);
+const newCopyChapterId=chapterCopied.data.chapter.id;
+assert.notEqual(newCopyChapterId,chapterDupSourceId);
+assert.equal(chapterCopied.data.chapter.revision,0);
+const chapterCopyRetry=await request(chapterDupApi,{method:'POST',cookie:author,
+ body:copyChapterBody});
+assert.equal(chapterCopyRetry.status,200);
+assert.equal(chapterCopyRetry.data.replayed,true);
+assert.equal(chapterCopyRetry.data.chapter.id,newCopyChapterId,
+ 'retry operationId returns the identical chapter, no duplicates');
+const copyChapterRows=await request('/api/v1/books/'+chapterDupBookId+'/chapters',
+ {cookie:author});
+assert.equal(copyChapterRows.data.chapters.length,2);
+assert.deepEqual(copyChapterRows.data.chapters.map(c=>c.id),
+ [chapterDupSourceId,newCopyChapterId],'new chapter appended after source');
+assert.equal(copyChapterRows.data.chapters[1].title,'Copie indépendante du premier chapitre');
+assert.equal(copyChapterRows.data.chapters[1].revision,0);
+const duplicatedText=await request('/api/v1/books/'+chapterDupBookId+
+ '/chapters/'+newCopyChapterId,{cookie:author});
+assert.equal(duplicatedText.status,200);
+assert.deepEqual(duplicatedText.data.chapter.content,latestCopyDoc,
+ 'copy uses latest saved revision, not earlier revision');
+const originalAfterCopy=await request(chapterDupSrc,{cookie:author});
+assert.equal(originalAfterCopy.status,200);
+assert.deepEqual(originalAfterCopy.data.chapter.content,latestCopyDoc);
+assert.equal(originalAfterCopy.data.chapter.revision,2,'original revision untouched');
+const newCopyComments=await request('/api/v1/books/'+chapterDupBookId+
+ '/chapters/'+newCopyChapterId+'/comments',{cookie:author});
+assert.equal(newCopyComments.status,200);
+assert.deepEqual(newCopyComments.data.comments,[],
+ 'comments and anchors never inherited on copied chapter');
+const newCopyRevisions=await request('/api/v1/books/'+chapterDupBookId+
+ '/chapters/'+newCopyChapterId+'/revisions',{cookie:author});
+assert.equal(newCopyRevisions.status,200);
+assert.deepEqual(newCopyRevisions.data.revisions.map(r=>r.sequence),[0],
+ 'copied chapter starts with a single new sequence zero');
+const chapterSnapAfterCopy=await request('/api/v1/books/'+chapterDupBookId+
+ '/snapshots',{cookie:author});
+assert.equal(chapterSnapAfterCopy.data.snapshots.length,1);
+assert.equal(chapterSnapAfterCopy.data.snapshots[0].id,chapterDupSnap.data.snapshot.id,
+ 'source snapshot unaffected; no snapshot is automatically created');
+const editionAfterChapterCopy=await request('/api/v1/books/'+chapterDupBookId+
+ '/editions',{cookie:author});
+assert.equal(editionAfterChapterCopy.data.status,'DRAFT',
+ 'new editorial chapter invalidates prior status');
+assert.equal((await request('/api/v1/books/'+chapterDupBookId+
+ '/chapters/'+newCopyChapterId,{cookie:outsider})).status,404);
+const invalidChapterCopy=await request('/api/v1/books/'+chapterDupBookId+
+ '/chapters/'+randomUUID()+'/duplicate',{method:'POST',cookie:author,
+ body:copyChapterBody});
+assert.equal(invalidChapterCopy.status,404);
+const newEditionAfterCopy=await request('/api/v1/books/'+chapterDupBookId+'/editions',
+ {method:'POST',cookie:author,body:{confirm:'CREATE_EDITION_FROM_SAVED',
+ expectedEditionId:editionAfterChapterCopy.data.currentEditionId,
+ expectedUpdatedAt:editionAfterChapterCopy.data.expectedUpdatedAt}});
+assert.equal(newEditionAfterCopy.status,201);
+assert.equal((await request(chapterDupApi,{method:'POST',cookie:author,
+ body:copyChapterBody})).status,404,
+ 'old edition chapter cannot create or replay copy into current edition');
+
 // BS-004f: a book copy is an independent draft with only the latest saved
 // chapters of the current edition, never the source/comments/snapshots/scans.
 const dupSource=await request('/api/v1/books',{method:'POST',cookie:author,
