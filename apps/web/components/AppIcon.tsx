@@ -14,6 +14,7 @@ const paths={
   download:<><path d="M12 3v13m0 0-5-5m5 5 5-5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></>,
   plus:<><path d="M12 5v14M5 12h14"/></>,
   refresh:<><path d="M20 11a8 8 0 0 0-14-4L3 10m0-5v5h5"/><path d="M4 13a8 8 0 0 0 14 4l3-3m0 5v-5h-5"/></>,
+  chart:<><path d="M4 20V12m5 8V8m5 12V4m5 16V10"/><path d="M2 21h20"/></>,
   history:<><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
   comment:<><path d="M20 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4Z"/><path d="M7 9h9M7 13h6"/></>,
   edit:<><path d="m14 6 4 4M4 20l4-.7L20 7.3a2.5 2.5 0 0 0-3.5-3.5L4.7 15.7 4 20Z"/></>,
