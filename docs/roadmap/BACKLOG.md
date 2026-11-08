@@ -119,3 +119,7 @@ Sous-issue #158 livrée en PR #159 : E2E propriétaire BON, CI #216 SUCCESS, sna
 ## P0 BS-008e #161 — comparaison mot à mot des révisions (candidate v0.31.0-alpha)
 
 Comparaison lecture seule de deux révisions enregistrées **d'un chapitre de l'édition courante**, en segments de texte ajoutés, supprimés, inchangés, avec auteurs/dates et compteurs. API privée et RBAC, sélection FR/EN dans Historique, rendu texte échappé, budget temps/mémoire/longueur et refus 422 sans troncature ni altération. Tests unitaires sur fidélité des deux textes et E2E réels sur accès multitenant/anciens chapitres. **Non inclus** : diff JSON ProseMirror riche, formatage Word, comparaison inter-éditeurs asynchrones, fusion de branches, OCR ni antivirus ClamAV. Parents #9/#6 restent ouverts.
+
+## Livraison confirmée v0.31.0-alpha — 8 novembre 2026
+
+BS-008e issue #161 / PR #162 livrée après E2E propriétaire BON et CI #221 SUCCESS au dernier SHA, snapshot Neon protégé `snap-patient-resonance-bf5rw81g` avant fusion, main `6a4814e6c1ca3056c382294c6e27cf8804835225` ; Vercel production `dpl_8zRQx6evd9nZc51cFsXD5kRpCJQf` READY, santé/version HTTP 200 et DB ready. Voir `docs/deployments/2026-11-08-v0.31.0-alpha.md`. Parent #9 ouvert pour fonctionnalités restantes. ClamAV OFF.
