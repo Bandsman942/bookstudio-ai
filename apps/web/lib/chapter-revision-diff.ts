@@ -42,7 +42,7 @@ export function compareSavedRevisionText(left:string,right:string,
  const segments:DiffSegment[]=[],counts={added:0,removed:0,unchanged:0};
  function emit(kind:DiffKind,token:string){
    if(!token)return;
-   if(counted(token))counts[kind]++;
+   if(counted(token))counts[kind==='equal'?'unchanged':kind]++;
    const last=segments[segments.length-1];
    if(last?.kind===kind)last.text+=token;
    else segments.push({kind,text:token});
