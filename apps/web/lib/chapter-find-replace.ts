@@ -25,7 +25,10 @@ export function findChapterTextMatches(
   const matches:ChapterTextMatch[]=[];
   let limited=false;
   doc.descendants((node,pos)=>{
-    if(limited||!node.isText||!node.text)return false;
+    if(limited)return false;
+    // ProseMirror's false skips ALL children. Descend through paragraph,
+    // heading, list and quote blocks to inspect their text nodes.
+    if(!node.isText||!node.text)return true;
     pattern.lastIndex=0;
     for(const match of node.text.matchAll(pattern)){
       if(matches.length>=limit){limited=true;break;}
