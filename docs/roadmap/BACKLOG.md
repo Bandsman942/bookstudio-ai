@@ -81,3 +81,7 @@ Progression par livre (issue #145) livrée via PR #146 : propriétaire E2E BON, 
 - Non inclus : fusion de deux éditions, modification d'une édition historique, migration des ancres/commentaires, duplication de la provenance Supabase, publication externe, impression, conversion lourde en tâche de fond. À traiter dans les issues complémentaires, et garder #5 ouvert jusqu'aux critères complets.
 - Documentation utilisateur/API/technique/QA/exploitation et release dans la PR **avant déploiement**, E2E propriétaire BON et CI sur SHA final obligatoires.
 - ClamAV serveur dédié non installé, #104/#126/#131/#133 toujours ouverts et flags OFF.
+
+## Livraison confirmée v0.27.0-alpha — 8 novembre 2026
+
+Sous-issue #148 : éditions multiples, copie non destructive et consultation historique livrées dans PR #149 ; E2E propriétaire BON ; CI #201/#202 SUCCESS, snapshot Neon `snap-rough-cake-bfs1ehep`, Vercel READY `dpl_E4x9gofu5oepnAW1y8C254fLzSRP`. La documentation prépublication était intégrée à la PR #149 ; preuves postproduction dans le journal `docs/deployments/2026-11-08-v0.27.0.md`. P0 parent #5 toujours ouvert pour comparaison des éditions et autres critères restants. Correction UI menu bibliothèque : signalement vidéo du 8 novembre 2026, modale initialement prisonnière d'une carte avec transform/overflow ; lot suivant à corriger.

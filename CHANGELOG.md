@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.27.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.27.0] — alpha privée livrée le 8 novembre 2026 (PR #149, CI #201/#202)
 ### BS-004f #148 — Éditions distinctes et manuscrit historique consultable
 - Catalogue privé des éditions d'un même ouvrage (numéro, langue, chapitres actifs et édition courante), accessible à tout membre autorisé.
 - OWNER/EDITOR : création atomique d'une nouvelle édition depuis les **dernières révisions enregistrées** des chapitres actifs. Nouveaux identifiants/versions initiales ; conservation intacte de l'ancienne édition, révisions, commentaires et snapshots historiques. Statut du livre réinitialisé à DRAFT.
