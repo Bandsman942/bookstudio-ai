@@ -800,6 +800,113 @@ assert.equal(snapshotRecheck.status,200);
 assert.ok((await snapshotRecheck.text()).includes('Premier paragraphe'),
  'fork leaves historical snapshot byte content/export intact');
 
+// BS-008d: historical chapter revisions remain readable and restorable
+// without replacing prior rows or allowing stale editor tabs.
+const historyBook=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Historique des révisions E2E',bookType:'ESSAY',language:'fr'}});
+assert.equal(historyBook.status,201);
+const historyBookId=historyBook.data.book.id;
+const historyChapterId=historyBook.data.book.chapterId;
+const historyChapterPath='/api/v1/books/'+historyBookId+'/chapters/'+historyChapterId;
+const historyPath=historyChapterPath+'/revisions';
+const firstDoc={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Première rédaction à préserver dans l’historique.'}]}]};
+const revisedDoc={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:'Deuxième rédaction indépendante et sauvegardée.'}]}]};
+const firstHistorySave=await request(historyChapterPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:firstDoc}});
+assert.equal(firstHistorySave.status,200);
+assert.equal(firstHistorySave.data.revision,1);
+const secondHistorySave=await request(historyChapterPath,{method:'PATCH',cookie:author,
+ body:{baseRevision:1,content:revisedDoc}});
+assert.equal(secondHistorySave.status,200);
+assert.equal(secondHistorySave.data.revision,2);
+const firstHistoryPage=await request(historyPath+'?limit=2',{cookie:author});
+assert.equal(firstHistoryPage.status,200);
+assert.deepEqual(firstHistoryPage.data.revisions.map(r=>r.sequence),[2,1]);
+assert.equal(firstHistoryPage.data.nextBefore,1);
+assert.equal(firstHistoryPage.data.currentRevision,2);
+assert.ok(firstHistoryPage.data.revisions[0].authorName);
+assert.equal(JSON.stringify(firstHistoryPage.data).includes('Première rédaction'),false,
+ 'history inventory never returns prose');
+const remainingHistory=await request(historyPath+'?limit=2&before=1',{cookie:author});
+assert.deepEqual(remainingHistory.data.revisions.map(r=>r.sequence),[0]);
+assert.equal(remainingHistory.data.nextBefore,null);
+assert.equal((await request(historyPath+'?limit=100',{cookie:author})).status,400);
+assert.equal((await request(historyPath+'?limit=2&limit=4',{cookie:author})).status,400);
+assert.equal((await request(historyPath,{cookie:outsider})).status,404);
+assert.equal((await request(historyPath)).status,401);
+const earlyText=await request(historyPath+'/1',{cookie:author});
+assert.equal(earlyText.status,200);
+assert.ok(earlyText.data.revision.text.includes('Première rédaction'));
+assert.equal(earlyText.data.revision.isCurrent,false);
+const latestText=await request(historyPath+'/2',{cookie:author});
+assert.equal(latestText.status,200);
+assert.ok(latestText.data.revision.text.includes('Deuxième rédaction'));
+assert.equal(latestText.data.revision.isCurrent,true);
+assert.equal((await request(historyPath+'/1',{cookie:outsider})).status,404);
+assert.equal((await request(historyPath+'/999',{cookie:author})).status,404);
+assert.equal((await request(historyPath+'/abc',{cookie:author})).status,400);
+const versionItems=await request('/api/v1/books',{cookie:author});
+const historyMetadata=versionItems.data.books.find(b=>b.id===historyBookId);
+assert.ok(historyMetadata?.updatedAt);
+const historyWriting=await request('/api/v1/books/'+historyBookId,{
+ method:'PATCH',cookie:author,
+ body:{action:'status',status:'WRITING',expectedUpdatedAt:historyMetadata.updatedAt}});
+assert.equal(historyWriting.status,200,'book status must progress before restoration');
+const revisionRestorePath=historyPath+'/1';
+assert.equal((await request(revisionRestorePath,{method:'POST',
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:2}})).status,401);
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:outsider,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:2}})).status,404);
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
+ omitOrigin:true,body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:2}})).status,403);
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER',expectedRevision:2}})).status,400);
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:1}})).status,409,
+ 'stale editor revision must not restore content');
+const historyRestore=await request(revisionRestorePath,{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:2}});
+assert.equal(historyRestore.status,200,'append-only chapter restoration works');
+assert.equal(historyRestore.data.revision,3);
+assert.equal(historyRestore.data.restoredFrom,1);
+const currentAfterHistory=await request(historyChapterPath,{cookie:author});
+assert.equal(currentAfterHistory.status,200);
+assert.equal(currentAfterHistory.data.chapter.revision,3);
+assert.deepEqual(currentAfterHistory.data.chapter.content,firstDoc,
+ 'current revision contains selected historical text');
+assert.equal((await request(historyPath+'/1',{cookie:author})).data.revision.text,
+ earlyText.data.revision.text,'source history immutable');
+assert.equal((await request(historyPath+'/2',{cookie:author})).data.revision.text,
+ latestText.data.revision.text,'intermediate revision immutable');
+const bookAfterHistoryRestore=await request('/api/v1/books/'+historyBookId+'/editions',
+ {cookie:author});
+assert.equal(bookAfterHistoryRestore.data.status,'DRAFT',
+ 'restoring a historical text invalidates old editorial approval/status');
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:2}})).status,409,
+ 'stale retry is rejected, no duplicate revisions');
+assert.equal((await request(historyPath+'/3',{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:3}})).status,422,
+ 'current revision cannot be restored into itself');
+assert.equal((await request(historyPath+'?limit=10',{cookie:author})).data.currentRevision,3);
+const historyEditions=await request('/api/v1/books/'+historyBookId+'/editions',{cookie:author});
+const historyFork=await request('/api/v1/books/'+historyBookId+'/editions',{
+ method:'POST',cookie:author,
+ body:{confirm:'CREATE_EDITION_FROM_SAVED',
+ expectedEditionId:historyEditions.data.currentEditionId,
+ expectedUpdatedAt:historyEditions.data.expectedUpdatedAt}});
+assert.equal(historyFork.status,201);
+assert.equal((await request(historyPath,{cookie:author})).status,404,
+ 'revision history of older edition cannot be opened as current');
+assert.equal((await request(revisionRestorePath,{method:'POST',cookie:author,
+ body:{confirm:'RESTORE_CHAPTER_REVISION',expectedRevision:3}})).status,404,
+ 'revision history cannot mutate a chapter after edition change');
+const oldHistoryPreview=await request('/api/v1/books/'+historyBookId+'/editions/'+
+ historyEditions.data.currentEditionId+'/chapters/'+historyChapterId,{cookie:author});
+assert.equal(oldHistoryPreview.status,200,'previous edition remains readable');
+
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});

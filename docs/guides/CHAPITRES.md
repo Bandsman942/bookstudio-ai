@@ -147,3 +147,15 @@ In Book Overview → Editions → **Compare editions**, choose two different edi
 ### English
 
 From **Book overview → Versions & history → ⋯ → Restore into a new edition**, select a named snapshot, including one from an earlier edition. After confirmation, BookStudio creates independent chapter IDs and initial revisions containing **exactly the saved snapshot content**; old editions and history remain untouched. The book returns to Draft. Unsaved edits, comments, imported sources and approvals are not copied. Existing **Restore** is a separate in-place action for the current edition. Stale tabs receive conflicts and must refresh. This direct copy supports at most 500 chapters / 20 MiB. Only OWNER/EDITOR may execute.
+
+## 13. Consulter et restaurer les révisions d'un chapitre (candidate v0.30.0-alpha)
+
+Dans un **chapitre ouvert dans l'éditeur**, cliquez sur **Historique** (en haut de l'écran). La colonne des révisions montre leur numéro, leur date et le nom de l'auteur qui les a enregistrées. La liste charge 20 révisions à la fois ; le bouton **Charger les révisions précédentes** permet de remonter tout l'historique sans limite arbitraire à 100 éléments.
+
+Choisissez une révision pour afficher son **texte enregistré** à cette date, en lecture seule (la mise en page riche n'est pas reproduite dans cet aperçu). Si votre rôle est OWNER/EDITOR, cliquez sur **Restaurer cette révision** puis confirmez. Cette commande **ajoute une nouvelle révision à la suite**, sans effacer la source historique ni les autres versions. Le statut du livre revient à **Brouillon** car le contenu éditorial a changé.
+
+**Précaution essentielle** : attendez **Enregistré** avant toute restauration ; les modifications locales non enregistrées, les conflits d'édition et les coupures réseau bloquent la commande. Si la révision a changé ailleurs depuis l'ouverture, l'API refusera avec HTTP 409. Les anciennes éditions restent consultables via **Éditions**, mais leur contenu ne peut pas être modifié par la route des révisions du chapitre courant.
+
+### English
+
+In the chapter editor choose **History**. The revision timeline shows each saved revision's date, sequence and author, paginated 20 at a time. Select an entry to read its **saved text** without editing it. OWNER/EDITOR may **Restore this revision**, which appends a new revision rather than overwriting any historical record; the book status resets to Draft. Save pending local edits and resolve conflicts before restoring. Stale server versions are rejected with 409; revisions from previous editions are read-only via the Editions viewer.

@@ -77,3 +77,7 @@ Preuve documentaire requise avant tout déploiement : `docs/releases/v0.28.0.md`
 ## Candidate v0.29.0-alpha — restauration non destructive historique
 
 Ajouter **avant déploiement** les six pièces du manifeste `docs/releases/v0.29.0.md`, y compris design `docs/design/SNAPSHOT-FORK-0.29.0.md`, QA `docs/qa/E2E-SNAPSHOT-FORK-0.29.0.md`, OpenAPI, guide, exploitation et roadmap. Contrôles CI : `pnpm release:check`, `pnpm snapshot-fork:check`, E2E HTTP, sécurité ACL/CSRF, typecheck et build. Aucun déploiement sans **E2E propriétaire v0.29 BON** et CI du dernier commit, snapshot Neon protégé avant fusion, puis Vercel production uniquement depuis main. ClamAV OFF.
+
+## Candidate v0.30.0-alpha — historique du chapitre
+
+La PR doit contenir AVANT la fusion : `docs/releases/v0.30.0.md`, guide `docs/guides/CHAPITRES.md`, conception `docs/design/CHAPTER-HISTORY-0.30.0.md`, OpenAPI, exploitation, QA `docs/qa/E2E-CHAPTER-HISTORY-0.30.0.md`, changelog et roadmap. La CI doit valider `pnpm release:check`, `pnpm chapter-history:check`, `pnpm test`, le test HTTP E2E multi-tenant et de restauration sans perte, typecheck et build. Aucun commit en production avant E2E propriétaire `v0.30.0-alpha BON`, snapshot Neon protégé et déploiement depuis `main` uniquement. ClamAV reste OFF.

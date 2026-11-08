@@ -104,3 +104,10 @@ Sous-issue #148 : éditions multiples, copie non destructive et consultation his
 ## Livraison confirmée v0.29.0-alpha — 8 novembre 2026
 
 BS-008c #155 livré via PR #156 : E2E propriétaire BON, CI #210 SUCCESS, snapshot Neon production `snap-twilight-morning-bfpcenut` créé avant fusion, SHA main `696a3b874a50`, déploiement Vercel `dpl_H4zQpRJJvMmR6mvNCqSm4PrV5Vpv` READY, `/api/health` DB ready et `/api/version` alpha 0.29.0 HTTP 200. Voir journal `docs/deployments/2026-11-08-v0.29.0-alpha.md`. Les P0 parents BS-004 #5 et BS-008 #9 demeurent ouverts pour autres critères ; sécurité ClamAV toujours différée.
+
+## P0 BS-008d #158 — historique chapitre (candidate v0.30.0-alpha)
+
+- Pagination par séquence de **toutes** les révisions du chapitre de l'édition courante, auteur et date ; aucun texte dans la liste.
+- Aperçu historique privé en texte brut à la demande ; restauration d'un numéro ancien créant une **nouvelle** révision et revenant au statut DRAFT, avec validation d'accès et résolution des conflits inter-onglets.
+- UI intégrée au Studio FR/EN, accessible mobile/clavier, sans restauration des brouillons locaux non sauvegardés ; audit sans prose, E2E PostgreSQL, documentation complète avant publication.
+- Non inclus : diff prose mot à mot, revue visuelle ProseMirror, suivi des modifications Word avancé, merge de plusieurs révisions, restauration au-delà de l'édition courante (traitée séparément par v0.29). Les parents P0 #9/#6 restent ouverts sur leurs autres exigences, sécurité ClamAV différée.

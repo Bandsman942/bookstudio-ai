@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.30.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-008d #158 — historique des chapitres et restauration ciblée
+- Consultation paginée des révisions successives d'un chapitre et aperçu en texte brut sur demande (auteur/date), sans prose dans la liste.
+- Restauration explicite d'une version antérieure dans une nouvelle révision, sans toucher à l'historique, avec statut DRAFT et audit auteur/fromSequence/toSequence.
+- Sauvegarde du chapitre et restauration sous protection de concurrence ; ancien onglet/hors édition courante refusé, validations RBAC/CSRF.
+- Nouvelle interface Historiques dans le Studio, FR/EN, mobile, clavier, fermeture Escape et toasts précis ; documents user/API/design/QA/exploitation/roadmap actualisés dans la PR avant publication. ClamAV différé.
+
 ## [0.29.0] — alpha privée livrée le 8 novembre 2026 (PR #156, CI #210)
 ### BS-008c #155 — restaurer une version historique dans une nouvelle édition
 - Nouvelle commande « Restaurer dans une nouvelle édition » depuis Versions & historique : copie exacte des révisions référencées, y compris des chapitres retirés depuis ; nouvelles IDs, numéro d’édition croissant, ancien historique et snapshots intacts.
