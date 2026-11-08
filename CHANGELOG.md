@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.35.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.35.0] — alpha privée livrée le 8 novembre 2026 (PR #174, CI #248)
 ### BS-004i #173 — fusion NON destructive de deux chapitres courants
 - Action « Fusionner avec un autre chapitre… » depuis les menus ⋯ du sommaire et Studio, choix/recherche d'un deuxième chapitre actif, titre personnalisable, confirmation sur les originaux conservés, toasts FR/EN, mobile et clavier.
 - Un chapitre **nouveau** est ajouté en dernière position, révision 0, contenant les blocs ProseMirror complets des **dernières révisions sauvegardées** du premier chapitre suivi du deuxième. Attributs/marques/lignes pris en charge préservés, contenu non tronqué, empreinte recalculée, statut du livre revient DRAFT.

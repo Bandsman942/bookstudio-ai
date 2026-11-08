@@ -151,3 +151,7 @@ Issue BS-004h #170 livrée via PR #171 : E2E propriétaire BON, CI #243 SUCCESS 
 ## Candidate P0 BS-004i #173 — fusion non destructive de chapitres (v0.35.0-alpha)
 
 Depuis le menu contextuel d'un chapitre source, choisir un deuxième chapitre actif, ordre explicite premier puis second, et créer un **nouveau chapitre indépendant** en dernière position du même livre, à révision 0, avec blocs riches sauvegardés concaténés sans perte. Les deux originaux, historiques, commentaires, snapshots, sources/imports Supabase, autorisations et attestations ClamAV sont intacts. Transaction Serializable, verrou livre, préconditions des deux sources, audit ID/hash seul et opération UUID idempotente ; max 500 chapitres actifs et 2 MiB du JSON réuni, 409/422 sans effet partiel. UI FR/EN/mobile et QA PostgreSQL. Gate documentaire complet avant production ; parent #5 ouvert pour gestion des ouvrages, parent #6 ouvert pour fonctionnalités riches de l'éditeur. ClamAV reporté/OFF.
+
+## Livraison vérifiée v0.35.0-alpha — 8 novembre 2026
+
+Issue BS-004i #173 livrée via PR #174 : E2E propriétaire BON, CI #248 SUCCESS au SHA exact, snapshot Neon protégé `snap-muddy-haze-bf1e6ks6` créé **avant fusion**, main `2a04c0cc7c07efd0ee04b1f9938a8a4d3101a99a`, Vercel `dpl_7uERoax7eGTJaDfK7KcDNKR8DfJt` READY, `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 v0.35.0-alpha. Journal `docs/deployments/2026-11-08-v0.35.0-alpha.md`. Parents #5/#6 ouverts, ClamAV OFF.
