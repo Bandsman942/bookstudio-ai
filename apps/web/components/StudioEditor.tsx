@@ -8,6 +8,7 @@ import EditorRibbon from './EditorRibbon';
 import AppIcon from './AppIcon';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
+import ChapterRevisionsPanel from './ChapterRevisionsPanel';
 import ActionMenu from './ActionMenu';
 import ChapterActionsMenu from './ChapterActionsMenu';
 import ShortcutsHelp from './ShortcutsHelp';
@@ -296,6 +297,11 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
         <button type="button" className="studio-shortcuts-trigger" title={locale==='fr'?'Raccourcis clavier (?)':'Keyboard shortcuts (?)'}
           aria-label={locale==='fr'?'Aide des raccourcis clavier':'Keyboard shortcuts help'}
           onClick={()=>document.dispatchEvent(new Event('bookstudio-shortcuts-open'))}>?</button>
+        <ChapterRevisionsPanel bookId={bookId} chapterId={chapterId}
+          canEdit={canEdit} getCurrentRevision={()=>revisionRef.current}
+          canRestoreNow={()=>canEdit&&!pendingRef.current&&!savingRef.current&&
+            !conflictRef.current&&state==='saved'&&!recovery}
+          onRestored={()=>router.refresh()}/>
         <ActionMenu label={t('editor.display')} actions={[
           {label:t(focus?'editor.focusOff':'editor.focusOn'),
             onSelect:()=>setFocus(value=>!value)},

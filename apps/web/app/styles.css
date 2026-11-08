@@ -1001,3 +1001,31 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
   .edition-comparison-controls{grid-template-columns:1fr}
   .edition-comparison-controls .button{width:100%}
 }
+
+/* Chapter history: always portal to body; never clip behind editor panes. */
+.studio-history-trigger{border:1px solid var(--border, #cbd5e1);border-radius:8px;
+  background:transparent;color:inherit;padding:7px 11px;cursor:pointer;font-size:0.86rem}
+.studio-history-trigger:hover,.studio-history-trigger:focus-visible{
+  border-color:var(--accent, #2563eb);outline-offset:2px}
+.chapter-history-modal{width:min(960px,calc(100vw - 24px));max-width:960px;
+  max-height:min(90dvh,900px);overflow-y:auto;overflow-x:hidden}
+.chapter-history-layout{display:grid;grid-template-columns:minmax(185px,255px) minmax(0,1fr);
+  gap:16px;margin-top:15px;min-height:225px}
+.chapter-history-list{display:flex;flex-direction:column;gap:8px;
+  max-height:54dvh;overflow-y:auto;min-width:0}
+.chapter-history-item{display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  text-align:left;width:100%;border:1px solid var(--border,#cbd5e1);
+  padding:10px;border-radius:10px;background:transparent;color:inherit;cursor:pointer}
+.chapter-history-item:hover,.chapter-history-item:focus-visible,
+.chapter-history-item.selected{border-color:var(--accent,#2563eb)}
+.chapter-history-item small{overflow-wrap:anywhere;opacity:.75}
+.chapter-history-preview{min-width:0;overflow-wrap:anywhere}
+.chapter-history-text{white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;
+  max-height:43dvh;max-width:100%;padding:14px;border-radius:10px;
+  background:var(--surface-2,#f1f5f9);color:var(--text,#1e293b);line-height:1.5}
+.chapter-history-confirm{border:1px solid var(--border,#cbd5e1);
+  padding:15px;margin-top:14px;border-radius:10px}
+.chapter-history-confirm button{margin-right:10px;margin-top:8px}
+@media(max-width:700px){.chapter-history-layout{grid-template-columns:1fr}
+  .chapter-history-list{max-height:30dvh}.chapter-history-text{max-height:30dvh}
+  .studio-history-trigger{font-size:.78rem;padding:6px 8px}}
