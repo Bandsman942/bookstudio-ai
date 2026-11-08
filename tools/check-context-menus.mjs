@@ -49,3 +49,19 @@ const e2e=file('packages/database/scripts/e2e-api.mjs');
 for(const scenario of ['chapter title optimistic concurrency','chapter metadata isolated by membership','chapter metadata CSRF enforced','title rename preserves all text'])
   assert.ok(e2e.includes(scenario),'Missing HTTP E2E chapter scenario: '+scenario);
 console.log('Context menu structural contracts OK across',surfaces.length,'surfaces.');
+
+
+/* Regression #151: video showed fixed book dialog clipped to hover-transformed card. */
+const bookActions=file('apps/web/components/BookActionsMenu.tsx');
+const propertiesDialog=file('apps/web/components/BookPropertiesDialog.tsx');
+for(const invariant of ["import {createPortal} from 'react-dom'","createPortal(<>","document.body",
+  "mode==='rename'","mode==='archive'","mode==='properties'","mode==='status'"])
+  assert.ok(bookActions.includes(invariant),'Book action portal regression: '+invariant);
+assert.ok(propertiesDialog.includes('modal-backdrop book-actions-overlay'),
+  'Metadata/status dialogs must use the top-level fixed overlay');
+assert.ok(bookActions.includes('modal-backdrop book-actions-overlay'),
+  'Rename/archive dialogs must use the top-level fixed overlay');
+assert.ok(css.includes('.book-actions-overlay.modal-backdrop{position:fixed;inset:0'),
+  'Global book overlay must occupy viewport outside transformed cards');
+assert.ok(css.includes('max-height:calc(100dvh'),
+  'Book action modal must stay scrollable on small mobile screens');

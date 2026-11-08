@@ -2,6 +2,7 @@
 
 import {useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
+import {createPortal} from 'react-dom';
 import ActionMenu from './ActionMenu';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
@@ -28,6 +29,14 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
   const [desired,setDesired]=useState(title);
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const router=useRouter();
+  useEffect(()=>{
+    if(!mode)return;
+    // A fixed dialog must be outside transformed/clipped book cards. Lock
+    // background scrolling while the portal is visible, preserving prior state.
+    const previous=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    return ()=>{document.body.style.overflow=previous;};
+  },[mode]);
   useEffect(()=>{
     if(!mode)return;
     function esc(event:globalThis.KeyboardEvent){if(event.key==='Escape'&&!busy)setMode(null);}
@@ -84,7 +93,8 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
   ];
   return <>
     <ActionMenu label={t('book.actionsFor',{title})} actions={actions} disabled={busy}/>
-    {(mode==='rename'||mode==='archive')&&<div className="modal-backdrop" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
+    {mode&&typeof document!=='undefined'&&createPortal(<>
+    {(mode==='rename'||mode==='archive')&&<div className="modal-backdrop book-actions-overlay" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
       {mode==='rename'?<form className="modal" onSubmit={event=>{event.preventDefault();void commit('rename');}}
         role="dialog" aria-modal="true" aria-label={t('book.rename')}>
         <button className="close" type="button" aria-label={t('common.close')} disabled={busy} onClick={()=>setMode(null)}>×</button>
@@ -110,5 +120,6 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
       <BookPropertiesDialog mode={mode} bookId={bookId} title={title}
         bookType={bookType} language={language} status={status}
         updatedAt={updatedAt} onClose={()=>setMode(null)}/>}
+    </>,document.body)}
   </>;
 }

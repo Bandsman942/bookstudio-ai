@@ -3,6 +3,7 @@ import {useCallback,useEffect,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
+import BookEditionCompare from './BookEditionCompare';
 
 type Edition={id:string;number:number;language:string;chapterCount:number;isCurrent:boolean};
 type EditionList={editions:Edition[];currentEditionId:string|null;expectedUpdatedAt:string};
@@ -142,6 +143,9 @@ export default function BookEditionsPanel({bookId,editable}:Props){
        </button>
      </div>)}
    </div>}
+   {list&&list.editions.length>=2&&
+     <BookEditionCompare key={list.currentEditionId??'none'}
+       bookId={bookId} editions={list.editions}/>}
    {confirmNew&&<div className="modal-backdrop" onMouseDown={event=>{
      if(event.target===event.currentTarget&&!busy)setConfirmNew(false);
    }}>

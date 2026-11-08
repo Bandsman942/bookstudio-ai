@@ -39,3 +39,13 @@ Créer une issue et une PR, réutiliser `ActionMenu` pour les actions secondaire
 ## Réorganisation structurelle (v0.22)
 
 Une action Monter/Descendre déplace seulement la **position** d'un chapitre. Le menu est désactivé aux extrémités ou pour un lecteur. L'éditeur exige de résoudre les changements locaux avant de naviguer ; la vue d'ensemble peut déclencher l'action directement. L'API `PATCH /api/v1/books/{bookId}/chapters/reorder` accepte `chapterId`, `direction: up|down` et `expectedOrderToken` obtenu par `GET /api/v1/books/{bookId}/chapters`. Le serveur revérifie RBAC/CSRF, renvoie 409 si l'ordre a changé, et échange les positions au moyen d'une position sentinelle libre pour respecter la contrainte SQL `UNIQUE(manuscript_id,position)`. Texte, révisions, commentaires et snapshots ne changent pas. Une restauration depuis la corbeille ajoute le chapitre en fin d'ouvrage.
+
+## Correctif v0.28.0-alpha — reproduction vidéo #151
+
+**Vidéo propriétaire du 8 novembre 2026, onglet Bibliothèque :** le menu ⋯ fonctionne, mais après **Modifier les propriétés** le dialogue commence dans une colonne de la largeur de la carte, partiellement tronqué, puis revient au centre quand la souris quitte la carte.
+
+**Cause technique confirmée dans le code :** `.book-card:hover{transform:translateY(-4px)}` crée un bloc de référence pour un descendant `position:fixed`, et `.book-card{overflow:hidden}` le coupe. `BookActionsMenu` rendait la modale dans cette carte, contrairement au menu `ActionMenu` déjà portalisé.
+
+**Solution :** les quatre dialogues de livre (renommer, propriétés, statut, archiver) passent par `createPortal(...,document.body)`. Le calque `book-actions-overlay` occupe le viewport, au-dessus des cartes et menus, avec bordures safe-area, défilement interne mobile et verrou du scroll de fond. Le déclencheur ⋯ conserve son comportement discret, hover/focus et clavier. Tester ouverture puis déplacement de souris sur la couverture **sans repositionnement ni clignotement**.
+
+**Garde de régression :** `pnpm ui:check` teste le portail et le calque overlay. E2E manuel 320/375/768/1364px, zoom 200 %, hover, clic droit, Escape, bouton Fermer, erreurs/confirmations RBAC et absence de scroll sous la modale.

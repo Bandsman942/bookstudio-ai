@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.28.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-008b #152 et UI #151 — comparaison non destructive et menus d'ouvrages
+- Comparaison de deux éditions d'un livre sur le titre, la position et l'empreinte de la **dernière révision enregistrée** de chaque chapitre actif : nombre de chapitres inchangés, modifiés, renommés, déplacés, ajoutés et absents ; aucun texte manuscrit ni hash brut exposé par cette API.
+- Rapprochement conservateur : même position+titre+contenu, empreinte unique puis titre unique. Ne pas inventer de filiation si titre et contenu ont simultanément changé ou si des chapitres sont ambigus. Limite de 350 chapitres actifs par édition.
+- Vue d'ensemble > Éditions : sélection de deux éditions, consultation des différences, réponse contextualisée FR/EN, responsive mobile, support réseau faible, lecture seule.
+- **Correction de la vidéo utilisateur du 8 novembre** : fenêtres Renommer/Propriétés/Statut/Archiver désormais portalisées dans `document.body` hors des cartes transformées par `transform:translateY` et `overflow:hidden`. Plus de modale écrasée dans la carte ; overlay mobile plein écran, focus et scroll protégés.
+- Contrats structurels UI renforcés, tests unitaires du diff et E2E HTTP réels avec permissions multi-tenant, édition identique, contenu modifié, ajout de chapitre, absence de fuite de prose/hash.
+- Documentation utilisateur, technique, API, exploitation, QA, release et backlog actualisée **avant** toute livraison. Aucun nouveau schéma SQL, variable ou serveur ClamAV.
+
+
 ## [0.27.0] — alpha privée livrée le 8 novembre 2026 (PR #149, CI #201/#202)
 ### BS-004f #148 — Éditions distinctes et manuscrit historique consultable
 - Catalogue privé des éditions d'un même ouvrage (numéro, langue, chapitres actifs et édition courante), accessible à tout membre autorisé.

@@ -17,6 +17,8 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 
 - **Version livrée v0.27.0-alpha** : éditions multiples, copie non destructive du manuscrit courant et historique en lecture seule (issue #148). **E2E propriétaire BON, CI #201/#202, Vercel READY.** [Release v0.27](docs/releases/v0.27.0.md).
 
+- **Candidate v0.28.0-alpha** : comparaison de deux éditions et correction des modales de menus contextuels des ouvrages (issues #152/#151), **non publiée** avant E2E propriétaire. [Fiche v0.28](docs/releases/v0.28.0.md).
+
 ## Fonctionnalités déjà disponibles dans l'alpha privée
 
 - Monorepo Next.js, TypeScript, Tiptap, Prisma et Neon PostgreSQL isolé de DTSC Platform.
