@@ -73,3 +73,11 @@ Import indépendant et tableau éditorial à six étapes (issue #141) livrés vi
 ## v0.26.0-alpha — livraison vérifiée le 8 novembre 2026
 
 Progression par livre (issue #145) livrée via PR #146 : propriétaire E2E BON, CI #196/#197 SUCCESS, Neon snapshot snap-flat-brook-bfyi7mlm, Vercel READY dpl_3jLVENms5oSxET1WSP8YrKUpMXAo. Prochain jalon BS-004 : multi-éditions avec conservation de l’historique. ClamAV différé.
+
+## v0.27.0-alpha — P0 BS-004f #148, éditions multiples
+
+- **Nouvelle tranche candidate** : inventaire des éditions, duplication **non destructive** de la dernière sauvegarde vers une nouvelle édition, lecture historique privée, ID de chapitre indépendants, conservation des commentaires/révisions/snapshots précédents et retour du statut du livre à DRAFT.
+- Transactions Serializable et double précondition (`expectedEditionId`, `expectedUpdatedAt`) ; refus de copie directe au-delà de 500 chapitres/20 MiB, sans modification des contenus existants. Contrôle serveur RBAC, Origin, audit.
+- Non inclus : fusion de deux éditions, modification d'une édition historique, migration des ancres/commentaires, duplication de la provenance Supabase, publication externe, impression, conversion lourde en tâche de fond. À traiter dans les issues complémentaires, et garder #5 ouvert jusqu'aux critères complets.
+- Documentation utilisateur/API/technique/QA/exploitation et release dans la PR **avant déploiement**, E2E propriétaire BON et CI sur SHA final obligatoires.
+- ClamAV serveur dédié non installé, #104/#126/#131/#133 toujours ouverts et flags OFF.

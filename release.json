@@ -1,6 +1,6 @@
 {
-  "version": "0.26.0",
+  "version": "0.27.0",
   "channel": "alpha",
-  "gitTag": "v0.26.0",
-  "status": "deployed"
+  "gitTag": "v0.27.0",
+  "status": "pending-deployment"
 }
