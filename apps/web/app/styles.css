@@ -905,3 +905,45 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
   .book-progress-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:340px){.book-progress-stats{grid-template-columns:1fr}}
+
+
+/* Multi-edition management: read-only historical previews, responsive */
+.book-editions{padding:19px;margin:22px 0 28px;border:1px solid var(--line);
+  border-radius:14px;background:var(--surface,#fff)}
+.book-editions>.section-header{margin-bottom:10px}
+.book-edition-list{display:grid;gap:9px;margin-top:13px}
+.book-edition-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px;border:1px solid var(--line);border-radius:10px}
+.book-edition-row>div:first-child{display:flex;flex-direction:column;flex:1 1 180px;gap:4px}
+.book-edition-row .source-note{font-size:12px}
+.book-edition-row .badge{border-radius:99px;padding:4px 10px;
+  background:var(--surface-muted,#f2f6f5);color:var(--muted);
+  border:1px solid var(--line);font-size:12px}
+.book-edition-row .badge.success{color:var(--green)}
+.edition-reader{width:min(94vw,920px);max-width:920px;max-height:90dvh;
+  display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain}
+.edition-reader-layout{display:grid;grid-template-columns:minmax(130px,220px) minmax(0,1fr);
+  gap:12px;min-height:150px;max-height:68dvh}
+.edition-reader-chapters{display:flex;flex-direction:column;gap:6px;
+  min-height:0;overflow-y:auto;border-right:1px solid var(--line);
+  padding:4px 10px 4px 0}
+.edition-reader-chapters button{border:0;border-radius:8px;
+  padding:9px;text-align:left;background:transparent;color:var(--ink)}
+.edition-reader-chapters button:hover,.edition-reader-chapters button:focus-visible{
+  background:var(--surface-muted,#f1f6f5)}
+.edition-reader-text{min-height:0;overflow:auto;overscroll-behavior:contain;
+  padding:7px 10px}
+.edition-reader-text h3{margin-top:0}
+.edition-reader-text pre{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;
+  word-break:normal;font:inherit;line-height:1.65;color:var(--ink)}
+@media(max-width:650px){
+  .book-editions{padding:13px}
+  .edition-reader{width:100%;max-height:calc(100dvh - 12px);
+    margin:0;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  .edition-reader-layout{grid-template-columns:1fr;max-height:none}
+  .edition-reader-chapters{flex-direction:row;overflow-x:auto;
+    overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);
+    padding:8px 0}
+  .edition-reader-chapters button{flex:0 0 auto;max-width:65vw}
+  .edition-reader-text{max-height:55dvh}
+}
