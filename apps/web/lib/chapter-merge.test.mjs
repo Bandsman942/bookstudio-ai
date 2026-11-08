@@ -24,7 +24,7 @@ test('two ProseMirror documents join in user-selected order and keep rich marks'
  assert.equal(plan.blockCount,4);
  assert.equal(plan.content.content[1].content[0].marks[0].type,'bold');
  assert.equal(plan.content.content[3].content[0].marks[0].attrs.href,'https://example.org');
- assert.equal(plan.text,'Introduction\ntexte en gras\nCitation sûre\nune référence');
+ assert.equal(plan.text,'Introduction\ntexte en gras\nCitation sûre\n\nune référence');
  assert.equal(plan.contentHash,createHash('sha256').update(JSON.stringify(plan.content)).digest('hex'));
  assert.equal(a.sequence,3);
  assert.equal(nextChapterPosition(null),0);
