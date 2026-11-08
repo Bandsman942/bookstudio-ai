@@ -414,3 +414,35 @@ paths:
         '413': {description: Corps JSON dépasse 2048 octets}
         '422': {description: La révision choisie est déjà la révision courante}
         '503': {description: Incident DB, aucun état partiel enregistré}
+
+
+  /books/{bookId}/chapters/{chapterId}/revisions/compare:
+    get:
+      summary: Comparaison privée des textes enregistrés de deux révisions d'un chapitre actif
+      description: >-
+        Lecture seule après vérification de session, espace et édition courante du
+        chapitre ; aucun appel IA. Sélection de deux révisions distinctes, dans
+        l'ordre voulu, via from/to. Diff mot-à-mot et ponctuation au plus petit
+        coût mémoire (préfixe/suffixe identiques puis LCS borné). Réponse en
+        segments equal/added/removed, aucune balise HTML, hash de contenu ou
+        lien de fichier. Preserve exactement les espaces et retours ligne,
+        sans troncature. La comparaison porte sur le texte brut : les
+        changements de style ne sont pas calculés ; formattingMayDiffer signale
+        seulement un contenu structuré différent avec texte identique.
+        Taille texte: 250000 caractères UTF-16/révision ; jusqu'à 12000 unités
+        lexicales/révision ; max 4 millions de cases de comparaison pour le
+        sous-texte variable. 422 si le budget est dépassé ; pas d'export
+        tronqué ni dégradation silencieuse des données.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: from, in: query, required: true, schema: {type: integer, minimum: 0}}
+        - {name: to, in: query, required: true, schema: {type: integer, minimum: 0}}
+      responses:
+        '200': {description: 'chapterId, from/to (sequence, createdAt, authorName), comparison: counts, segments[], algorithm, formattingMayDiffer'}
+        '400': {description: Révisions identiques, paramètre manquant/invalide ou duplication}
+        '401': {description: Session absente}
+        '404': {description: Livre inaccessible, chapitre hors édition courante ou numéro futur}
+        '409': {description: Révision source incomplète/incohérente}
+        '422': {description: Texte ou travail de comparaison hors limites, aucune troncature}
+        '503': {description: Indisponibilité de comparaison temporaire}

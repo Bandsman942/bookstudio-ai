@@ -81,3 +81,7 @@ Ajouter **avant déploiement** les six pièces du manifeste `docs/releases/v0.29
 ## Candidate v0.30.0-alpha — historique du chapitre
 
 La PR doit contenir AVANT la fusion : `docs/releases/v0.30.0.md`, guide `docs/guides/CHAPITRES.md`, conception `docs/design/CHAPTER-HISTORY-0.30.0.md`, OpenAPI, exploitation, QA `docs/qa/E2E-CHAPTER-HISTORY-0.30.0.md`, changelog et roadmap. La CI doit valider `pnpm release:check`, `pnpm chapter-history:check`, `pnpm test`, le test HTTP E2E multi-tenant et de restauration sans perte, typecheck et build. Aucun commit en production avant E2E propriétaire `v0.30.0-alpha BON`, snapshot Neon protégé et déploiement depuis `main` uniquement. ClamAV reste OFF.
+
+## Candidate v0.31.0-alpha — diff lexical des révisions
+
+Exiger AVANT le déploiement : `docs/releases/v0.31.0.md`, guide révisions, conception `docs/design/CHAPTER-DIFF-0.31.0.md`, OpenAPI, exploitation, QA `docs/qa/E2E-CHAPTER-DIFF-0.31.0.md`, changelog et roadmap. CI : `pnpm release:check`, `pnpm chapter-diff:check`, `pnpm test`, HTTP E2E multi-tenant, typecheck/build. Le diff doit conserver le texte exact (espaces et sauts de ligne) et ne jamais le tronquer silencieusement ; historique autre édition refusé. Avant publication : E2E propriétaire `v0.31.0-alpha BON`, snapshot Neon, main seulement, READY /api/health et /api/version, journal réel postproduction. Preview OFF, ClamAV OFF.

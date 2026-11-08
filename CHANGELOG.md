@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.31.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-008e #161 — comparaison de deux révisions enregistrées
+- Choix libre de deux versions d'un chapitre depuis Historique, comparaison réelle des mots et ponctuations avec segments conservés/ajoutés/supprimés, compteurs et auteurs/dates.
+- Algorithme LCS borné, optimisé par préfixe/suffixe communs : aucune troncature ou estimation fallacieuse ; HTTP 422 pour les très grands changements. Aperçu reste possible indépendamment.
+- API privée GET, chapitre actif et workspace réautorisés ; pas de hash/HTML/IA, texte conservé exactement y compris espaces/retours à la ligne. Historique et versions jamais mutés.
+- Interface responsive FR/EN, mode clair/sombre, clavier, légende accessible, messages contextualisés et tests E2E anti-fuites. Tous les documents utilisateur, technique, API, ops, QA, release et roadmap mis à jour avant publication. ClamAV reste OFF.
+
 ## [0.30.0] — alpha privée livrée le 8 novembre 2026 (PR #159, CI #216)
 ### BS-008d #158 — historique des chapitres et restauration ciblée
 - Consultation paginée des révisions successives d'un chapitre et aperçu en texte brut sur demande (auteur/date), sans prose dans la liste.

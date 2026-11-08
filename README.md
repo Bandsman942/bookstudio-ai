@@ -68,3 +68,7 @@ Avant PR/livraison : `pnpm release:check && pnpm test && pnpm typecheck && pnpm 
 ## v0.30.0-alpha — livrée en production privée
 
 Historique paginé de toutes les révisions sauvegardées d'un chapitre, aperçus privés et restauration non destructive vers une nouvelle révision depuis le Studio (#158). Tests unitaires/HTTP E2E et documentation obligatoires dans la PR ; livrée après E2E propriétaire BON, CI #216 et snapshot Neon antérieur à la fusion ; Vercel READY. Les versions précédentes restent immuables et ClamAV reste OFF. [Documentation QA](docs/qa/E2E-CHAPTER-HISTORY-0.30.0.md).
+
+## Candidate v0.31.0-alpha — NON DÉPLOYÉE
+
+Comparaison privée, précise et non destructive des textes enregistrés de deux révisions d'un chapitre (#161) : Historique → sélecteurs → Comparer ; ajouts, suppressions, parties inchangées, limites explicites sans troncature. [Fiche de release](docs/releases/v0.31.0.md) · [QA](docs/qa/E2E-CHAPTER-DIFF-0.31.0.md). CI/documentation obligatoires dans la PR ; production actuelle v0.30 tant que l'E2E propriétaire v0.31 n'est pas validé. ClamAV toujours reporté.
