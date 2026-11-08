@@ -62,3 +62,10 @@ Sélecteur de destination indépendant de la page de bibliothèque, recherche se
 ## v0.25.0-alpha — livraison vérifiée le 8 novembre 2026
 
 Import indépendant et tableau éditorial à six étapes (issue #141) livrés via PR #143. CI #192/#193 SUCCESS, E2E BON, snapshot Neon `snap-plain-lake-bfb2k071`, Vercel READY `dpl_C35ji6tLKDyprZNa2qc37xNVmn7g`. Prochaine tranche BS-004 : suivi détaillé de la progression d'un livre (mots, chapitres, historique) sans modifier le contenu ni fermer prématurément le parent #5. ClamAV serveur isolé non installé ; issues sécurité P0 ouvertes.
+
+## P0 BS-004e #145 — progression par ouvrage, candidate v0.26.0-alpha
+
+- Vue d'ensemble : chapitres avec/sans texte **selon leur dernière révision**, proportion informative et non taux d'achèvement, chapitres retirés, versions, enregistrements de révision, dernière activité et liens.
+- API privée avec contrôle de workspace, dernière révision de l'édition active, réponse sans prose/source, secours UI non bloquant ; tests unitaires et HTTP E2E multi-tenant.
+- Documentation utilisateur, OpenAPI, architecture, exploitation, E2E et note de release complétée **avant** déploiement et vérifiée par `pnpm release:check`.
+- Parent #5 reste **ouvert** pour la gestion multi-éditions et les fonctionnalités métier non livrées. Les issues ClamAV #104/#126/#131/#133 restent différées sans fermeture ni activation.

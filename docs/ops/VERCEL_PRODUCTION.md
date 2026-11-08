@@ -66,3 +66,7 @@ Après migration sur la base cible, utiliser `pnpm --filter @bookstudio/database
 - L'API liste les livres par pages via Neon. Contrôler latences des requêtes `GET /api/v1/books` et montées en charge (24/100 livres/page), accès cross-tenant et comportement en réseau faible.
 - Le moteur de recherche sur titre emploie `contains` sur PostgreSQL. **L'indexation trigramme n'est pas revendiquée** ; mesurer avant ajout d'extension/index et migration dédiée.
 - Sauvegarder la base Neon avant fusion, vérifier main-only, Preview OFF, santé/version, runtime et journal réel **après** READY. ClamAV non installé et flags OFF.
+
+## Candidate v0.26.0-alpha — progression des ouvrages
+
+Aucune migration SQL ni variable Vercel pour ce lot. `GET /api/v1/books/{bookId}/progress` consulte des lignes de révision existantes et ne renvoie que des agrégats et identifiants autorisés ; surveiller la latence et les erreurs de lecture sous charge. En cas de panne des statistiques, la vue d'ensemble doit rester ouverte. Documentation et CI avant fusion, snapshot Neon puis publication main-only, Preview OFF, health/version et journal réel après READY. ClamAV demeure hors service.

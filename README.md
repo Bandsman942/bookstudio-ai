@@ -13,6 +13,8 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 - **Obligation avant TOUT déploiement :** consulter [la porte documentaire et technique](docs/ops/RELEASE-DOCUMENTATION-GATE.md) et exécuter `pnpm release:check`. Documentation utilisateur, API, technique, exploitation, recette, roadmap, changelog, limites et rollback doivent être à jour **dans le commit testé**, avant fusion/deploiement. Après READY, publier le journal de déploiement au SHA/ID réel (sans réécrire les faits historiques).
 - Cycle : issue → branche → PR → documentation → tests/CI → validation E2E propriétaire → snapshot Neon → fusion `main` → **production uniquement**, aucune Preview → vérification READY/API → verrou Vercel + journal.
 
+- **Candidate v0.26.0-alpha** : progression détaillée et privée d'un livre, chapitre avec/sans texte, révisions et versions (#145), **non publiée avant validation E2E**. [Fiche v0.26](docs/releases/v0.26.0.md).
+
 ## Fonctionnalités déjà disponibles dans l'alpha privée
 
 - Monorepo Next.js, TypeScript, Tiptap, Prisma et Neon PostgreSQL isolé de DTSC Platform.
