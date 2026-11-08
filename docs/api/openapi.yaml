@@ -489,3 +489,47 @@ paths:
         '413': {description: Corps JSON dépasse 4096 octets}
         '422': {description: Taille excessive, pas de copie partielle ou tronquée}
         '503': {description: Transaction échouée sans écriture partielle}
+
+
+  /books/{bookId}/chapters/{chapterId}/duplicate:
+    post:
+      summary: Dupliquer la dernière révision sauvegardée d'un chapitre courant
+      description: >-
+        Session et membre OWNER/EDITOR du même workspace, Origin anti-CSRF.
+        Confirmation explicite et operationId UUID idempotent. Transaction
+        Serializable, lock sur livre et vérification édition actuelle,
+        sequence revisionSeq et updatedAt du chapitre source. Crée un nouveau
+        chapitre à la fin du manuscrit avec nouvel UUID et sequence 0, JSON
+        et texte intégraux de la dernière révision enregistrée. Source intacte,
+        Book.status remet à DRAFT. Aucun commentaire, snapshot, fichier
+        Supabase, historique d'import, attestation antivirus ou permission
+        copié. Max 500 chapitres actifs, 20 Mio JSON+texte sans troncature.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: chapterId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [confirm, expectedChapterUpdatedAt, expectedEditionId, expectedRevision, operationId, title]
+              properties:
+                confirm: {type: string, const: DUPLICATE_CHAPTER_FROM_SAVED}
+                expectedChapterUpdatedAt: {type: string, format: date-time}
+                expectedEditionId: {type: string, format: uuid}
+                expectedRevision: {type: integer, minimum: 0}
+                operationId: {type: string, format: uuid}
+                title: {type: string, minLength: 2, maxLength: 180}
+      responses:
+        '201': {description: Nouveau chapter id/title/revision/position, replayed false}
+        '200': {description: Reprise operationId idempotente, même chapter id, replayed true}
+        '400': {description: UUID, titre, confirmation ou date incorrects}
+        '401': {description: Non connecté}
+        '403': {description: Origin interdit}
+        '404': {description: Chapitre hors édition actuelle, workspace ou rôle non autorisé}
+        '409': {description: Révision/horodatage/édition dépassé ou source incohérente}
+        '413': {description: Corps de requête > 4096 octets}
+        '422': {description: Plafond 500 chapitres ou 20 MiB atteint, sans troncature}
+        '503': {description: Transaction échouée et annulée}

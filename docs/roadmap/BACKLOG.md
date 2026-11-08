@@ -131,3 +131,7 @@ Créer un livre DRAFT indépendant à partir des chapitres actifs de l'édition 
 ## Livraison vérifiée v0.32.0-alpha — 8 novembre 2026
 
 Issue BS-004f #164 livrée en PR #165 : propriétaire E2E BON, CI #229 SUCCESS dernier SHA, snapshot Neon protégé `snap-withered-cherry-bf4adqt3` créé **avant** fusion, main `1407b6b0912573466da6957342a1a1636080a994`, Vercel `dpl_AqPhxQQFwMDdVSY1tj1RR1q3d7ix` READY, sondes `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 0.32.0-alpha. Voir journal `docs/deployments/2026-11-08-v0.32.0-alpha.md`. Le parent #5 reste ouvert ; ClamAV OFF.
+
+## Candidate BS-004g P0 #167 — duplication du chapitre (v0.33.0-alpha)
+
+Copie interne à l'édition active d'un chapitre depuis le sommaire/éditeur avec titre personnalisé : **dernière révision enregistrée**, nouvel UUID, séquence 0, en fin de manuscrit, original intact, statut DRAFT. API sous contrôle RBAC/Origin, lock livre + Serializable, idempotence `operationId`, 409 conflicts, 422 limites, audit sans prose, HTTP E2E réel. Pas de transfert de commentaires, imports, fichiers Supabase, snapshots, attestations de sécurité ou permissions. Documents complets avant publication. Suivant BS-004 #5 : copie ciblée entre ouvrages, contrôles d'organisation et ergonomie longue liste ; ClamAV toujours reporté.

@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.33.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-004g #167 — duplication sûre d'un chapitre courant
+- Menu ⋯ des chapitres : **Dupliquer ce chapitre…**, nouveau titre, confirmation des exclusions, FR/EN, mobile et clavier. La copie indépendante est ajoutée à la fin du manuscrit avec un nouveau UUID et révision 0.
+- JSON structuré, texte et hash exacts de la dernière révision **sauvegardée** ; original et snapshots inchangés. Aucun héritage de commentaires, ancrages, imports, source Supabase, historiques, droits ou attestations antivirus. Statut du livre réinitialisé à DRAFT.
+- API privée POST transactionnelle, session/workspace OWNER-EDITOR, CSRF, expectedEditionId/expectedRevision/expectedChapterUpdatedAt, verrou FOR UPDATE, Serializable, audit sans prose et opération UUID idempotente : replay 200 sans seconde copie. Limite 500 chapitres, 20 MiB, échecs 409/422 sans perte.
+- Tests unitaires, E2E HTTP PostgreSQL multi-tenant et documents guide/API/design/QA/ops/release/roadmap actualisés dans la PR avant publication. ClamAV OFF.
+
+
 ## [0.32.0] — alpha privée livrée le 8 novembre 2026 (PR #165, CI #229)
 ### BS-004f #164 — dupliquer un ouvrage sans transférer les sources
 - Nouvelle commande « Dupliquer le livre… » sur la fiche et dans les menus contextuels de la bibliothèque. Titre personnalisable, explications sur les brouillons non enregistrés et le périmètre de la copie, FR/EN mobile et toasts contextualisés.

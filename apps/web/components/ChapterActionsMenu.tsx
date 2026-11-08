@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {usePathname,useRouter} from 'next/navigation';
 import ActionMenu from './ActionMenu';
@@ -12,9 +12,10 @@ type Props={bookId:string;chapterId:string;title:string;updatedAt:string;revisio
 
 export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,revision,editable,beforeNavigate,reorder}:Props){
  const {t,locale}=useAppPreferences(),{notify}=useToast();
- const [mode,setMode]=useState<'create'|'rename'|'delete'|null>(null);
+ const [mode,setMode]=useState<'create'|'rename'|'delete'|'duplicate'|null>(null);
  const [desired,setDesired]=useState(title),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const router=useRouter(),pathname=usePathname();
+ const duplicateOperationRef=useRef<string|null>(null);
  const endpoint='/api/v1/books/'+bookId+'/chapters/'+chapterId;
  function close(){if(!busy){setMode(null);setError('');}}
  useEffect(()=>{
@@ -88,12 +89,87 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
      notify({tone:'error',title:locale==='fr'?'Déplacement interrompu':'Move interrupted',detail});
    }finally{setBusy(false);}
  }
- const start=(next:'create'|'rename'|'delete')=>{if((next==='create'||next==='delete')&&beforeNavigate?.()===false)return;setDesired(next==='create'?'':title);setError('');setMode(next);};
+ async function duplicateChapter(event:React.FormEvent){
+   event.preventDefault();
+   if(!editable||busy||beforeNavigate?.()===false)return;
+   const operationId=duplicateOperationRef.current;
+   if(!operationId)return;
+   setBusy(true);setError('');
+   try{
+     // The editor sidebar may hold initial revision metadata while autosave
+     // advances the chapter. Fetch latest SERVER metadata just before POST,
+     // while the API still revalidates everything under the book-row lock.
+     const [metadataResponse,chaptersResponse]=await Promise.all([
+       fetch('/api/v1/books/'+bookId+'/editions',{cache:'no-store'}),
+       fetch('/api/v1/books/'+bookId+'/chapters',{cache:'no-store'})
+     ]);
+     const metadata=await metadataResponse.json().catch(()=>({})) as {
+       currentEditionId?:string;error?:string};
+     const chaptersResult=await chaptersResponse.json().catch(()=>({})) as {
+       chapters?:{id:string;revision:number;updatedAt:string}[];error?:string};
+     const liveChapter=chaptersResult.chapters?.find(c=>c.id===chapterId);
+     if(!metadataResponse.ok||!metadata.currentEditionId||
+        !chaptersResponse.ok||!liveChapter){
+       const status=!metadataResponse.ok?metadataResponse.status:
+         !chaptersResponse.ok?chaptersResponse.status:404;
+       const msg=explainActionError({locale,operation:'chapter-duplicate',
+         status,code:metadata.error||chaptersResult.error});
+       setError(msg);
+       notify({tone:'error',title:locale==='fr'?'Copie du chapitre indisponible':
+         'Chapter duplication unavailable',detail:msg});return;
+     }
+     const response=await fetch(endpoint+'/duplicate',{
+       method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({
+         confirm:'DUPLICATE_CHAPTER_FROM_SAVED',
+         operationId,title:desired,
+         expectedEditionId:metadata.currentEditionId,
+         expectedRevision:liveChapter.revision,
+         expectedChapterUpdatedAt:liveChapter.updatedAt
+       })
+     });
+     const body=await response.json().catch(()=>({})) as {
+       chapter?:{id:string;title:string};error?:string;replayed?:boolean};
+     if(!response.ok||!body.chapter?.id){
+       const msg=explainActionError({locale,operation:'chapter-duplicate',
+         status:response.status,code:body.error});
+       setError(msg);
+       notify({tone:response.status===409?'warning':'error',
+         title:locale==='fr'?'Duplication du chapitre refusée':
+           'Chapter duplication refused',detail:msg});return;
+     }
+     setMode(null);
+     notify({tone:'success',
+       title:locale==='fr'?'Chapitre dupliqué':'Chapter duplicated',
+       detail:locale==='fr'?
+         '« '+body.chapter.title+' » a été ajouté à la fin du manuscrit avec le dernier texte enregistré. Les commentaires, sources et révisions de « '+title+' » restent dans le chapitre d’origine. Le livre revient à Brouillon.':
+         '“'+body.chapter.title+'” was appended with the latest saved text. Comments, sources and revisions remain on “'+title+'”. The book returns to Draft.'});
+     router.push('/books/'+bookId+'/chapters/'+body.chapter.id);
+     router.refresh();
+   }catch{
+     const msg=locale==='fr'?
+       'Connexion interrompue. Vérifiez la liste des chapitres avant de recommencer ; la même opération permet de retrouver une copie déjà créée.':
+       'Connection interrupted. Check the chapter list before retrying; repeating the same operation retrieves an existing copy.';
+     setError(msg);
+     notify({tone:'error',title:locale==='fr'?'Copie à vérifier':'Check chapter duplication',detail:msg});
+   }finally{setBusy(false);}
+ }
+ const start=(next:'create'|'rename'|'delete'|'duplicate')=>{
+   if((next==='create'||next==='delete'||next==='duplicate')&&
+      beforeNavigate?.()===false)return;
+   if(next==='duplicate'){
+     duplicateOperationRef.current=crypto.randomUUID();
+     setDesired((locale==='fr'?'Copie de ':'Copy of ')+title.slice(0,140));
+   }else setDesired(next==='create'?'':title);
+   setError('');setMode(next);
+ };
  return <>
    <ActionMenu label={t('chapter.actionsFor',{title})} disabled={busy} actions={[
      {label:t('chapter.open'),href:endpoint.replace('/api/v1',''),onSelect:()=>beforeNavigate?.()!==false},
      ...(editable?[{label:t('book.chapterAdd'),separatorBefore:true,onSelect:()=>start('create')},
        {label:t('chapter.rename'),onSelect:()=>start('rename')},
+       {label:locale==='fr'?'Dupliquer ce chapitre…':'Duplicate this chapter…',
+         onSelect:()=>start('duplicate')},
        ...(reorder?[{label:locale==='fr'?'Monter d’une position':'Move up one position',
          disabled:reorder.index<=0,onSelect:()=>void move('up')},
          {label:locale==='fr'?'Descendre d’une position':'Move down one position',
@@ -103,15 +179,36 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
    ]}/>
    {mode&&typeof document!=='undefined'&&createPortal(<div className="modal-backdrop" style={{zIndex:2200}} onMouseDown={event=>{if(event.target===event.currentTarget)close();}}>
      <form className="modal" role="dialog" aria-modal="true"
-       aria-label={mode==='create'?t('book.newChapterTitle'):
+       onKeyDown={event=>{
+         if(mode!=='duplicate'||event.key!=='Tab')return;
+         const items=[...event.currentTarget.querySelectorAll<HTMLElement>(
+           'button:not([disabled]),input:not([disabled]),select:not([disabled])'
+         )].filter(item=>item.getClientRects().length>0);
+         const first=items[0],last=items[items.length-1];
+         if(!first||!last)return;
+         if(event.shiftKey&&document.activeElement===first){
+           event.preventDefault();last.focus();
+         }else if(!event.shiftKey&&document.activeElement===last){
+           event.preventDefault();first.focus();
+         }
+       }}
+       aria-label={mode==='duplicate'?
+         (locale==='fr'?'Dupliquer le chapitre':'Duplicate chapter'):
+         mode==='create'?t('book.newChapterTitle'):
          locale==='fr'?(mode==='delete'?'Retirer un chapitre':t('chapter.renameHeading')):
-         (mode==='delete'?'Remove chapter':t('chapter.renameHeading'))} onSubmit={submit}>
+         (mode==='delete'?'Remove chapter':t('chapter.renameHeading'))} onSubmit={mode==='duplicate'?duplicateChapter:submit}>
        <button className="close" type="button" aria-label={t('common.close')} disabled={busy} onClick={close}>×</button>
        <div className="eyebrow">{t('chapter.section')}</div>
-       <h2>{mode==='create'?t('book.newChapterTitle'):mode==='rename'?t('chapter.renameHeading'):
+       <h2>{mode==='create'?t('book.newChapterTitle'):
+         mode==='duplicate'?(locale==='fr'?'Dupliquer « '+title+' »':'Duplicate “'+title+'”'):
+         mode==='rename'?t('chapter.renameHeading'):
          (locale==='fr'?'Retirer ce chapitre du manuscrit ?':'Remove this chapter from the manuscript?')}</h2>
        {mode!=='delete'?<>
-         <p>{mode==='create'?t('book.overviewSubtitle'):t('chapter.renameDetails')}</p>
+         <p>{mode==='duplicate'?
+           (locale==='fr'?
+             'Un nouveau chapitre indépendant sera ajouté à la fin du livre, avec uniquement le dernier contenu enregistré. Les commentaires, snapshots et fichiers sources restent associés à l’original. Enregistrez d’abord vos brouillons. Le statut du livre reviendra à Brouillon.':
+             'A new independent chapter will be appended with only the latest saved content. Comments, snapshots and source files remain on the original. Save your drafts first. Book status returns to Draft.'):
+           mode==='create'?t('book.overviewSubtitle'):t('chapter.renameDetails')}</p>
          <label>{t('book.newTitle')}
            <input autoFocus required minLength={2} maxLength={180} value={desired}
              onChange={event=>setDesired(event.target.value)}/>
@@ -121,7 +218,8 @@ export default function ChapterActionsMenu({bookId,chapterId,title,updatedAt,rev
          '“'+title+'” will disappear from active navigation and search. Its content, revisions and comments remain preserved and can be restored from the overview.'}</p>}
        {error&&<p className="form-error" role="alert">{error}</p>}
        <button className={'button full'+(mode==='delete'?' is-danger':'')} type="submit" disabled={busy}>
-         {busy?t('book.saving'):mode==='create'?t('book.chapterCreate'):mode==='delete'?
+         {busy?t('book.saving'):mode==='create'?t('book.chapterCreate'):
+         mode==='duplicate'?(locale==='fr'?'Créer la copie du chapitre':'Create chapter copy'):mode==='delete'?
            (locale==='fr'?'Confirmer le retrait réversible':'Confirm reversible removal'):
            t('book.saveTitle')}
        </button>

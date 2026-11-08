@@ -76,3 +76,7 @@ Comparaison privée, précise et non destructive des textes enregistrés de deux
 ## v0.32.0-alpha — livrée en production privée
 
 Issue BS-004f #164 : commande **Dupliquer un ouvrage** depuis les menus contextuels des livres. Un nouveau livre indépendant DRAFT est créé avec l'édition 1 et uniquement les chapitres actifs dans leur **dernière révision enregistrée**, sans transférer les fichiers sources, imports, scans, commentaires, snapshots, éditions historiques, droits ou publications. La copie est transactionnelle et les retries sont idempotents. [Release](docs/releases/v0.32.0.md) · [Recette E2E](docs/qa/E2E-BOOK-DUPLICATE-0.32.0.md). **Production actuelle : v0.32.0-alpha**, propriétaire E2E BON et GitHub CI #229 SUCCESS, snapshot Neon de protection avant fusion et Vercel READY. ClamAV OFF.
+
+## Candidate v0.33.0-alpha — NON DÉPLOYÉE
+
+Nouvelle fonctionnalité **Dupliquer ce chapitre…** dans les menus contextuels du sommaire et du Studio, issue #167 (BS-004g). Une nouvelle ID de chapitre est ajoutée à la fin de l'édition courante, avec une révision zéro portant uniquement le **dernier contenu enregistré** du chapitre source. Les commentaires, révisions historiques, imports, sources, snapshots, scans et permissions ne sont pas copiés ; source originale conservée. Réexécution idempotente sous lock du livre. [Release](docs/releases/v0.33.0.md) · [E2E](docs/qa/E2E-CHAPTER-COPY-0.33.0.md). Production actuelle **v0.32.0-alpha** jusqu'à E2E propriétaire v0.33 BON, CI finale, snapshot Neon et merge main. ClamAV OFF.
