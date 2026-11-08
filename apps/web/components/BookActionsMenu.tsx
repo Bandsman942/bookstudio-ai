@@ -159,7 +159,21 @@ export default function BookActionsMenu({bookId,title,bookType,language,status,u
     <ActionMenu label={t('book.actionsFor',{title})} actions={actions} disabled={busy}/>
     {mode&&typeof document!=='undefined'&&createPortal(<>
     {(mode==='rename'||mode==='archive'||mode==='duplicate')&&<div className="modal-backdrop book-actions-overlay" onMouseDown={event=>{if(event.currentTarget===event.target&&!busy)setMode(null);}}>
-      {mode==='duplicate'?<form className="modal" onSubmit={event=>void duplicateBook(event)}
+      {mode==='duplicate'?<form className="modal"
+        onSubmit={event=>void duplicateBook(event)}
+        onKeyDown={event=>{
+          if(event.key!=='Tab')return;
+          const focusable=[...event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])'
+          )].filter(item=>item.getClientRects().length>0);
+          const first=focusable[0],last=focusable[focusable.length-1];
+          if(!first||!last)return;
+          if(event.shiftKey&&document.activeElement===first){
+            event.preventDefault();last.focus();
+          }else if(!event.shiftKey&&document.activeElement===last){
+            event.preventDefault();first.focus();
+          }
+        }}
         role="dialog" aria-modal="true"
         aria-label={locale==='fr'?'Dupliquer un ouvrage':'Duplicate book'}>
         <button className="close" type="button" disabled={busy}
