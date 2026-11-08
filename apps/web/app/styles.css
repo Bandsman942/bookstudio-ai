@@ -1029,3 +1029,17 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 @media(max-width:700px){.chapter-history-layout{grid-template-columns:1fr}
   .chapter-history-list{max-height:30dvh}.chapter-history-text{max-height:30dvh}
   .studio-history-trigger{font-size:.78rem;padding:6px 8px}}
+
+/* Keep the Studio toolbar usable at 320px with a visible icon and aria label. */
+@media(max-width:760px){
+ .studio-history-trigger{display:grid;place-items:center;min-width:34px;width:34px;height:36px;
+   padding:0;font-size:0}
+ .studio-history-trigger::before{content:"↺";font-size:20px;line-height:1}
+}
+@media(max-width:390px){
+ .studio-shortcuts-trigger{display:none}
+ .studio-quick-overview{max-width:90px}
+ .studio-topbar{padding:0 6px}
+ .studio-actions .save-state{font-size:10px;max-width:70px;white-space:nowrap;
+   overflow:hidden;text-overflow:ellipsis}
+}

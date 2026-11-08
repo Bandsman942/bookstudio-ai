@@ -21,6 +21,8 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
  const [confirm,setConfirm]=useState<number|null>(null),[busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const closeRef=useRef<HTMLButtonElement>(null);
+ const triggerRef=useRef<HTMLButtonElement>(null);
+ const wasOpen=useRef(false);
  const base='/api/v1/books/'+bookId+'/chapters/'+chapterId+'/revisions';
  useEffect(()=>setMounted(true),[]);
  const load=useCallback(async(cursor:number|null)=>{
@@ -45,10 +47,28 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
    void load(null);
  },[open,load]);
  useEffect(()=>{
+   if(open){
+     wasOpen.current=true;closeRef.current?.focus();
+   }else if(wasOpen.current){
+     wasOpen.current=false;triggerRef.current?.focus();
+   }
+ },[open]);
+ useEffect(()=>{
    if(!open)return;
-   closeRef.current?.focus();
    const handle=(event:KeyboardEvent)=>{
-     if(event.key==='Escape'&&!busy){event.preventDefault();setOpen(false);}
+     if(event.key==='Escape'&&!busy){event.preventDefault();setOpen(false);return;}
+     if(event.key!=='Tab')return;
+     const dialog=closeRef.current?.closest('[role="dialog"]');
+     const active=[...(dialog?.querySelectorAll<HTMLElement>(
+       'button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled])'
+     )??[])].filter(item=>item.getClientRects().length>0);
+     const first=active[0],last=active[active.length-1];
+     if(!first||!last)return;
+     if(event.shiftKey&&document.activeElement===first){
+       event.preventDefault();last.focus();
+     }else if(!event.shiftKey&&document.activeElement===last){
+       event.preventDefault();first.focus();
+     }
    };
    document.addEventListener('keydown',handle);
    return()=>document.removeEventListener('keydown',handle);
@@ -122,7 +142,7 @@ export default function ChapterRevisionsPanel({bookId,chapterId,canEdit,
  const formatDate=(date:string)=>new Intl.DateTimeFormat(fr?'fr-FR':'en-US',
    {dateStyle:'medium',timeStyle:'short'}).format(new Date(date));
  return <>
-   <button type="button" className="studio-history-trigger"
+   <button ref={triggerRef} type="button" className="studio-history-trigger"
      onClick={()=>setOpen(true)} aria-haspopup="dialog"
      aria-label={fr?'Historique des révisions du chapitre':'Chapter revision history'}>
      {fr?'Historique':'History'}
