@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.34.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.34.0] — alpha privée livrée le 8 novembre 2026 (PR #171, CI #243)
 ### BS-004h #170 — copier le dernier chapitre sauvegardé dans un autre livre du même espace
 - Commande « Copier dans un autre livre… » sur le menu contextuel de chapitre. Sélecteur privé des ouvrages modifiables du **même workspace**, recherche titre bornée, réponse limitée à 50 résultats avec signal hasMore, refus des destinations hors espace ou archivées.
 - Nouveau chapitre indépendant en fin de l'édition courante du livre choisi, révision 0 reproduisant exactement le JSON/texte/hash de la dernière version enregistrée du chapitre source. Source, snapshots et commentaires intacts ; destination repasse en DRAFT.

@@ -143,3 +143,7 @@ Issue BS-004g #167 livrée en PR #168 : E2E propriétaire BON, CI #235 SUCCESS d
 ## Candidate P0 BS-004h #170 — copier un chapitre entre livres (v0.34.0-alpha)
 
 Action menu ⋯ **Copier dans un autre livre…** : sélecteur limité aux livres modifiables du même workspace, recherche insensible à la casse, max 50 résultats avec `hasMore`. Nouvel ID de chapitre à révision 0 ajouté en fin de l'édition courante de destination, texte/JSON du dernier enregistrement de source, original inchangé et cible DRAFT. Transaction verrouillant les deux livres dans l'ordre ID, membership OWNER/EDITOR sur les deux, contrôle concurrent des éditions, idempotence et audit sans prose. Aucune copie d'import, objet Supabase, commentaire, snapshot, preuve antivirus ni permission ; tests E2E anti-cross-tenant. ClamAV reporté, parent BS-004 #5 toujours ouvert pour critères restants ; publication seulement après gate documentaire + CI + E2E propriétaire.
+
+## Livraison confirmée v0.34.0-alpha — 8 novembre 2026
+
+Issue BS-004h #170 livrée via PR #171 : E2E propriétaire BON, CI #243 SUCCESS au SHA exact, snapshot Neon protégé `snap-orange-fog-bfyx3lrt` créé **avant fusion**, main `1ccf23b60013ef72131da7c816746b1bee743ac2`, Vercel `dpl_7XACxK6xAZyRtajgh6q4mPCFgdmE` READY, `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 v0.34.0-alpha. Journal `docs/deployments/2026-11-08-v0.34.0-alpha.md`. Parent #5 ouvert, ClamAV OFF.
