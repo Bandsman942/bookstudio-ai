@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.30.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.30.0] — alpha privée livrée le 8 novembre 2026 (PR #159, CI #216)
 ### BS-008d #158 — historique des chapitres et restauration ciblée
 - Consultation paginée des révisions successives d'un chapitre et aperçu en texte brut sur demande (auteur/date), sans prose dans la liste.
 - Restauration explicite d'une version antérieure dans une nouvelle révision, sans toucher à l'historique, avec statut DRAFT et audit auteur/fromSequence/toSequence.

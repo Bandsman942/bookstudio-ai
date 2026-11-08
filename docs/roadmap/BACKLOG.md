@@ -111,3 +111,7 @@ BS-008c #155 livré via PR #156 : E2E propriétaire BON, CI #210 SUCCESS, snapsh
 - Aperçu historique privé en texte brut à la demande ; restauration d'un numéro ancien créant une **nouvelle** révision et revenant au statut DRAFT, avec validation d'accès et résolution des conflits inter-onglets.
 - UI intégrée au Studio FR/EN, accessible mobile/clavier, sans restauration des brouillons locaux non sauvegardés ; audit sans prose, E2E PostgreSQL, documentation complète avant publication.
 - Non inclus : diff prose mot à mot, revue visuelle ProseMirror, suivi des modifications Word avancé, merge de plusieurs révisions, restauration au-delà de l'édition courante (traitée séparément par v0.29). Les parents P0 #9/#6 restent ouverts sur leurs autres exigences, sécurité ClamAV différée.
+
+## Livraison vérifiée v0.30.0-alpha — 8 novembre 2026
+
+Sous-issue #158 livrée en PR #159 : E2E propriétaire BON, CI #216 SUCCESS, snapshot de protection Neon `snap-hidden-mud-bfw2ewji` **avant** fusion, SHA `main` `b46c21976c247ea450a2edbafee02e13e8afbeea`, Vercel `dpl_8n81aoY1d8QwQd88YgjDqLaY1wQ1` READY, sondes privées `/api/health` 200 DB ready et `/api/version` 200 0.30.0-alpha. Journal `docs/deployments/2026-11-08-v0.30.0-alpha.md`. P0 parents #9/#6 restent ouverts pour le cahier des charges restant ; ClamAV hors service.
