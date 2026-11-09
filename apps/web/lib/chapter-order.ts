@@ -11,8 +11,8 @@ export function chapterOrderToken(chapters:readonly ChapterOrderRow[]):string{
   });
   return createHash('sha256').update(normalized.join('|')).digest('hex');
 }
-export function nextChapterOrder(chapters:readonly ChapterOrderRow[],
-  chapterId:string,direction:'up'|'down'){
+export function nextChapterOrder<T extends ChapterOrderRow>(chapters:readonly T[],
+  chapterId:string,direction:'up'|'down'):T[]|null{
   const index=chapters.findIndex(ch=>ch.id===chapterId);
   if(index<0)return null;
   const target=index+(direction==='up'?-1:1);

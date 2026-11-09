@@ -23,3 +23,12 @@ test('collision-safe order digest includes positions, not manuscript text',()=>{
    chapterOrderToken([{id:ids[0],position:0},{id:ids[1],position:1}]));
  assert.throws(()=>chapterOrderToken([{id:ids[0],position:-1}]),/INVALID/);
 });
+test('moving rows preserves part metadata needed to validate grouping',()=>{
+ const grouped=ordered.map((chapter,index)=>({
+  ...chapter,partId:index<2?'first':'second',title:'Chapter '+index
+ }));
+ const moved=nextChapterOrder(grouped,ids[1],'down');
+ assert.deepEqual(moved?.map(row=>row.partId),['first','second','first']);
+ assert.deepEqual(moved?.map(row=>row.title),['Chapter 0','Chapter 2','Chapter 1']);
+ assert.deepEqual(grouped.map(row=>row.partId),['first','first','second']);
+});
