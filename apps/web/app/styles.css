@@ -1362,3 +1362,51 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
   overflow:hidden;touch-action:none
  }
 }
+
+
+/* v0.38 — live, read-only H1–H3 outline nested inside existing Studio drawer.
+ * One scrollable list at a time: chapters keep their ⋯ contextual actions;
+ * sections never trigger a network request or document mutation. */
+.studio-outline-tabs{display:grid;grid-template-columns:1fr 1fr;
+ gap:6px;margin:11px 0 8px;min-width:0}
+.studio-outline-tabs button{display:flex;align-items:center;justify-content:center;
+ gap:7px;min-width:0;min-height:44px;padding:8px 10px;
+ border:1px solid var(--line);border-radius:9px;
+ background:var(--surface-muted,#f3f6f5);color:var(--muted);
+ font-size:12px;font-weight:800;cursor:pointer}
+.studio-outline-tabs button.active{color:var(--ink);
+ border-color:var(--green);background:var(--surface-hover,#eaf3ed)}
+.studio-outline-tabs button:focus-visible,
+.chapter-outline-link:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.chapter-section-outline{display:flex;flex:1 1 auto;flex-direction:column;
+ gap:9px;min-height:0;min-width:0;overflow:hidden}
+.section-outline-search{display:grid;gap:5px;padding:4px 4px 0;
+ color:var(--muted);font-weight:700;font-size:11px}
+.section-outline-search input{min-width:0;width:100%;font-size:16px;
+ padding:8px 10px;min-height:44px;border:1px solid var(--line);
+ border-radius:8px;color:var(--ink);background:var(--surface,#fff)}
+.section-outline-count{font-size:11px;color:var(--muted);padding:3px 7px}
+.chapter-outline-list{display:flex;flex-direction:column;flex:1 1 auto;
+ min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+ scrollbar-width:thin;gap:3px;padding:3px 4px 12px 0}
+.chapter-outline-link{min-width:0;width:100%;display:flex;align-items:center;
+ gap:8px;text-align:start;min-height:44px;padding:9px 8px;
+ border:0;border-radius:9px;background:transparent;color:var(--ink);
+ cursor:pointer;font-size:12px}
+.chapter-outline-link:hover,.chapter-outline-link.selected{
+ color:var(--green);background:var(--surface-hover,#edf4f2)}
+.section-outline-level{font-size:10px;flex:0 0 25px;
+ color:var(--muted);font-weight:800}
+.chapter-outline-name{display:block;min-width:0;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;flex:1}
+.section-outline-limit{font-size:11px;color:var(--muted);
+ padding:12px;background:var(--surface-muted);border-radius:9px;
+ line-height:1.5}
+.section-outline-note{margin:0;padding:7px 5px 2px;font-size:11px;
+ line-height:1.45;color:var(--muted)}
+@media(max-width:900px){
+ .studio .studio-outline-tabs{margin-top:8px}
+ .studio .chapter-section-outline{min-height:0}
+ .studio .chapter-outline-list{flex:1 1 auto;min-height:0;
+  -webkit-overflow-scrolling:touch}
+}

@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.37.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.38.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -273,3 +273,20 @@ Dans le **Studio d'édition plein écran**, le hamburger déjà disponible est a
 ### English — Mobile navigation
 
 On narrow screens, tap the **☰ button at the upper-left** of Library, Book Overview, Search or Archives to reveal the **complete left navigation**, including the book's long chapter list and ⋯ actions. Close using **×**, the backdrop, Escape or a navigation link. The menu scrolls independently, preserves keyboard focus and respects iPhone safe areas and light/dark themes. Studio's own hamburger is kept visible and enlarged, even in focus mode; pending unsaved drafts still block unsafe navigation.
+
+## 23. Sommaire des sections du chapitre courant (candidate v0.38.0-alpha)
+
+Le Studio dispose d'une nouvelle navigation structurée qui **ne modifie jamais votre manuscrit**. Sur ordinateur, utilisez la barre latérale ; sur téléphone ou tablette (jusqu'à 900px), ouvrez le **hamburger ☰ en haut à gauche**. Deux onglets sont disponibles :
+
+- **Chapitres** : retrouve tous les chapitres de votre livre et leurs menus contextuels ⋯ (renommer, dupliquer, réorganiser, copier, fusionner, etc., selon vos droits). Les actions habituelles ne disparaissent pas.
+- **Sections** : présente les titres **H1, H2 et H3 réellement saisis dans le chapitre ouvert**, avec indentation selon le niveau. Les styles de paragraphes en gras ne sont pas pris pour des titres. Un titre vide n'est pas inventé ; les H4 ne sont pas inclus dans cette première tranche.
+
+La liste se met à jour en fonction du **document actuellement ouvert dans l'éditeur**, même si un brouillon n'est pas encore enregistré. Saisissez une partie du titre dans **Filtrer les titres H1–H3** pour retrouver une section (Unicode/accents acceptés). Le compteur indique combien de titres correspondent ; au-delà de **300**, l'application indique clairement qu'il reste des résultats et demande de préciser le filtre. **Aucune partie du manuscrit n'est effacée ni tronquée.**
+
+Sélectionnez une section pour **déplacer le curseur et afficher son emplacement** sans changer le texte. Les titres sont revérifiés au moment de la navigation pour éviter un saut erroné après une modification du document. Aucun appel IA ou service externe n'est effectué. Cette fonction est également disponible en lecture seule et en mode concentration. Pour naviguer vers un **autre chapitre**, retournez dans **Chapitres** ; le garde habituel empêche la sortie lorsque des modifications restent à sauvegarder.
+
+Cette première version est un sommaire **interne au chapitre courant**, pas encore la table des matières complète du livre, ni une hiérarchie persistante des parties, ni une table intégrée aux exports PDF/DOCX.
+
+### English — Live section outline
+
+In Studio's left sidebar (or the **☰** mobile drawer), switch between **Chapters** and **Sections**. Chapters keeps the complete chapter list and ⋯ action menus. Sections lists the current open document's real **H1/H2/H3** headings with hierarchical indentation, title filtering and accurate result counts. The outline includes local unsaved drafts, but clicking a section **only moves the caret and viewport**, without editing or saving the document. More than 300 headings are signaled explicitly; refine the filter to find later matches. Reader roles can navigate. Whole-book tables of contents and publication exports are not part of this release.

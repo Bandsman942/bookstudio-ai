@@ -6,6 +6,9 @@ import StarterKit from '@tiptap/starter-kit';
 import {safeExternalHref} from '@bookstudio/domain';
 import EditorRibbon from './EditorRibbon';
 import ChapterFindReplacePanel from './ChapterFindReplacePanel';
+import ChapterSectionOutline from './ChapterSectionOutline';
+import {sameSectionAtPosition,type SectionHeading} from '@/lib/section-outline';
+import {TextSelection} from '@tiptap/pm/state';
 import AppIcon from './AppIcon';
 import Link from 'next/link';
 import ChapterComments from './ChapterComments';
@@ -30,6 +33,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const [currentRevision,setRevision]=useState(revision);
  const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[mobileNav,setMobileNav]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
  const [recovery,setRecovery]=useState<string|null>(null);
+ const [sidebarMode,setSidebarMode]=useState<'chapters'|'sections'>('chapters');
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
  const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
  const retryCountRef=useRef(0),retryAtRef=useRef(0),conflictRef=useRef(false);
@@ -291,6 +295,31 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    }
    return true;
  }
+
+ function jumpToSection(heading:SectionHeading){
+   if(!editor)return;
+   if(!sameSectionAtPosition(editor.state.doc,heading)){
+     notify({tone:'warning',
+       title:locale==='fr'?'Sommaire actualisé':'Outline changed',
+       detail:locale==='fr'?
+         'Le titre a changé pendant la navigation. Vérifiez le sommaire actualisé, aucune modification n’a été faite.':
+         'This heading changed while navigating. Check the updated outline; no manuscript was modified.'});
+     return;
+   }
+   const jump=()=>{
+     if(!sameSectionAtPosition(editor.state.doc,heading))return;
+     // Selection-only transaction. Never runs editor.update and never creates
+     // a revision or autosave draft.
+     editor.view.dispatch(editor.state.tr.setSelection(
+       TextSelection.create(editor.state.doc,heading.position+1)
+     ).scrollIntoView());
+     editor.view.focus();
+   };
+   if(mobileNav){
+     setMobileNav(false);
+     window.requestAnimationFrame(()=>window.requestAnimationFrame(jump));
+   }else jump();
+ }
  function protectNavigation(event:React.MouseEvent){
    if(!canLeaveEditor())event.preventDefault();else setMobileNav(false);
  }
@@ -306,16 +335,35 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <Link href={'/search?bookId='+bookId} className="back-link" onClick={protectNavigation}>
       <AppIcon name="search"/>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}
     </Link>
-    <div ref={navListRef} className="chapter-navigation" aria-label={locale==='fr'?'Liste des chapitres':'Chapter list'}>{chapters.map((c,i)=>
-      <div key={c.id} className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
-        <Link href={'/books/'+bookId+'/chapters/'+c.id} onClick={protectNavigation}
-          className={'chapter-nav-link '+(c.id===chapterId?'selected':'')} aria-current={c.id===chapterId?'page':undefined}>
-          <AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span>
-        </Link>
-        <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title} revision={c.revision}
-          updatedAt={c.updatedAt} editable={canEdit} beforeNavigate={canLeaveEditor}
-          reorder={{token:orderToken,index:i,total:chapters.length}}/>
-      </div>)}</div>
+    <div className="studio-outline-tabs" role="group"
+      aria-label={locale==='fr'?'Choisir la navigation latérale':'Choose sidebar navigation'}>
+      <button type="button" className={sidebarMode==='chapters'?'active':''}
+        aria-pressed={sidebarMode==='chapters'} onClick={()=>setSidebarMode('chapters')}>
+        <AppIcon name="chapter" size={15}/>{locale==='fr'?'Chapitres':'Chapters'}
+      </button>
+      <button type="button" className={sidebarMode==='sections'?'active':''}
+        aria-pressed={sidebarMode==='sections'} onClick={()=>setSidebarMode('sections')}>
+        <AppIcon name="manuscript" size={15}/>{locale==='fr'?'Sections':'Sections'}
+      </button>
+    </div>
+    {sidebarMode==='chapters'?
+      <div ref={navListRef} className="chapter-navigation"
+        role="navigation" aria-label={locale==='fr'?'Liste des chapitres':'Chapter list'}>
+        {chapters.map((c,i)=>
+          <div key={c.id} className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
+            <Link href={'/books/'+bookId+'/chapters/'+c.id} onClick={protectNavigation}
+              className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}
+              aria-current={c.id===chapterId?'page':undefined}>
+              <AppIcon name="chapter" size={16}/><span>{String(i+1).padStart(2,'0')}. {c.title}</span>
+            </Link>
+            <ChapterActionsMenu bookId={bookId} chapterId={c.id} title={c.title}
+              revision={c.revision} updatedAt={c.updatedAt} editable={canEdit}
+              beforeNavigate={canLeaveEditor}
+              reorder={{token:orderToken,index:i,total:chapters.length}}/>
+          </div>)}
+      </div>:
+      <ChapterSectionOutline editor={editor} onJump={jumpToSection}/>}
+
     <div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>
   <main className="studio-center">

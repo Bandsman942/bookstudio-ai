@@ -1,0 +1,16 @@
+# E2E v0.38.0-alpha — Navigation par les sections du chapitre (#183)
+
+**CANDIDATE NON DÉPLOYÉE.** Ne pas fusionner ni déclencher Vercel avant CI SUCCESS au dernier SHA et **`E2E v0.38.0-alpha BON`** explicite.
+
+1. Ouvrir dans le Studio un chapitre comprenant au moins **trois titres réellement mis en forme** via le ruban : H1 « Introduction », H2 « Contexte », H3 « Méthodologie », quelques paragraphes et un dernier H2 « Conclusion ». Y ajouter gras, accents, emoji et lien, puis sauvegarder.
+2. Depuis la colonne gauche du Studio, vérifier deux boutons **Chapitres / Sections**. Cliquer **Sections** : le plan affiche uniquement les vrais H1/H2/H3 **dans leur ordre de lecture** et avec une indentation adaptée, sans inventer les paragraphes ressemblant à des titres. Changer la langue FR/EN et le thème clair/sombre.
+3. Sélectionner « Méthodologie » : la fenêtre d'édition défile au bon titre, le curseur s'y place, sans modifier le texte, sans accroître la révision et sans déclencher d'autosauvegarde parasite. Répéter en compte VIEWER/REVIEWER : navigation possible, écriture toujours interdite.
+4. Faire évoluer un H2 en paragraphe, renommer un H3, ajouter un nouveau H1 **sans enregistrer** : le sommaire réagit immédiatement au **brouillon local**. Vérifier l'absence de transmission à un service externe. Revenir au titre puis effectuer une sauvegarde normale ; le contenu et les révisions ne doivent pas être altérés par le sommaire.
+5. Rechercher « MÉTHODOLOGIE » dans le filtre du plan : résultat trouvé malgré la casse. Tester accents, titres vides et terme absent, les messages contextuels « Aucun titre » ou « Aucun résultat ».
+6. Sur un chapitre généré ou un corpus de test avec **plus de 300 titres H1–H3**, vérifier la limite explicitement annoncée et le compteur **300 sur N**, puis filtrer pour accéder au 301ᵉ titre ou plus loin ; aucune section n'est « perdue » dans les données. Tester des titres très longs : ellipsis visuel, titre complet au focus/lecteur d'écran.
+7. Revenir à **Chapitres** : **tous les chapitres et leurs actions ⋯** doivent rester accessibles comme en v0.37 ; tester le changement de chapitre avec un brouillon non sauvegardé, qui doit être empêché par `canLeaveEditor`.
+8. Sur mobile 320/375/390px et tablette 768/900px, ouvrir le hamburger ☰ en haut à gauche, puis **Sections** ; vérifier la liste défilante, un titre de fin de chapitre, la fermeture du drawer au saut, le positionnement du curseur et l'absence de débordement horizontal. Tester mode concentration, rotation 900→901px, safe-area iOS, clavier Tab/Escape, focus et toasts. À 1440px, la sidebar desktop ne doit pas changer de structure.
+9. Vérifier qu'une sélection dans le sommaire n'entraîne **aucune requête de sauvegarde**, **aucun audit d'édition**, **aucune augmentation de révision** et aucune réécriture du JSON ProseMirror. Les recherches et titres restent strictement locaux.
+10. **CI** sur dernier commit : `pnpm section-outline:check`, `pnpm release:check`, `pnpm ui:check`, `pnpm perf:check`, `pnpm test`, worker, HTTP E2E PostgreSQL, Prisma, TypeScript et build. Vérifier le dossier documentaire complet dans la PR.
+
+**Après validation E2E propriétaire uniquement :** snapshot Neon prod AVANT merge main ; Vercel prod-only, Preview OFF, health/version/logs ; journal réel postprod docs-only. ClamAV toujours OFF.
