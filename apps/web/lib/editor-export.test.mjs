@@ -41,10 +41,51 @@ test('DOCX exporter rejects executable URL marks',()=>{
   assert.throws(()=>renderDocx('Titre',[{title:'Chapitre 1',content:invalid}]),/DOCUMENT_UNSAFE_LINK/);
 });
 
+test('v2 structured DOCX exports frozen part headings and linked chapter contents',()=>{
+ const chapters=[{title:'Introduction',partTitle:'Partie I — Fondements',withinPart:true,content:document},
+   {title:'Méthodologie',withinPart:true,content:document},
+   {title:'Résultats',partTitle:'Partie II — Pratique',withinPart:true,content:document}];
+ const zip=unzipSync(renderDocx('Mon livre structuré',chapters));
+ const xml=strFromU8(zip['word/document.xml']);
+ assert.match(xml,/Table des matières/);
+ assert.match(xml,/Partie I — Fondements/);
+ assert.match(xml,/Partie II — Pratique/);
+ assert.match(xml,/w:hyperlink w:anchor="BS_Chapter_3"/);
+ assert.match(xml,/w:bookmarkStart w:id="3" w:name="BS_Chapter_3"/);
+ const md=renderMarkdown('Mon livre structuré',chapters);
+ assert.match(md,/## Table des matières/);
+ assert.match(md,/## Partie I — Fondements/);
+ assert.match(md,/### Méthodologie/);
+ assert.match(md,/- \*\*Partie I — Fondements\*\*\n  - Introduction\n  - Méthodologie\n- \*\*Partie II — Pratique\*\*/);
+ assert.ok(md.indexOf('Partie I — Fondements')<md.indexOf('Partie II — Pratique'));
+});
+
+test('unassigned chapters keep a top-level Markdown heading in a mixed snapshot',()=>{
+ const md=renderMarkdown('Essai',[{title:'Avant-propos',content:document},
+   {title:'Chapitre structuré',partTitle:'Partie I',withinPart:true,content:document}]);
+ assert.match(md,/\n\n## Avant-propos\n\n/);
+ assert.match(md,/\n\n### Chapitre structuré\n\n/);
+});
+
+test('legacy flat Markdown export keeps its original chapter headings',()=>{
+ const md=renderMarkdown('Livre ancien',[{title:'Chapitre A',content:document}]);
+ assert.match(md,/## Chapitre A/);
+ assert.ok(!md.includes('Table des matières'));
+});
+
 test('PDF reading export keeps a valid non-empty PDF with inline style and link',async()=>{
   const bytes=await renderReadingPdf('Mon livre',[{title:'Chapitre 1',content:document}]);
   assert.ok(bytes.byteLength>600);
   assert.equal(Buffer.from(bytes.subarray(0,5)).toString('ascii'),'%PDF-');
+});
+
+test('PDF with frozen part titles includes a visible contents page',async()=>{
+ const data=await renderReadingPdf('Livre structuré',[
+   {title:'Fondements',partTitle:'Partie I',content:document},
+   {title:'Applications',partTitle:'Partie II',content:document}]);
+ assert.equal(Buffer.from(data.subarray(0,5)).toString('ascii'),'%PDF-');
+ assert.ok((Buffer.from(data).toString('latin1').match(/\/Type \/Page\b/g)||[]).length>=3,
+   'contents plus two chapter pages are expected');
 });
 
 test('PDF supports 13 French chapters with typographic spaces and Greek Unicode',async()=>{

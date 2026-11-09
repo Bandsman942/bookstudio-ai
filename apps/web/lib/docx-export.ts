@@ -8,7 +8,8 @@ type Node = {
   marks?:Array<{type?:string;attrs?:{href?:string}}>;
   content?:Node[];
 };
-export type ExportChapter={title:string;content:unknown};
+/** partTitle is frozen by the signed snapshot, never read from the live manuscript. */
+export type ExportChapter={title:string;content:unknown;partTitle?:string;withinPart?:boolean};
 
 const escapeXml=(value:string)=>value.replace(/&/g,'&amp;').replace(/</g,'&lt;')
   .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
@@ -43,6 +44,20 @@ function runs(node:Node,links:Map<string,string>):string {
 
 const paragraph=(inner:string,style?:string)=>'<w:p>'+
   (style?'<w:pPr><w:pStyle w:val="'+style+'"/></w:pPr>':'')+inner+'</w:p>';
+const textRun=(value:string)=>'<w:r><w:t xml:space="preserve">'+escapeXml(value)+'</w:t></w:r>';
+
+/** An explicit, searchable table of contents with internal DOCX bookmarks.
+ * No invented page numbers: Word repaginates according to user settings. */
+function toc(chapters:ExportChapter[]):string{
+ if(!chapters.some(c=>c.partTitle))return '';
+ const lines=[paragraph(textRun('Table des matières'),'TocTitle')];
+ chapters.forEach((chapter,index)=>{
+   if(chapter.partTitle)lines.push(paragraph(textRun(chapter.partTitle),'TocPart'));
+   lines.push(paragraph('<w:hyperlink w:anchor="BS_Chapter_'+(index+1)+'" w:history="1">'+
+     textRun(chapter.title)+'</w:hyperlink>',chapter.withinPart?'TocChapter':'TocUnassigned'));
+ });
+ return lines.join('')+paragraph('<w:r><w:br w:type="page"/></w:r>');
+}
 
 function paragraphs(node:Node,links:Map<string,string>):string {
   if(node.type==='paragraph')return paragraph(runs(node,links));
@@ -70,10 +85,13 @@ export function renderDocx(title:string,chapters:ExportChapter[]):Uint8Array {
     collectLinks(chapter.content as Node,links);
   }
   const body=[
-    paragraph('<w:r><w:t xml:space="preserve">'+escapeXml(title)+'</w:t></w:r>','Title'),
+    paragraph(textRun(title),'Title'),
+    toc(chapters),
     ...chapters.flatMap((chapter,index)=>[
       index>0?paragraph('<w:r><w:br w:type="page"/></w:r>'):'',
-      paragraph('<w:r><w:t xml:space="preserve">'+escapeXml(chapter.title)+'</w:t></w:r>','Heading1'),
+      chapter.partTitle?paragraph(textRun(chapter.partTitle),'PartHeading'):'',
+      paragraph('<w:bookmarkStart w:id="'+(index+1)+'" w:name="BS_Chapter_'+(index+1)+'"/>'+
+        textRun(chapter.title)+'<w:bookmarkEnd w:id="'+(index+1)+'"/>','Heading1'),
       paragraphs(chapter.content as Node,links)
     ])
   ].join('');
@@ -89,6 +107,11 @@ export function renderDocx(title:string,chapters:ExportChapter[]):Uint8Array {
     '<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>'+
     '<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:rPr><w:b/><w:sz w:val="26"/></w:rPr></w:style>'+
     '<w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:rPr><w:b/></w:rPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="PartHeading"><w:name w:val="part heading"/><w:rPr><w:b/><w:sz w:val="38"/></w:rPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="TocTitle"><w:name w:val="contents title"/><w:rPr><w:b/><w:sz w:val="32"/></w:rPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="TocPart"><w:name w:val="contents part"/><w:rPr><w:b/></w:rPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="TocChapter"><w:name w:val="contents chapter"/><w:pPr><w:ind w:left="360"/></w:pPr></w:style>'+
+    '<w:style w:type="paragraph" w:styleId="TocUnassigned"><w:name w:val="contents unassigned chapter"/></w:style>'+
     '<w:style w:type="paragraph" w:styleId="Quote"><w:name w:val="quote"/><w:pPr><w:ind w:left="360"/></w:pPr></w:style>'+
     '<w:style w:type="paragraph" w:styleId="Code"><w:name w:val="code"/><w:rPr><w:rFonts w:ascii="Courier New"/></w:rPr></w:style>'+
     '</w:styles>';
@@ -148,8 +171,17 @@ function markdownBlocks(node:Node):string[] {
   return (node.content??[]).flatMap(markdownBlocks);
 }
 export function renderMarkdown(title:string,chapters:ExportChapter[]):string {
-  return ['# '+escapeMd(title),...chapters.flatMap(chapter=>{
+  const structured=chapters.some(c=>c.partTitle);
+  // Keep the contents list contiguous: blank lines between nested items turn
+  // the indented chapters into detached lists in several Markdown readers.
+  const contents=structured?['## Table des matières\n\n'+chapters.flatMap(chapter=>[
+    ...(chapter.partTitle?['- **'+escapeMd(chapter.partTitle)+'**']:[]),
+    (chapter.withinPart?'  - ':'- ')+escapeMd(chapter.title)
+  ]).join('\n')]:[];
+  return ['# '+escapeMd(title),...contents,...chapters.flatMap(chapter=>{
     assertValidDocument(chapter.content);
-    return ['## '+escapeMd(chapter.title),...markdownBlocks(chapter.content as Node)];
+    return [...(chapter.partTitle?['## '+escapeMd(chapter.partTitle)]:[]),
+      (structured&&chapter.withinPart?'### ':'## ')+escapeMd(chapter.title),
+      ...markdownBlocks(chapter.content as Node)];
   })].join('\n\n')+'\n';
 }

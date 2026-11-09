@@ -350,3 +350,20 @@ Cette tranche ne crée pas de sections par IA et n'ajoute pas encore de table de
 ### English — Move whole parts and scroll Studio independently
 
 After v0.42 is approved, open **Book overview → Book parts** and use **↑ Move up / ↓ Move down** to swap an entire part with the next adjacent group, preserving all its chapters and saved revisions. Empty parts and boundaries cannot move. A stale order returns a conflict that requires refresh. Studio has independent scrolling for the left Chapters/Sections navigation, the central manuscript and the right Editorial Intelligence panel, with no extra document scroll or blank area below. On mobile, use ☰ and ✧ to open the exclusive drawers. Sections requires genuine Heading 1/2/3 formatting; Normal paragraphs are not automatically indexed. The empty-state guide links to the whole-book outline and preserves unsaved-draft protections. The candidate is not deployed until owner E2E approval.
+
+## 27. Versionner les parties et les retrouver dans les exports (candidate v0.43.0-alpha)
+
+**À partir de la v0.43 validée**, dans la **Vue d'ensemble → Versions**, enregistrez une version nommée après avoir organisé les parties et enregistré vos chapitres. Cette version capture **les titres et affectations des parties et des chapitres** au moment précis de l'enregistrement, en plus des révisions de texte.
+
+1. Ouvrez la version et choisissez **Exporter DOCX, PDF ou Markdown**. Lorsque des chapitres appartiennent à des parties, le document commence par une table des matières listant les parties et chapitres, suivie des chapitres avec leurs intertitres de partie. Dans Word, les noms des chapitres du sommaire renvoient à leur emplacement. Le PDF présente les titres sans inventer de numéros de page.
+2. Vous pouvez ensuite renommer ou déplacer des parties dans le livre courant : **réexporter l'ancienne version donnera toujours l'ancien sommaire**, avec les titres, positions et textes originaux. Les révisions de texte enregistrées restent immuables.
+3. Pour **retrouver aussi la structure des parties** dans un nouveau manuscrit de travail, utilisez l'action existante **Restaurer comme nouvelle édition** depuis la version. Confirmez après avoir sauvegardé vos brouillons : une édition indépendante est créée, avec de **nouvelles identités** pour les parties et chapitres, tout en préservant les versions et éditions existantes. La commande plus ancienne **Restaurer les textes** ne change pas l'organisation des parties dans l'édition actuelle.
+4. Les anciennes versions enregistrées **avant cette évolution** (format v1) n'avaient pas de métadonnées de parties : elles restent lisibles/exportables/restaurables, mais aucune hiérarchie de parties ne peut en être reconstituée automatiquement.
+
+**Limite actuelle :** la table des matières exportée liste **parties et chapitres**, pas encore toutes les sections H1–H3. Ces vrais titres restent dans le corps des documents et dans la navigation du Studio. Les PDF ne contiennent pas de pagination de sommaire factice. Aucun appel d'IA ni de service externe n'est effectué pour générer ces exports.
+
+**Retour arrière technique :** un logiciel antérieur à la v0.43 ne sait pas lire les nouveaux manifests v2 ; ne supprimez pas ces versions. Le support pourra rétablir une version compatible en cas de rollback. Cette fonctionnalité reste **candidate** jusqu'à validation E2E v0.43 et livraison de production.
+
+### English — Frozen part structure and exports
+
+With v0.43, new named snapshots preserve part titles, chapter grouping and order exactly as saved. Export a structured snapshot to DOCX, PDF or Markdown for a visible parts-and-chapters contents list; DOCX includes internal chapter links. Later live edits never change the old export. **Restore as new edition** reconstructs the historical parts using new independent identifiers; **Restore texts** in the same edition does not alter structure. Legacy v1 snapshots remain readable but cannot recover group metadata they never stored. The exported contents list does not yet include every H1–H3 heading or fabricated PDF page numbers. Production awaits owner E2E acceptance.

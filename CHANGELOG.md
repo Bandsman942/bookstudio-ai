@@ -4,14 +4,22 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.42.0] — alpha privée candidate, en attente E2E propriétaire
+## [0.43.0] — alpha privée candidate, en attente CI et E2E propriétaire
+### BS-008f/BS-009c #199 — conservation des parties dans les versions et exports
+- Ajouté : manifests de snapshot signés **v2**, avec titres de parties, IDs et rattachements figés ; parseur strict v2 et compatibilité de hash/lecture totale v1. Aucune modification de `DocumentRevision`, d'ancienne version ni de source.
+- Ajouté : restauration non destructive **comme nouvelle édition** des parties d'un snapshot v2 avec nouveaux UUID et affectations d'origine ; v1 continue sa restauration plate.
+- Ajouté : tables des matières des **parties et chapitres** des snapshots structurés dans les exports DOCX (hyperliens internes), PDF (sommaire et intertitres) et Markdown. Exports historiques indépendants des renommages/déplacements ultérieurs.
+- Sécurité/QA : contrôle de l'intégrité du manifeste, nombres bornés, titres échappés, ACL, Origin, conflits et E2E HTTP PostgreSQL ; tests d'export PDF/Word et de hash v1/v2. **NON DÉPLOYÉ** en attente de CI SHA final + E2E propriétaire. Pas de migration/variable/activation IA ou ClamAV.
+- Limites : pas encore de sections H1–H3 dans la **table des matières exportée** ni de numéros de page PDF inventés. Restauration textuelle dans la même édition inchangée.
+
+## [0.42.0] — alpha privée livrée le 9 novembre 2026 (PR #197, CI #284)
 ### BS-005g #195 — déplacement des parties sans modification du manuscrit
 - Ajouté : commandes **↑ Monter / ↓ Descendre** une partie et tous ses chapitres en bloc (même face à une plage sans partie), sans créer de révision ni détacher de chapitres ; bords et parties vides protégés. Liste/sommaire se rechargent avec l'ordre réel.
 - Ajouté : PATCH privée de déplacement, ACL OWNER/EDITOR, Origin, édition actuelle, `expectedOrderToken`, verrou et transaction Serializable ; repositionnement SQL en deux phases évitant les collisions d'unicité, y compris avec chapitres retirés, audit sans contenu, conflits explicites 409. Tests unitaires/HTTP E2E pour invariants, ordre aller-retour et révisions intactes.
 ### BS-005h #196 — navigation du Studio et scroll bureau/mobile
 - Corrigé : Studio fixé au viewport dynamique avec **défilements indépendants** du sommaire, de l'éditeur et de l'intelligence éditoriale ; contexte latéral compact/défilable, onglets accessibles, suppression de l'espace vide au bas du scroll global. Hamburger et tiroirs exclusifs mobile, gestes tactiles, zoom/hauteur et thèmes conservés.
 - Ajouté : explication actionnable si aucun vrai titre H1–H3 n'existe dans le chapitre (style « Normal » ≠ titre), lien protégé vers le sommaire global. Tests de contrat UI/scroll et E2E mobile prévus ; pas de sections inventées ou de mutation du contenu.
-- **NON DÉPLOYÉ** : attendre CI dernier SHA puis `E2E v0.42.0-alpha BON` propriétaire, snapshot Neon AVANT merge main et Vercel production seulement. Aucune migration, aucun fournisseur IA/ClamAV activé.
+- **LIVRÉ** : E2E propriétaire BON, CI #284 SUCCESS, snapshot Neon `snap-tiny-forest-bfnyly58` créé avant fusion, `main` `dee257b8`, Vercel READY `dpl_Cwyymd2gHXLeVt8vP1HvV7Tssaep`, santé/version 200 DB ready, verrou production-only restauré. [Journal réel](docs/deployments/2026-11-09-v0.42.0-alpha.md). Aucune migration, aucun fournisseur IA/ClamAV activé.
 
 ## [0.41.0] — alpha privée livrée le 9 novembre 2026 (PR #193, CI #280)
 ### BS-005f #192 — Parties persistantes et sommaire hiérarchique

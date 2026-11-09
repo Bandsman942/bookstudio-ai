@@ -8,7 +8,7 @@ export type SnapshotRevisionSource={
  chapter:{manuscriptId:string};
 };
 export type SnapshotForkChapter={
- sourceChapterId:string;title:string;position:number;
+ sourceChapterId:string;title:string;position:number;partId:string|null;
  content:unknown;text:string;contentHash:string;
 };
 export const SNAPSHOT_FORK_MAX_CHAPTERS=500;
@@ -39,6 +39,7 @@ export function planSnapshotFork(manifest:SnapshotManifest,sourceManuscriptId:st
      Buffer.byteLength(rev.text,'utf8');
    if(bytes>SNAPSHOT_FORK_MAX_BYTES)throw new Error('SNAPSHOT_COPY_TOO_LARGE');
    return {sourceChapterId:item.chapterId,title:item.title,position:item.position,
+     partId:'partId' in item&&typeof item.partId==='string'?item.partId:null,
      content:rev.content,text:rev.text,contentHash:rev.contentHash};
  });
  return result.sort((a,b)=>a.position-b.position||

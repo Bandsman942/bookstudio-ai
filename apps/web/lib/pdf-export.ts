@@ -98,12 +98,29 @@ export async function renderReadingPdf(bookTitle:string,chapters:ExportChapter[]
   try{
     richLine(doc,{type:'text',text:bookTitle},{font:'bold',size:27,color:'#142C39',gap:20},fontCache);
     richLine(doc,{type:'text',text:'BOOKSTUDIO AI BY DTSC · ÉDITION DE LECTURE'},{font:'regular',size:9,color:'#678079',gap:10},fontCache);
-    doc.moveDown(3);
+    const hasParts=chapters.some(chapter=>Boolean(chapter.partTitle));
+    if(hasParts){
+      doc.moveDown(2);
+      richLine(doc,{type:'text',text:'TABLE DES MATIÈRES'},
+        {font:'bold',size:17,color:'#142C39',gap:16},fontCache);
+      // Intentionally omit page numbers: PDFKit paginates chapters and long
+      // contents dynamically. Never present guessed page references as fact.
+      for(const chapter of chapters){
+        if(chapter.partTitle)richLine(doc,{type:'text',text:chapter.partTitle},
+          {font:'bold',size:12,color:'#2C7E73',gap:8},fontCache);
+        richLine(doc,{type:'text',text:chapter.title},
+          {font:'regular',size:10.5,color:'#263846',gap:7,
+            indent:chapter.withinPart?18:0},fontCache);
+      }
+      doc.addPage();
+    }else doc.moveDown(3);
     for(let index=0;index<chapters.length;index++){
       const chapter=chapters[index];
       assertValidDocument(chapter.content);
       if(index>0)doc.addPage();
       try{
+        if(chapter.partTitle)richLine(doc,{type:'text',text:chapter.partTitle},
+          {font:'bold',size:21,color:'#2C7E73',gap:13},fontCache);
         richLine(doc,{type:'text',text:chapter.title},{font:'bold',size:18,color:'#142C39',gap:16},fontCache);
         for(const item of ((chapter.content as Node).content??[]))writeBlocks(doc,item,fontCache);
       }catch(error){
