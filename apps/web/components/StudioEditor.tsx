@@ -7,7 +7,7 @@ import {safeExternalHref} from '@bookstudio/domain';
 import EditorRibbon from './EditorRibbon';
 import ChapterFindReplacePanel from './ChapterFindReplacePanel';
 import ChapterSectionOutline from './ChapterSectionOutline';
-import {sameSectionAtPosition,type SectionHeading} from '@/lib/section-outline';
+import {sameSectionAtPosition,findChapterSectionByOrdinal,type SectionHeading} from '@/lib/section-outline';
 import {analyzeEditorialStructure} from '@/lib/editorial-structure';
 import {TextSelection} from '@tiptap/pm/state';
 import AppIcon from './AppIcon';
@@ -21,8 +21,9 @@ import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import {useToast} from './ToastProvider';
 type Chapter={id:string;title:string;updatedAt:string;revision:number};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
-type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean;orderToken:string};
-export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit,orderToken}:Props){
+type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean;orderToken:string;
+ outlineTarget:{revision:number;ordinal:number}|null};
+export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit,orderToken,outlineTarget}:Props){
  const {t,locale}=useAppPreferences();
  const router=useRouter();
  const preferenceActions=usePreferenceActions();
@@ -37,6 +38,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const [recovery,setRecovery]=useState<string|null>(null);
  const [sidebarMode,setSidebarMode]=useState<'chapters'|'sections'>('chapters');
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
+ const outlineHandledRef=useRef<string|null>(null);
  const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
  const retryCountRef=useRef(0),retryAtRef=useRef(0),conflictRef=useRef(false);
 
@@ -171,10 +173,37 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  useEffect(()=>{
    if(!editor)return;
    setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
+   let unsavedDraft=false;
    try{const draft=localStorage.getItem(draftKey);
-     if(draft&&draft!==savedContentRef.current){JSON.parse(draft);setRecovery(draft);}
+     if(draft&&draft!==savedContentRef.current){unsavedDraft=true;JSON.parse(draft);setRecovery(draft);}
    }catch{}
- },[editor,draftKey]);
+   if(!outlineTarget)return;
+   const target=outlineTarget;
+   const targetKey=target.revision+':'+target.ordinal;
+   if(outlineHandledRef.current===targetKey)return;
+   outlineHandledRef.current=targetKey;
+   if(target.revision!==revision||unsavedDraft){
+     notify({tone:'warning',title:locale==='fr'?'Sommaire à actualiser':'Refresh the outline',
+       detail:locale==='fr'?'Le chapitre a changé ou contient un brouillon local. La navigation automatique est suspendue pour ne pas cibler un mauvais passage.':
+         'This chapter changed or has a local draft. Automatic navigation was paused to avoid jumping to the wrong passage.'});
+     return;
+   }
+   const heading=findChapterSectionByOrdinal(editor.state.doc,target.ordinal);
+   if(!heading||!sameSectionAtPosition(editor.state.doc,heading)){
+     notify({tone:'warning',title:locale==='fr'?'Section introuvable':'Section not found',
+       detail:locale==='fr'?'Cette section n’existe plus dans la révision ouverte. Revenez au sommaire global.':
+         'This section no longer exists in the opened revision. Return to the book outline.'});
+     return;
+   }
+   const frame=requestAnimationFrame(()=>{
+     if(!sameSectionAtPosition(editor.state.doc,heading))return;
+     editor.view.dispatch(editor.state.tr.setSelection(
+       TextSelection.create(editor.state.doc,heading.position+1)
+     ).scrollIntoView());
+     editor.view.focus();
+   });
+   return ()=>cancelAnimationFrame(frame);
+ },[editor,draftKey,outlineTarget?.revision,outlineTarget?.ordinal,revision,locale,notify]);
  useEffect(()=>{
    function networkDown(){
      if(pendingRef.current){setState('offline');setErrorDetail(currentTRef.current('editor.offlinePending'));}
@@ -357,6 +386,9 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <button ref={navCloseRef} type="button" className="studio-nav-close" aria-label={locale==='fr'?'Fermer les chapitres':'Close chapters'} onClick={()=>setMobileNav(false)}>×</button>
     <Link href="/library" className="brand" onClick={protectNavigation}><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
     <Link href={'/books/'+bookId} className="back-link" onClick={protectNavigation}><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
+    <Link href={'/books/'+bookId+'#book-outline'} className="back-link" onClick={protectNavigation}>
+      <AppIcon name="manuscript"/>{locale==='fr'?'Sommaire global':'Book outline'}
+    </Link>
     <div className="nav-section"><AppIcon name="manuscript"/>{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
     <Link href={'/search?bookId='+bookId} className="back-link" onClick={protectNavigation}>
       <AppIcon name="search"/>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}

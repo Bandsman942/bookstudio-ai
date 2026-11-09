@@ -46,3 +46,21 @@ export function sameSectionAtPosition(doc:ProseMirrorNode,
  return node?.type.name==='heading'&&
    node.attrs.level===heading.level&&node.textContent.trim()===heading.title;
 }
+
+/** Resolve a saved book-wide TOC ordinal against the exact revision document.
+ * Unlike the visible per-chapter outline, this lookup is not capped at 300. */
+export function findChapterSectionByOrdinal(doc:ProseMirrorNode,
+ ordinal:number):SectionHeading|null{
+ if(!Number.isSafeInteger(ordinal)||ordinal<0)return null;
+ let current=0,found:SectionHeading|null=null;
+ doc.descendants((node,position)=>{
+  if(found)return false;
+  if(node.type.name!=='heading')return true;
+  const level=node.attrs.level as unknown;
+  if(level!==1&&level!==2&&level!==3)return false;
+  const title=node.textContent.trim();
+  if(title){if(current===ordinal)found={position,level,title};current++;}
+  return false;
+ });
+ return found;
+}

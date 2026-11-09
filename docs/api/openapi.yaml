@@ -3,9 +3,9 @@ info:
   title: BookStudio AI API
   version: 0.1.0
   description: >-
-    API autonome, aucune connexion directe à DTSC Platform. v0.39.0-alpha
-    corrige uniquement le Studio mobile et ajoute des indicateurs éditoriaux
-    calculés dans le navigateur : aucune nouvelle route API, aucun appel IA.
+    API autonome, aucune connexion directe à DTSC Platform. v0.40.0-alpha
+    ajoute la projection privée en lecture seule des titres sauvegardés H1-H3
+    d'un chapitre autorisé pour le sommaire global, sans appel IA.
 servers:
   - url: /api/v1
 paths:
@@ -705,3 +705,41 @@ paths:
 # Tiptap/ProseMirror editor document. No API, AI provider, background job,
 # snapshot mutation, save, permission change, or data-leak surface added.
 # Existing chapter revision PATCH and same-workspace READ contracts unchanged.
+
+  /books/{bookId}/chapters/{chapterId}/outline:
+    get:
+      summary: Titres H1–H3 sauvegardés d'un chapitre courant, en lecture seule (v0.40)
+      description: >-
+        Session active et accès au livre privé non archivé obligatoires. Le chapitre
+        doit être actif dans le manuscrit de l'édition la plus récente. Extrait
+        uniquement les titres H1/H2/H3 non vides de DocumentRevision à la
+        séquence revisionSeq, sans aucun paragraphe, contenu JSON complet, ancien
+        état, brouillon, commentaire ni fichier. Ordinal stable et absolu dans
+        la révision courante, même lorsque le filtre réduit les résultats.
+        Réponse privée sans cache et lecture sans écriture. 60 titres au maximum
+        par page et signalement explicite hasMore/total.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: chapterId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: filter
+          in: query
+          schema: {type: string, maxLength: 100, default: ''}
+          description: Filtre littéral Unicode insensible à la casse ; caractères de contrôle rejetés.
+        - name: offset
+          in: query
+          schema: {type: integer, minimum: 0, maximum: 100000, default: 0}
+      responses:
+        '200':
+          description: >-
+            chapterId, revision, headings[] avec ordinal/level/title, total des
+            correspondances et hasMore. Aucune prose ni arbre ProseMirror.
+        '400': {description: Filtre ou offset invalide}
+        '401': {description: Session absente/expirée}
+        '404': {description: Livre ou chapitre inaccessible, archivé, supprimé ou historique}
+        '503': {description: Révision absente ou service indisponible}

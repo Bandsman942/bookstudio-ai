@@ -15,6 +15,7 @@ import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
 import type {BookProgress} from '@/lib/book-progress';
 import BookEditionsPanel from './BookEditionsPanel';
+import BookOutline from './BookOutline';
 
 type Chapter={id:string;title:string;revision:number;updatedAt:string};
 type Props={
@@ -132,6 +133,7 @@ export default function BookOverview({bookId,title,status,kind,language,chapters
           'Progress figures are temporarily unavailable. Your manuscript remains accessible and editable.'}
       </p>}
     </section>
+    <BookOutline bookId={bookId} chapters={chapters}/>
     <div className="section-header" id="book-structure"><h2><AppIcon name="chapter"/>{t('book.structure')}</h2>
       {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}><AppIcon name="plus"/>{t('book.chapterAdd')}</button>}
     </div>

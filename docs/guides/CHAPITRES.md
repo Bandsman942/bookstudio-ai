@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.39.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.40.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -304,3 +304,18 @@ Le panneau présente maintenant des **repères locaux** du chapitre : nombre de 
 ### English — Mobile Studio and editorial indicators
 
 On small phones, Studio now takes the full viewport instead of being squeezed beside a persistent manuscript sidebar. Use the **☰** button to show Chapters or Sections in an overlay, and the **sparkles ✧** button in the Studio header to open the **Editorial Intelligence** drawer from the right. Close with ×, backdrop or Escape. Only one drawer opens at once. The panel includes local chapter word/paragraph/heading counts and a hint about paragraphs over 180 words; it **does not perform AI-powered editing** or transmit prose to an AI provider. Mobile visual acceptance testing is required before release.
+
+## 25. Sommaire global de l'ouvrage (candidate v0.40.0-alpha)
+
+Sur **Bibliothèque → votre livre → Vue d'ensemble**, repérez le panneau **Sommaire global du livre**. La liste affiche **tous les chapitres actifs de l'édition courante**, dans leur ordre. Vous pouvez aussi le rejoindre depuis le menu gauche (☰ sur téléphone) ou, dans le Studio, depuis le lien **Sommaire global**.
+
+1. Touchez le titre d'un chapitre pour **déplier ses sections**. Les titres H1, H2 et H3 **déjà enregistrés** s'affichent avec un retrait par niveau. Un clic sur **Ouvrir** ouvre seulement le chapitre, sans cibler de section.
+2. Touchez une section pour ouvrir le **Studio directement à ce titre**. La navigation est en lecture seule et ne crée pas de nouvelle révision. Elle fonctionne aussi pour les rôles de lecture seule et sur mobile. Le lien vérifie la révision exacte ; si une sauvegarde ultérieure a changé le chapitre, ou si un brouillon local doit être récupéré, le Studio vous avertit et **ne saute pas vers un titre incertain**.
+3. Dans un chapitre très long, les **60 premiers titres** sont affichés, avec un compteur qui indique le total réel. Touchez **Charger les titres suivants** pour avancer (60 par page). La zone **Rechercher un titre dans ce chapitre** filtre les titres ; cliquez **Filtrer** pour appliquer. La recherche ne porte pas sur les paragraphes et ne modifie rien.
+4. Si le chargement échoue sur réseau lent, utilisez **Réessayer**. Les chapitres restent listés, même si leurs titres ne peuvent pas être chargés. En cas de renommage, nouvelle version ou changement d'édition, actualisez la vue d'ensemble.
+
+**Confidentialité :** seuls les titres des sections demandées sont transférés au navigateur, depuis la dernière révision enregistrée du chapitre autorisé. Les paragraphes, autres éditions, chapitres retirés et brouillons ne sont jamais inclus dans cette réponse. Aucune IA n'analyse le texte. Cette version n'ajoute pas encore de **parties éditoriales persistantes**, de glisser-déposer hiérarchique ou de table des matières automatiquement intégrée aux exports PDF/DOCX.
+
+### English — Whole-book outline
+
+On **Book overview**, find **Book table of contents**, or use the left navigation (☰ on mobile). All active chapters in the current edition appear in order. Expand a chapter to load only its **saved H1–H3 heading titles**, with indentation by heading level. **Open** visits the chapter; choosing a heading scrolls to that exact position in Studio **only if the saved revision still matches**. A local recovery draft or newer revision pauses the jump and displays a warning. Load additional heading pages in groups of 60, filter by heading title and retry failed loads. Chapter content, previous editions and unsaved drafts are not sent by this API. This is not yet a persistent part hierarchy or exported TOC.
