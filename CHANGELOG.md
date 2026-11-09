@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.41.0] — alpha privée candidate, attente E2E propriétaire
+### BS-005f #192 — Parties persistantes et sommaire hiérarchique
+- Ajouté : métadonnées `ManuscriptPart` par manuscrit et rattachement `Chapter.partId` nullable, migration SQL additive et FK composite anti-rattachement à une autre édition. Les anciens chapitres demeurent sans partie ; ordre et révisions inchangés.
+- Ajouté : création, renommage et suppression **uniquement des parties vides** ; affectation/détachement d'un chapitre, refus 409 si la partie ne formerait plus une suite de chapitres consécutifs, y compris lors d'un déplacement. Appels privés, OWNER/EDITOR, Origin, préconditions d'édition, transaction sérialisable et audit sans prose.
+- Ajouté : panneau de gestion, sommaire global **Partie → Chapitre → titres H1/H2/H3** et repères de parties dans le volet Manuscrit du Studio ; vues FR/EN, mobile, thèmes, notifications explicites. Les autres chapitres et parties non affectés restent visibles.
+- Modifié : copier un ouvrage et créer une édition copient leurs parties avec de **nouveaux UUID**, en conservant les groupes existants. Un chapitre retiré est détaché avant restauration ; la suppression d'une partie ne supprime jamais ses chapitres.
+- QA : tests de continuité et de copie immuable, E2E PostgreSQL HTTP multi-tenant, anti-CSRF, préconditions, duplication/édition et non-régression sur la séquence des révisions ; CI `book-parts:check`, gate documentaire et revue mobile propriétaire.
+- Non inclus : composition/numérotation automatique dans les exports, déplacement de parties entières, sous-parties, restauration des parties depuis les snapshots historiques (snapshot v1 sans métadonnées de parties), sécurité ClamAV ni analyse IA externe. **Pas encore déployé ; ClamAV OFF.**
+
 ## [0.40.0] — alpha privée livrée le 9 novembre 2026 (PR #190, CI #274)
 ### Sommaire global du livre et navigation aux sections sauvegardées
 - Ajouté : sur la vue d'ensemble, un **sommaire transversal** liste tous les chapitres actifs de l'édition courante. Déplier une ligne charge uniquement les titres H1–H3 enregistrés, avec indentation, filtre et pagination de 60 titres, sans télécharger les paragraphes entiers dans cette vue.

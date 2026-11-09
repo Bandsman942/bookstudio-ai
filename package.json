@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.40.0",
+  "version": "0.41.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",
@@ -50,6 +50,7 @@
     "search-paging:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/search-paging.test.mjs",
     "mobile-workspace:check": "pnpm --filter @bookstudio/web exec node --test lib/mobile-workspace.test.mjs",
     "section-outline:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/section-outline.test.mjs",
+    "book-parts:check": "node --experimental-strip-types --test apps/web/lib/book-parts.test.mjs",
     "editorial-structure:check": "node --experimental-strip-types --test apps/web/lib/editorial-structure.test.mjs",
     "book-outline:check": "node --experimental-strip-types --test apps/web/lib/saved-book-outline.test.mjs"
   }

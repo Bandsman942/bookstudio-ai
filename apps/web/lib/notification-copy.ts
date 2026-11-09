@@ -42,6 +42,9 @@ export function explainActionError(issue:Issue):string{
  const {locale,operation,code,status}=issue;
  const label=actions[locale][operation];
  const point=safePoints(issue.codepoints);
+ if(operation==='chapter-reorder'&&code==='BOOK_PART_NOT_CONTIGUOUS')return locale==='fr'?
+   'Le chapitre ne peut pas traverser cette limite : une partie doit conserver tous ses chapitres côte à côte. Réorganisez d’abord leur rattachement dans « Parties de l’ouvrage ». Aucun texte ou ordre n’a été modifié.':
+   'This chapter cannot cross the boundary: chapters in one part must stay adjacent. Change its assignment under “Book parts” first. No text or order was changed.';
  if(code==='EXPORT_UNSUPPORTED_GLYPHS'){
    const at=Number.isInteger(issue.chapterNumber)&&Number(issue.chapterNumber)>0?
      (locale==='fr'?' au chapitre '+issue.chapterNumber:' in chapter '+issue.chapterNumber):'';

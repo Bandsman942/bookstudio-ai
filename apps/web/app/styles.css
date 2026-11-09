@@ -1481,6 +1481,10 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 .book-outline>.source-note{line-height:1.6;margin:0 0 15px}
 .book-outline-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .book-outline-chapter+.book-outline-chapter{border-top:1px solid var(--line)}
+.book-outline-list>div+div{border-top:1px solid var(--line)}
+.book-outline-part-label{padding:11px 13px;background:var(--surface-hover,#eaf3ed);
+ color:var(--green);font-weight:800;font-size:12px;overflow-wrap:anywhere;
+ border-bottom:1px solid var(--line)}
 .book-outline-chapter-top{display:flex;align-items:stretch;gap:8px;
  background:var(--surface,#fff);min-width:0}
 .book-outline-toggle{display:flex;align-items:center;gap:11px;flex:1 1 auto;
@@ -1517,4 +1521,46 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
  .book-outline-toggle{padding-inline:8px;gap:7px}
  .book-outline-open{padding-inline:9px}
  .book-outline-heading{min-height:44px}
+}
+
+/* v0.41: parts are manuscript metadata; the chapter editor remains independent. */
+.book-parts-panel{margin:22px 0 28px;padding:20px;border:1px solid var(--line);
+ border-radius:14px;background:var(--surface,#fff);min-width:0}
+.book-parts-panel .section-header{margin:0 0 10px;gap:8px;flex-wrap:wrap}
+.book-parts-panel>.source-note{line-height:1.55}
+.book-parts-create{margin:16px 0;display:flex;flex-direction:column;gap:7px}
+.book-parts-create>label,.book-part-rename>label{font-size:12px;font-weight:700;color:var(--ink)}
+.book-parts-create>div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.book-parts-create input,.book-part-rename input,.book-part-assignment select{
+ min-width:0;max-width:100%;background:var(--surface,#fff);color:var(--ink);
+ border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:13px}
+.book-parts-create input{flex:1 1 210px}
+.book-part-rename{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+.book-part-rename>label{flex:0 0 100%}
+.book-part-rename input{flex:1 1 160px}
+.book-parts-list,.book-part-assignments{border:1px solid var(--line);border-radius:12px;
+ overflow:hidden;margin:15px 0}
+.book-part-item,.book-part-assignment{display:flex;justify-content:space-between;
+ align-items:center;gap:12px;min-width:0;padding:11px 12px}
+.book-part-item+.book-part-item,.book-part-assignment+.book-part-assignment{border-top:1px solid var(--line)}
+.book-part-ident{display:flex;flex-direction:column;gap:2px;min-width:0}
+.book-part-ident strong,.book-part-assignment>span{overflow-wrap:anywhere;color:var(--ink)}
+.book-part-ident strong{font-size:13px}
+.book-part-ident>span{font-size:11px;color:var(--muted)}
+.book-part-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.book-part-assignments h3{font-size:13px;margin:0;background:var(--surface-hover,#eaf3ed);
+ padding:12px;border-bottom:1px solid var(--line)}
+.book-part-assignment>span{flex:1;min-width:0;font-size:12px}
+.book-part-assignment>label{min-width:0;flex:0 1 210px}
+.book-part-assignment select{width:100%;min-height:44px}
+.book-parts-panel :is(a,button,input,select):focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.studio-chapter-part{padding:12px 10px 5px;margin-top:7px;font-size:11px;
+ font-weight:800;color:var(--green);overflow-wrap:anywhere;
+ border-top:1px solid var(--line)}
+@media(max-width:650px){
+ .book-parts-panel{padding:13px 10px;margin:16px 0 24px}
+ .book-part-item,.book-part-assignment{align-items:stretch;flex-direction:column;gap:9px}
+ .book-part-actions{justify-content:flex-start}
+ .book-part-assignment>label{flex:0 0 auto;width:100%}
+ .book-parts-create .button,.book-part-rename .button{min-height:44px}
 }

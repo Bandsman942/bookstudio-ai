@@ -3,8 +3,10 @@ import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {useAppPreferences} from './AppPreferences';
 import type {SavedHeading} from '@/lib/saved-book-outline';
+import {partBoundaryIndices} from '@/lib/book-parts';
 
-type Chapter={id:string;title:string;revision:number};
+type Chapter={id:string;title:string;revision:number;partId:string|null};
+type Part={id:string;title:string};
 type Entry={open:boolean;filter:string;appliedFilter:string;headings:SavedHeading[];
  total:number;revision:number;loaded:boolean;loading:boolean;error:boolean;hasMore:boolean};
 type Payload={revision:number;headings:SavedHeading[];total:number;hasMore:boolean};
@@ -13,11 +15,12 @@ const empty=(revision:number):Entry=>({open:false,filter:'',appliedFilter:'',hea
 
 /** Whole-book hierarchy is always available; only a selected chapter's saved
  * headings are downloaded. One request returns at most 60 headings, never prose. */
-export default function BookOutline({bookId,chapters}:{bookId:string;chapters:Chapter[]}){
+export default function BookOutline({bookId,chapters,parts}:{bookId:string;chapters:Chapter[];parts:Part[]}){
  const {locale}=useAppPreferences();
  const [entries,setEntries]=useState<Record<string,Entry>>({});
  const controllers=useRef(new Map<string,AbortController>());
  const revisions=chapters.map(c=>c.id+':'+c.revision).join('|');
+ const partStarts=new Set(partBoundaryIndices(chapters));
  useEffect(()=>{
   const pending=controllers.current;
   return ()=>{for(const controller of pending.values())controller.abort();pending.clear();};
@@ -70,11 +73,15 @@ export default function BookOutline({bookId,chapters}:{bookId:string;chapters:Ch
   <div className="section-header"><h2>{locale==='fr'?'Sommaire global du livre':'Book table of contents'}</h2>
    <span>{chapters.length} {locale==='fr'?'chapitres':'chapters'}</span></div>
   <p className="source-note">{locale==='fr'?
-   'Tous les chapitres actifs sont listés dans leur ordre. Ouvrez un chapitre pour découvrir ses titres H1–H3 enregistrés, puis atteindre directement une section dans le Studio. Les brouillons non enregistrés ne figurent pas ici.':
-   'All active chapters appear in order. Expand a chapter to view its saved H1–H3 headings and open a section in the Studio. Unsaved drafts are not shown.'}</p>
+   'Parties, chapitres et titres H1–H3 enregistrés sont présentés dans l’ordre du manuscrit. Ouvrez un chapitre pour atteindre une section du Studio. Les brouillons non enregistrés ne figurent pas ici.':
+   'Saved parts, chapters and H1–H3 headings follow manuscript order. Expand a chapter to jump to a Studio section. Unsaved drafts are not shown.'}</p>
   <div className="book-outline-list">{chapters.map((chapter,index)=>{
    const entry=entries[chapter.id]??empty(chapter.revision);
-   return <div key={chapter.id} className="book-outline-chapter">
+   const boundary=partStarts.has(index);
+   const label=boundary?parts.find(part=>part.id===chapter.partId)?.title:null;
+   return <div key={chapter.id}>
+    {label&&<div className="book-outline-part-label" role="heading" aria-level={3}>{label}</div>}
+    <div className="book-outline-chapter">
     <div className="book-outline-chapter-top">
      <button type="button" className="book-outline-toggle" aria-expanded={entry.open}
        aria-controls={'book-outline-'+chapter.id} onClick={()=>toggle(chapter)}>
@@ -122,7 +129,7 @@ export default function BookOutline({bookId,chapters}:{bookId:string;chapters:Ch
         disabled={entry.loading} onClick={()=>void fetchHeadings(chapter,entry.appliedFilter,entry.headings.length)}>
         {locale==='fr'?'Charger les titres suivants':'Load more headings'}</button>}
      </div>}
-   </div>;
+   </div></div>;
   })}</div>
   {chapters.length===0&&<p className="source-note">{locale==='fr'?'Ajoutez un chapitre pour construire le sommaire.':'Add a chapter to start a table of contents.'}</p>}
  </section>;

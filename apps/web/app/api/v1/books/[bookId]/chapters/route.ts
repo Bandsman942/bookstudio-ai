@@ -5,7 +5,8 @@ export async function GET(_req:Request,{params}:{params:Promise<{bookId:string}>
   if(!book)return errorResponse('NOT_FOUND',404);
   const chapters=book.editions[0]?.manuscript?.chapters ?? [];
   return Response.json({orderToken:chapterOrderToken(chapters),chapters:chapters.map(c=>({
-    id:c.id,title:c.title,revision:c.revisionSeq,position:c.position,updatedAt:c.updatedAt
+    id:c.id,title:c.title,partId:c.partId,revision:c.revisionSeq,
+    position:c.position,updatedAt:c.updatedAt
   }))},{headers:{'Cache-Control':'no-store'}});
 }
 

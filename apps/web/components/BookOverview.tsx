@@ -16,15 +16,16 @@ import AppIcon from './AppIcon';
 import type {BookProgress} from '@/lib/book-progress';
 import BookEditionsPanel from './BookEditionsPanel';
 import BookOutline from './BookOutline';
+import BookPartsPanel,{type BookPart} from './BookPartsPanel';
 
-type Chapter={id:string;title:string;revision:number;updatedAt:string};
+type Chapter={id:string;title:string;revision:number;updatedAt:string;partId:string|null};
 type Props={
   bookId:string;title:string;status:string;kind:string;language:string;
   chapters:Chapter[];updatedAt:string;editable:boolean;orderToken:string;
-  progress:BookProgress|null
+  progress:BookProgress|null;editionId:string;parts:BookPart[]
 };
 
-export default function BookOverview({bookId,title,status,kind,language,chapters,updatedAt,editable,orderToken,progress}:Props){
+export default function BookOverview({bookId,title,status,kind,language,chapters,updatedAt,editable,orderToken,progress,editionId,parts}:Props){
   const {t,locale}=useAppPreferences();
   const {notify}=useToast();
   const [newTitle,setNewTitle]=useState(''),[showForm,setShowForm]=useState(false),
@@ -133,7 +134,10 @@ export default function BookOverview({bookId,title,status,kind,language,chapters
           'Progress figures are temporarily unavailable. Your manuscript remains accessible and editable.'}
       </p>}
     </section>
-    <BookOutline bookId={bookId} chapters={chapters}/>
+    <BookPartsPanel bookId={bookId} editionId={editionId} parts={parts}
+      chapters={chapters.map(c=>({id:c.id,title:c.title,partId:c.partId,updatedAt:c.updatedAt}))}
+      editable={editable}/>
+    <BookOutline bookId={bookId} chapters={chapters} parts={parts}/>
     <div className="section-header" id="book-structure"><h2><AppIcon name="chapter"/>{t('book.structure')}</h2>
       {editable&&<button className="button small" type="button" onClick={()=>setShowForm(true)}><AppIcon name="plus"/>{t('book.chapterAdd')}</button>}
     </div>

@@ -136,23 +136,39 @@ model Manuscript {
   editionId String @unique @map("edition_id") @db.Uuid
   edition Edition @relation(fields:[editionId],references:[id],onDelete:Cascade)
   chapters Chapter[]
+  parts ManuscriptPart[]
   @@map("manuscripts")
+}
+model ManuscriptPart {
+  id String @id @default(uuid()) @db.Uuid
+  manuscriptId String @map("manuscript_id") @db.Uuid
+  title String @db.VarChar(180)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
+  chapters Chapter[]
+  @@unique([id,manuscriptId])
+  @@index([manuscriptId])
+  @@map("manuscript_parts")
 }
 model Chapter {
   id String @id @default(uuid()) @db.Uuid
   manuscriptId String @map("manuscript_id") @db.Uuid
   title String @db.VarChar(180)
   position Int @default(0)
+  partId String? @map("part_id") @db.Uuid
   revisionSeq Int @default(0) @map("revision_seq")
   updatedAt DateTime @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
   manuscript Manuscript @relation(fields:[manuscriptId],references:[id],onDelete:Cascade)
+  part ManuscriptPart? @relation(fields:[partId,manuscriptId],references:[id,manuscriptId],onDelete:Restrict)
   revisions DocumentRevision[]
   editorialComments EditorialComment[]
   sourceImport ManuscriptSourceImport?
   @@unique([manuscriptId,position])
   @@index([manuscriptId,position])
   @@index([manuscriptId,deletedAt,position])
+  @@index([manuscriptId,partId])
   @@map("chapters")
 }
 model DocumentRevision {

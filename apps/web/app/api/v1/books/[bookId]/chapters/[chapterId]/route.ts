@@ -90,7 +90,7 @@ export async function DELETE(req:Request,{params}:{params:Promise<{bookId:string
       if(!member||!currentBook)return 'NOT_FOUND' as const;
       const changed=await tx.chapter.updateMany({
         where:{id:chapterId,manuscriptId,deletedAt:null,updatedAt:expectedAt,
-          revisionSeq:payload.expectedRevision},data:{deletedAt:new Date()}
+          revisionSeq:payload.expectedRevision},data:{deletedAt:new Date(),partId:null}
       });
       if(changed.count!==1)return 'CHAPTER_CONFLICT' as const;
       await tx.book.update({where:{id:bookId},data:{updatedAt:new Date()}});

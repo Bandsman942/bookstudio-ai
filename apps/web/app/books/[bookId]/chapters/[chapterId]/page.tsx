@@ -10,6 +10,9 @@ export default async function ChapterPage({params,searchParams}:{params:Promise<
   const {bookId,chapterId}=await params,book=await accessToBook(bookId,user.id);
   const chapters=book?.editions[0]?.manuscript?.chapters??[],chapter=chapters.find(c=>c.id===chapterId);
   if(!book||!chapter)notFound();
+  const manuscriptId=book.editions[0]?.manuscript?.id;
+  const parts=manuscriptId?await prisma.manuscriptPart.findMany({where:{manuscriptId},
+    orderBy:[{createdAt:'asc'},{id:'asc'}],select:{id:true,title:true}}):[];
   const revision=await prisma.documentRevision.findUnique({where:{chapterId_sequence:{chapterId,sequence:chapter.revisionSeq}}});
   if(!revision)notFound();
   const canEdit=canWriteBook(book);
@@ -21,6 +24,6 @@ export default async function ChapterPage({params,searchParams}:{params:Promise<
     {revision:Number(revisionNumber),ordinal:Number(ordinalNumber)}:null;
   return <StudioEditor key={chapterId+':'+chapter.revisionSeq} bookId={bookId} bookTitle={book.title} chapterId={chapterId} chapterTitle={chapter.title}
     revision={chapter.revisionSeq} initialContent={revision.content as Record<string,unknown>}
-    chapters={chapters.map(c=>({id:c.id,title:c.title,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} orderToken={chapterOrderToken(chapters)} canEdit={canEdit}
+    chapters={chapters.map(c=>({id:c.id,title:c.title,partId:c.partId,updatedAt:c.updatedAt.toISOString(),revision:c.revisionSeq}))} parts={parts} orderToken={chapterOrderToken(chapters)} canEdit={canEdit}
     outlineTarget={outlineTarget}/>;
 }

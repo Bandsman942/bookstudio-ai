@@ -3,6 +3,7 @@ import {prisma} from '@bookstudio/database';
 import {activeUser,accessToBook} from '@/lib/auth';
 import {errorResponse,isSameOrigin} from '@/lib/security';
 import {chapterOrderToken,nextChapterOrder} from '@/lib/chapter-order';
+import {partsAreContiguous} from '@/lib/book-parts';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -37,12 +38,13 @@ export async function PATCH(request:Request,{params}:Ctx){
       if(!member||!liveBook)return {status:'NOT_FOUND'} as const;
       const rows=await tx.chapter.findMany({where:{manuscriptId,deletedAt:null},
         orderBy:[{position:'asc'},{id:'asc'}],
-        select:{id:true,position:true}});
+        select:{id:true,position:true,partId:true}});
       if(rows.length>2000)return {status:'TOO_LARGE'} as const;
       if(chapterOrderToken(rows)!==body.expectedOrderToken)
         return {status:'CONFLICT'} as const;
       const proposed=nextChapterOrder(rows,body.chapterId,body.direction);
       if(!proposed)return {status:'NOT_FOUND'} as const;
+      if(!partsAreContiguous(proposed))return {status:'PART_CONFLICT'} as const;
       if(proposed.every((c,i)=>c.id===rows[i].id))
         return {status:'OK',changed:false,orderToken:chapterOrderToken(rows)} as const;
       // The database enforces UNIQUE(manuscript_id, position), including
@@ -85,6 +87,7 @@ export async function PATCH(request:Request,{params}:Ctx){
     },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,maxWait:7000,timeout:12000});
     if(result.status==='NOT_FOUND')return errorResponse('NOT_FOUND',404);
     if(result.status==='CONFLICT')return errorResponse('CHAPTER_ORDER_CONFLICT',409);
+    if(result.status==='PART_CONFLICT')return errorResponse('BOOK_PART_NOT_CONTIGUOUS',409);
     if(result.status==='TOO_LARGE')return errorResponse('CHAPTER_ORDER_TOO_LARGE',422);
     return Response.json({ok:true,changed:result.changed,orderToken:result.orderToken},
       {headers:{'Cache-Control':'private, no-store'}});

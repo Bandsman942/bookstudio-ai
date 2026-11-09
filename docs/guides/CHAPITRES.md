@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.40.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.41.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -21,6 +21,19 @@ La **vue d'ensemble** énumère les chapitres et permet la création, l'ouvertur
 
 **Ce qui ne change pas :** texte, commentaires, contenu des révisions et snapshots existants. La restauration d'un chapitre retiré le replace **à la fin** de la structure courante.
 
+### Organiser l'ouvrage en parties (candidate v0.41)
+
+La **vue d'ensemble → Parties de l'ouvrage** permet aux auteurs habilités de créer par exemple « Première partie — Fondements » et « Deuxième partie — Applications ». Les parties sont enregistrées avec l'édition courante : ce ne sont plus des titres décoratifs ni des blocs de texte à insérer dans les chapitres.
+
+1. Créez une partie avec le champ **Nouvelle partie**. Une partie vide ne modifie aucun chapitre.
+2. Dans **Rattacher les chapitres**, choisissez une partie pour chaque chapitre. Un chapitre peut aussi rester **Sans partie**. Pour obtenir une partie de trois chapitres, affectez-les en avançant depuis le bord du groupe : les chapitres doivent toujours être **consécutifs** dans le sommaire.
+3. Une affectation qui créerait deux groupes séparés d'une même partie est refusée avec un message explicatif (409). Les actions **Monter/Descendre** de chapitre refusent également tout déplacement qui casserait un groupe. Aucune affectation ni aucun texte n'est modifié en cas de refus.
+4. **Renommer** change seulement le titre de la partie. **Supprimer** est disponible lorsque la partie est vide, après confirmation. Si elle contient des chapitres, détachez-les d'abord ; la suppression de la partie ne détruit jamais un chapitre.
+5. Dans le **Sommaire global**, le titre de partie précède ses chapitres, puis les titres H1–H3 sauvegardés sont accessibles par dépliage. Dans le Studio, le volet Manuscrit accessible par le bouton **☰** mobile affiche les mêmes repères de parties. Le bouton d'intelligence éditoriale et la protection des brouillons restent indépendants.
+6. **Créer une édition depuis la sauvegarde** ou **Dupliquer le livre** reprend les parties existantes, avec de nouvelles identités propres à la copie. L'édition historique demeure intacte et en lecture seule. Les parties sont attachées à la nouvelle édition, pas partagées entre livres.
+
+Les utilisateurs REVIEWER/VIEWER voient l'organisation mais ne disposent pas des commandes de modification. Toutes les mutations vérifient aussi les droits côté serveur, la session, l'édition et la concurrence. Les chapitres retirés sont détachés de leur partie et, s'ils sont restaurés, reviennent **Sans partie** en fin de livre. Les snapshots historiques de format v1 ne contiennent pas ces métadonnées et ne reconstituent **pas** les parties lors de leur restauration en édition : l'organisation peut alors être reconstituée à la main. Les exports DOCX/PDF ne contiennent pas encore de table des matières composée à partir des parties.
+
 ## 3. Droits et confidentialité
 
 OWNER/EDITOR : actions de modification. REVIEWER/VIEWER : consultation, menus destructifs et de réorganisation indisponibles. Même une requête API directe est revalidée par le serveur. Les manuscrits sont privés ; ne transmettez pas de liens signés de source hors du flux prévu.
@@ -38,6 +51,8 @@ Le worker ClamAV existe dans le code de v0.21 mais **n'est pas raccordé à un s
 # English quick guide
 
 **Library:** OWNER/EDITOR can create, rename, archive and restore a book; REVIEWER/VIEWER only see permitted content. **Chapters:** use the chapter **⋯** menu to create, rename, remove and restore. With v0.22, **Move up / Move down** changes one position without touching text, comments, revisions or snapshots. A restored chapter returns at the end of the book. If an order conflict appears, refresh before retrying. On mobile open the manuscript drawer and use **Book overview**; navigation scrolls independently. **Security:** ClamAV is not yet hosted; source manuscripts are not guaranteed scanned.
+
+**Parts (v0.41 candidate):** In **Book overview → Book parts**, editors can create and rename parts, then assign consecutive chapters using the selection next to each chapter. Non-adjacent assignments or moves splitting a part are refused without changing text. Only empty parts can be deleted. The full book outline and the Studio's manuscript drawer show the part labels; viewers have read-only access. New editions and duplicate books copy the grouping with fresh identifiers. Historical v1 snapshots do not restore this new grouping metadata; export table-of-contents formatting is a future milestone.
 
 ## 6. Propriétés de l'ouvrage et progression (candidate v0.23)
 
