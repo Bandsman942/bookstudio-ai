@@ -163,3 +163,9 @@ Studio Tiptap : bouton ⌕, Ctrl/Cmd+F/H, recherche littérale locale dans les n
 ## Livraison vérifiée v0.36.0-alpha — 8 novembre 2026
 
 Issue BS-005a #176 livrée via PR #177 : E2E propriétaire BON, CI #254 SUCCESS au SHA exact, snapshot Neon protégé `snap-patient-silence-bfinzivk` créé **avant fusion**, main `f5b8b592ddfd4dd0cfd9315ce3ee2031ea0f5774`, Vercel `dpl_4nRiqicmNNRtaLy2gmhuLuFirzRe` READY, `/api/health` HTTP 200 DB ready et `/api/version` HTTP 200 v0.36.0-alpha. Journal `docs/deployments/2026-11-08-v0.36.0-alpha.md`. Parents #5/#6 ouverts, ClamAV OFF.
+
+## Candidate P0 BS-005b #179 + UX mobile #180 — v0.37.0-alpha
+
+- **Recherche livre** : GET privé `/api/v1/search?q=...&bookId=...&offset=...`, page 30 avec hasMore/nextOffset, 35 chapitres E2E, snippets courts, tri déterministe, wildcards SQL échappés, livre même workspace/non archivé, révisions courantes uniquement. UI `/search?bookId=...` + liens directs ouvrage/Studio, bouton Charger suite, FR/EN. Recherche globale compatible. Hors de cette tranche : remplacement tous chapitres, recherche dans annotations/sources.
+- **Mobile hamburger central** : le menu gauche caché à ≤760px est désormais révélable en haut à gauche (44px) sur Bibliothèque, fiche ouvrage, Archives, Recherche via `WorkspaceShell`. Même liens et menus ⋯ que desktop, drawer scrollable et accessible (focus, Escape, backdrop, fermeture lien), safe-area, thèmes. Hamburger Studio renforcé à 320px et en mode concentration avec protection brouillons et sommaire long. Critères E2E manuels mobiles 320/375/768px et z-index/context menus.
+- **Release gate** : CI dernier SHA, version 0.37 candidate non déployée, docs guide/API/design/ops/QA/release/roadmap mises à jour **avant** publication, attente `E2E v0.37.0-alpha BON`, snapshot Neon production avant main et Vercel production-only Preview OFF. ClamAV non installé/OFF, parents P0 #5/#6 ouverts.

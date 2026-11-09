@@ -653,3 +653,46 @@ paths:
 # with ordinary session/workspace ACL, Origin and optimistic concurrency.
 # No search phrase or draft is transmitted to a new API or AI provider.
 # Globally scoped /search remains read-only and unchanged in this release.
+
+
+  /search:
+    get:
+      summary: Recherche privée dans les derniers chapitres sauvegardés, globale ou limitée à un ouvrage
+      description: >-
+        Session obligatoire. q littéral 2–80 caractères, métacaractères LIKE
+        échappés et paramètres stricts (pas de doublons). bookId facultatif :
+        scope limité au livre non archivé dont le demandeur est membre de
+        l'espace ; titre et contenu d'un ouvrage inaccessible ne sont jamais
+        révélés (404). offset facultatif : multiple de 30, entre 0 et 30000.
+        Recherche uniquement la DocumentRevision de revisionSeq de chaque
+        chapitre actif de l'édition courante. Exclut archives, autres tenants,
+        anciennes éditions, chapitres retirés, brouillons non sauvegardés.
+        30 résultats maximum avec hasMore, nextOffset, scope et extrait court
+        de 220 caractères ; cache privé no-store. Aucun nouvel index externe.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: {type: string, minLength: 2, maxLength: 80}
+          description: Terme littéral, insensible à la casse, pas de regex.
+        - name: bookId
+          in: query
+          required: false
+          schema: {type: string, format: uuid}
+          description: Limiter la recherche à ce livre autorisé.
+        - name: offset
+          in: query
+          required: false
+          schema: {type: integer, minimum: 0, maximum: 30000, multipleOf: 30, default: 0}
+          description: Offset page suivante fourni par nextOffset.
+      responses:
+        '200':
+          description: >-
+            query, bookId, bookTitle ou null, hits[] de chapitres avec
+            bookId/bookTitle/chapterId/chapterTitle/revision/snippet/updatedAt,
+            offset, pageSize 30, nextOffset null ou entier, hasMore,
+            limitedTo 30 et scope. Pas de contenu complet.
+        '400': {description: Terme/UUID/offset invalide, paramètre dupliqué ou inconnu}
+        '401': {description: Session absente ou expirée}
+        '404': {description: Ouvrage ciblé archivé, inexistant ou non autorisé}
+        '503': {description: Recherche momentanément indisponible}

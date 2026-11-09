@@ -20,3 +20,7 @@ Une production privée `v0.1.0` peut être envisagée uniquement comme environne
 ## Première production publique (disponibilité générale)
 
 En plus de tout ce qui précède, terminer et valider les P0 du cahier des charges : import DOCX/PDF sécurisé, export PDF, stockages chiffrés, antivirus, sauvegardes/restaurations éprouvées, contrôle d'accès collaboratif et conformité de traitement des manuscrits. Version `v1.0.0` seulement après recette complète et consentement final.
+
+## Addendum candidat v0.37.0-alpha — validation mobile et recherche privée
+
+Contrôle supplémentaire avant Go : le même menu desktop se découvre par **☰ haut gauche** sur les 4 workspaces centraux à 320/375px, avec navigation de tous les chapitres, actions contextuelles visibles, accès clavier, fermeture par Escape/backdrop/×, focus rendu, absence de débordement, thèmes et safe area. Studio reste consultable en mode concentration et bloque la sortie si un brouillon n'est pas sauvegardé. Recherche dans un livre : 35 résultats = 30+5 avec hasMore, ACL par ouvrage et workspace, 404 hors workspace/archives, q littéral anti-injection et aucune ancienne révision renvoyée. Le test `mobile-workspace:check` est statique, donc **recette E2E mobile manuelle obligatoire**. Documentation complète avant déploiement selon `RELEASE-DOCUMENTATION-GATE.md` ; E2E propriétaire BON, snapshot Neon pré-merge, Vercel prod-only et ClamAV désactivé.

@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.36.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.37.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -245,3 +245,31 @@ Open a chapter's **⋯ → Merge with another chapter…** (OWNER/EDITOR), searc
 ### English
 
 Open a chapter in **Studio**, click **⌕** or press **Ctrl/Cmd+F** to find, **Ctrl/Cmd+H** to find and replace (editors only). Literal, Unicode-aware search is case-insensitive by default and can be made case-sensitive. Navigate with Previous/Next or Enter/Shift+Enter; replace one occurrence or **review and explicitly confirm** the total. All substitutions are applied in one fully validated ProseMirror transaction, undoable in one step, then saved through the existing autosave; wait for **Saved**. The initial version only searches within **one text node**, never across differently marked segments. More than 500 matches blocks Replace All; replacements cannot exceed 1000 characters or one line; documents over 2 MiB are refused without truncation. Nothing is sent to an AI or third-party search provider.
+
+## 21. Recherche dans tout un ouvrage (candidate v0.37.0-alpha)
+
+Pour rechercher dans **tous les chapitres d'un livre autorisé**, ouvrez sa vue d'ensemble et cliquez **Rechercher dans ce livre** (ou utilisez le lien du menu gauche). Dans le **Studio**, ouvrez le menu **⋯ d'affichage → Rechercher dans tous les chapitres du livre** ou le lien **Rechercher dans ce livre** du sommaire. Lorsque le chapitre comporte un brouillon local non sauvegardé, la navigation depuis Studio est bloquée jusqu'à la confirmation de sauvegarde, pour éviter une perte.
+
+La page précise le **titre de l'ouvrage** et indique qu'elle recherche uniquement **les dernières révisions enregistrées dans l'édition courante**. Elle exclut les brouillons non sauvegardés, commentaires, snapshots, fichiers sources, archives, chapitres supprimés, éditions passées et ouvrages des autres espaces de travail. Un compte sans droit de lecture ne voit même pas le titre du livre, et le serveur renvoie 404.
+
+1. Saisissez un terme **littéral** de 2 à 80 caractères et cliquez **Rechercher**. Les caractères `%`, `_` et `\\` sont du texte normal, jamais des jokers SQL ; aucune requête IA n'est effectuée.
+2. Les résultats affichent le chapitre, un **court extrait** du texte sauvegardé et la révision correspondante. Cliquez sur un résultat pour ouvrir son chapitre. Les résultats sont organisés dans un ordre stable pour un manuscrit non modifié.
+3. Une page comporte **30 chapitres au maximum**. Si plus de résultats existent, un message l'indique et le bouton **Afficher les 30 résultats suivants** permet de charger une autre page, sans masquer les précédentes. Le total chargé reste visible. Sur une connexion faible, une erreur de chargement de la suite ne fait pas perdre les pages déjà affichées.
+4. Pour passer à tous vos livres accessibles, choisissez **Chercher dans tous mes livres**. Si le manuscrit est modifié entre deux pages, relancez la recherche pour obtenir un ordre cohérent. Un offset hors limites est explicitement rejeté.
+5. Cette version permet de **rechercher à l'échelle d'un livre**, mais **pas encore de remplacer tous les chapitres simultanément**. Pour remplacer, utilisez la recherche locale du chapitre ouvert (fonction v0.36).
+
+### English — Book-wide search
+
+Choose **Search this book** from the book overview or Studio chapter navigation, and enter a literal 2–80-character term. Only the **latest saved revisions of active chapters in the current edition** of this authorized book are searched. The private API never includes archived, historical or other-workspace content. Each page shows up to **30 results** and a **Load next 30 results** button only if more exist, preserving already-loaded results after a network failure. Results link to their chapters. Unsaved drafts are excluded; use the local Studio find/replace for the currently open document.
+
+## 22. Menu hamburger ☰ sur mobile (candidate v0.37.0-alpha)
+
+Sur téléphone, les options de la **barre latérale gauche** sont désormais rangées dans un **menu hamburger ☰ en haut à gauche** (zone cliquable d'environ 44 px) sur **Bibliothèque, Vue d'ensemble du livre, Recherche et Archives**. Appuyez pour faire apparaître la colonne entière, y compris Retour bibliothèque, Sources, Structure, Versions, Recherche dans ce livre et la **liste complète des chapitres avec leurs menus contextuels ⋯** si ces options existent pour votre rôle. Il s'agit du même menu que sur ordinateur, simplement replié pour laisser plus de place au texte.
+
+Pour le refermer : appuyez sur **×**, sur le **fond sombre**, sur un **lien** du menu ou utilisez **Échap** sur un clavier physique. Le menu peut défiler même avec de très nombreux chapitres ; le contenu derrière reste immobile. Le clavier Tab/Shift+Tab reste dans le panneau lorsqu'il est ouvert, puis revient au hamburger à la fermeture. Les couleurs clair/sombre, la langue FR/EN et l'encoche iPhone sont respectées.
+
+Dans le **Studio d'édition plein écran**, le hamburger déjà disponible est agrandi et reste utilisable **même en mode concentration**. Il révèle le sommaire, les actions ⋯, les liens de navigation et la recherche dans tout le livre. Il **n'ignore jamais la sauvegarde** : si vos modifications ne sont pas encore enregistrées, le Studio bloque la sortie vers une autre page et affiche un avertissement. À partir de 768 px, la disposition classique est conservée.
+
+### English — Mobile navigation
+
+On narrow screens, tap the **☰ button at the upper-left** of Library, Book Overview, Search or Archives to reveal the **complete left navigation**, including the book's long chapter list and ⋯ actions. Close using **×**, the backdrop, Escape or a navigation link. The menu scrolls independently, preserves keyboard focus and respects iPhone safe areas and light/dark themes. Studio's own hamburger is kept visible and enlarged, even in focus mode; pending unsaved drafts still block unsafe navigation.

@@ -4,6 +4,16 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.37.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-005b #179 — Recherche plein texte dans un ouvrage, avec pagination
+- Depuis la fiche d'ouvrage ou le Studio, **Rechercher dans ce livre** affiche les résultats des seuls chapitres actifs et des dernières révisions **sauvegardées** de ce livre ; pas de brouillons, autres workspaces, éditions historiques, archives ni chapitres retirés. La recherche globale est conservée.
+- GET /api/v1/search étendu avec bookId facultatif et offset strict (multiples de 30, ≤30000). Requête ILIKE paramétrée à métacaractères littéraux, ordre déterministe, 30 résultats par page + hasMore/nextOffset et extraits courts, 401/404/400 contextuels, cache privé. UI FR/EN avec recherche ciblée, chargement des pages suivantes sans perdre les précédentes même si le réseau échoue.
+### Mobile UX #180 — menu hamburger supérieur gauche du workspace
+- Les menus gauche auparavant cachés à ≤760px sont désormais consultables depuis un bouton **☰ de 44 px en haut à gauche** sur Bibliothèque, vue d'ensemble ouvrage, Archives et Recherche. Le même contenu desktop, y compris longue liste des chapitres et actions contextuelles, est présenté en drawer responsive avec croix, backdrop, Escape, focus trap, retour du focus et safe area iOS.
+- Hamburger déjà présent dans le Studio renforcé à 44 px, focus, clavier, scroll du sommaire et mode concentration ; accès à la recherche de tous les chapitres depuis la colonne et le menu d'affichage, sans contourner l'alerte de brouillon non sauvegardé.
+- Tests de pagination/ACL (35 chapitres), tests de contrat nav mobile et gate documentaire prépublication. Pas de nouvelle migration, secret, fournisseur IA ni activation ClamAV.
+
+
 ## [0.36.0] — alpha privée livrée le 8 novembre 2026 (PR #177, CI #254)
 ### BS-005a #176 — recherche et remplacement local du chapitre
 - Studio : bouton ⌕ visible sur ordinateur/mobile, Ctrl/Cmd+F/H, panneau FR/EN, recherche littérale Unicode dans les segments de texte du chapitre ouvert, option sensible à la casse, compteur, navigation et sélection. Les lecteurs peuvent rechercher, seuls les éditeurs modifient.
