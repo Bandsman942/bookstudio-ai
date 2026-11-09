@@ -4,6 +4,15 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.42.0] — alpha privée candidate, en attente E2E propriétaire
+### BS-005g #195 — déplacement des parties sans modification du manuscrit
+- Ajouté : commandes **↑ Monter / ↓ Descendre** une partie et tous ses chapitres en bloc (même face à une plage sans partie), sans créer de révision ni détacher de chapitres ; bords et parties vides protégés. Liste/sommaire se rechargent avec l'ordre réel.
+- Ajouté : PATCH privée de déplacement, ACL OWNER/EDITOR, Origin, édition actuelle, `expectedOrderToken`, verrou et transaction Serializable ; repositionnement SQL en deux phases évitant les collisions d'unicité, y compris avec chapitres retirés, audit sans contenu, conflits explicites 409. Tests unitaires/HTTP E2E pour invariants, ordre aller-retour et révisions intactes.
+### BS-005h #196 — navigation du Studio et scroll bureau/mobile
+- Corrigé : Studio fixé au viewport dynamique avec **défilements indépendants** du sommaire, de l'éditeur et de l'intelligence éditoriale ; contexte latéral compact/défilable, onglets accessibles, suppression de l'espace vide au bas du scroll global. Hamburger et tiroirs exclusifs mobile, gestes tactiles, zoom/hauteur et thèmes conservés.
+- Ajouté : explication actionnable si aucun vrai titre H1–H3 n'existe dans le chapitre (style « Normal » ≠ titre), lien protégé vers le sommaire global. Tests de contrat UI/scroll et E2E mobile prévus ; pas de sections inventées ou de mutation du contenu.
+- **NON DÉPLOYÉ** : attendre CI dernier SHA puis `E2E v0.42.0-alpha BON` propriétaire, snapshot Neon AVANT merge main et Vercel production seulement. Aucune migration, aucun fournisseur IA/ClamAV activé.
+
 ## [0.41.0] — alpha privée livrée le 9 novembre 2026 (PR #193, CI #280)
 ### BS-005f #192 — Parties persistantes et sommaire hiérarchique
 - Ajouté : métadonnées `ManuscriptPart` par manuscrit et rattachement `Chapter.partId` nullable, migration SQL additive et FK composite anti-rattachement à une autre édition. Les anciens chapitres demeurent sans partie ; ordre et révisions inchangés.

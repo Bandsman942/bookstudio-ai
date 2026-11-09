@@ -387,6 +387,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   <aside id="studio-manuscript-nav" className="studio-sidebar" aria-label={t('editor.manuscript')}
     role={mobileNav?'dialog':undefined} aria-modal={mobileNav?true:undefined}>
     <button ref={navCloseRef} type="button" className="studio-nav-close" aria-label={locale==='fr'?'Fermer les chapitres':'Close chapters'} onClick={()=>setMobileNav(false)}>×</button>
+    <div className="studio-nav-context">
     <Link href="/library" className="brand" onClick={protectNavigation}><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
     <Link href={'/books/'+bookId} className="back-link" onClick={protectNavigation}><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
     <Link href={'/books/'+bookId+'#book-outline'} className="back-link" onClick={protectNavigation}>
@@ -396,6 +397,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <Link href={'/search?bookId='+bookId} className="back-link" onClick={protectNavigation}>
       <AppIcon name="search"/>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}
     </Link>
+    </div>
     <div className="studio-outline-tabs" role="group"
       aria-label={locale==='fr'?'Choisir la navigation latérale':'Choose sidebar navigation'}>
       <button type="button" className={sidebarMode==='chapters'?'active':''}
@@ -427,7 +429,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
               reorder={{token:orderToken,index:i,total:chapters.length}}/>
           </div></Fragment>)}
       </div>:
-      <ChapterSectionOutline editor={editor} onJump={jumpToSection}/>}
+      <ChapterSectionOutline editor={editor} onJump={jumpToSection}
+        bookId={bookId} onNavigate={protectNavigation}/>}
 
     <div className="sidebar-footer">{t('editor.sidebarNote')}</div>
   </aside>

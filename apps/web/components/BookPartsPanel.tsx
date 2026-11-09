@@ -6,15 +6,22 @@ import {useToast} from './ToastProvider';
 
 export type BookPart={id:string;title:string;updatedAt:string};
 export type PartChapter={id:string;title:string;partId:string|null;updatedAt:string};
-type Props={bookId:string;editionId:string;parts:BookPart[];chapters:PartChapter[];editable:boolean};
+type Props={bookId:string;editionId:string;parts:BookPart[];chapters:PartChapter[];
+ orderToken:string;editable:boolean};
 
-export default function BookPartsPanel({bookId,editionId,parts,chapters,editable}:Props){
+export default function BookPartsPanel({bookId,editionId,parts,chapters,orderToken,editable}:Props){
  const {locale}=useAppPreferences(),{notify}=useToast(),router=useRouter();
  const [title,setTitle]=useState(''),[busy,setBusy]=useState('');
  const [renaming,setRenaming]=useState(''),[renameTitle,setRenameTitle]=useState('');
  const [confirmDelete,setConfirmDelete]=useState('');
  const fr=locale==='fr';
  const count=(id:string)=>chapters.filter(c=>c.partId===id).length;
+ const canMove=(partId:string,direction:'up'|'down')=>{
+  const start=chapters.findIndex(chapter=>chapter.partId===partId);
+  if(start<0)return false;
+  const end=chapters.findIndex((chapter,index)=>index>start&&chapter.partId!==partId);
+  return direction==='up'?start>0:(end<0?chapters.length:end)<chapters.length;
+ };
  const explanation=(code:string,status:number)=>{
   if(code==='BOOK_PART_NOT_CONTIGUOUS')return fr?
    'Une partie doit regrouper des chapitres voisins dans l’ordre actuel. Affectez d’abord les chapitres intermédiaires ou réorganisez la structure.':
@@ -22,6 +29,9 @@ export default function BookPartsPanel({bookId,editionId,parts,chapters,editable
   if(code==='BOOK_PART_NOT_EMPTY')return fr?
    'Détachez tous les chapitres de cette partie avant de la supprimer. Aucun chapitre ne sera effacé.':
    'Unassign every chapter before deleting this part. No chapter will be erased.';
+  if(code==='BOOK_PART_MOVE_UNAVAILABLE')return fr?
+   'Cette partie est vide ou se trouve déjà au bord du manuscrit. Aucun chapitre n’a été déplacé.':
+   'This part is empty or already at the manuscript boundary. No chapters were moved.';
   if(status===409)return fr?'Le sommaire a changé depuis votre dernière lecture. Actualisez la page avant de réessayer.':
    'The outline changed. Refresh the page and try again.';
   if(status===401||status===403||status===404)return fr?'Session ou droits insuffisants pour cette opération.':
@@ -68,6 +78,14 @@ export default function BookPartsPanel({bookId,editionId,parts,chapters,editable
    'delete:'+part.id,fr?'Partie vide « '+part.title+' » supprimée':'Empty part “'+part.title+'” removed');
   if(success)setConfirmDelete('');
  }
+ async function move(part:BookPart,direction:'up'|'down'){
+  if(!canMove(part.id,direction))return;
+  await send(`/api/v1/books/${bookId}/parts/${part.id}/move`,'PATCH',{
+    direction,expectedEditionId:editionId,expectedOrderToken:orderToken},
+    'move:'+part.id,
+    fr?`« ${part.title} » déplacée ${direction==='up'?'vers le haut':'vers le bas'} avec ses chapitres`:
+      `“${part.title}” moved ${direction==='up'?'up':'down'} with its chapters`);
+ }
  async function assign(chapter:PartChapter,next:string,event:React.ChangeEvent<HTMLSelectElement>){
   const target=event.currentTarget;
   const name=parts.find(p=>p.id===next)?.title??(fr?'Sans partie':'Unassigned');
@@ -80,8 +98,8 @@ export default function BookPartsPanel({bookId,editionId,parts,chapters,editable
   <div className="section-header"><h2>{fr?'Parties de l’ouvrage':'Book parts'}</h2>
    <span>{parts.length} {fr?'parties':'parts'}</span></div>
   <p className="source-note">{fr?
-   'Organisez vos chapitres en parties (ex. Première partie, Deuxième partie). Chaque partie regroupe des chapitres consécutifs ; les textes, révisions et exports conservent leur ordre actuel.':
-   'Organize chapters into parts (e.g. Part One, Part Two). Each part contains consecutive chapters; text, revisions and exports keep the current global order.'}</p>
+   'Organisez vos chapitres en parties. Montez ou descendez une partie entière : tous ses chapitres se déplacent ensemble, sans altérer leur texte ni leurs révisions.':
+   'Organize chapters into parts. Move an entire part up or down: all its chapters move together without changing their text or revision history.'}</p>
   {editable&&<form className="book-parts-create" onSubmit={create}>
    <label htmlFor="book-part-title">{fr?'Nouvelle partie':'New part'}</label>
    <div><input id="book-part-title" required minLength={2} maxLength={180} value={title}
@@ -98,6 +116,12 @@ export default function BookPartsPanel({bookId,editionId,parts,chapters,editable
      <button type="button" className="button small secondary" onClick={()=>setRenaming('')}>{fr?'Annuler':'Cancel'}</button>
    </form>:<><div className="book-part-ident"><strong>{part.title}</strong><span>{count(part.id)} {fr?'chapitres':'chapters'}</span></div>
     {editable&&<div className="book-part-actions">
+      <button type="button" className="button small secondary" disabled={!!busy||!canMove(part.id,'up')}
+       title={fr?'Déplacer la partie et tous ses chapitres vers le haut':'Move this part and all its chapters up'}
+       onClick={()=>void move(part,'up')}>{fr?'↑ Monter':'↑ Move up'}</button>
+      <button type="button" className="button small secondary" disabled={!!busy||!canMove(part.id,'down')}
+       title={fr?'Déplacer la partie et tous ses chapitres vers le bas':'Move this part and all its chapters down'}
+       onClick={()=>void move(part,'down')}>{fr?'↓ Descendre':'↓ Move down'}</button>
       <button type="button" className="button small secondary" disabled={!!busy}
        onClick={()=>{setRenaming(part.id);setRenameTitle(part.title);setConfirmDelete('');}}>
         {fr?'Renommer':'Rename'}</button>
