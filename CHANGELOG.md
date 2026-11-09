@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.38.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-005c #183 — sommaire dynamique des sections H1–H3 dans le Studio
+- La barre latérale du Studio, y compris via hamburger mobile/tablette, dispose d'onglets **Chapitres** et **Sections**. Le premier conserve toutes les actions contextuelles ⋯ et la navigation existante ; le second construit localement un sommaire hiérarchique depuis les véritables titres ProseMirror H1/H2/H3 du **chapitre courant**, y compris les brouillons locaux, sans appel IA/serveur.
+- Recherche/filtrage Unicode par titre, indentation selon niveau, indication du nombre réel de résultats ; affichage borné à 300 titres avec avertissement explicite et filtre pour retrouver les autres, sans découper ou tronquer le document.
+- Un clic sur une section vérifie la validité de son ancre et déplace uniquement la sélection/viewport dans l'éditeur (transaction `docChanged=false`) : aucune révision, mutation, autosave ou transmission de prose. Fonctionne en lecture seule, avec le menu mobile jusqu'à 900px, FR/EN et thèmes clair/sombre.
+- Tests unitaires (H1–H3, Unicode, marques, positions, navigation immuable, >300 sections et filtres), UI et documentaire prépublication. Pas de migration/API/secret/worker ni activation ClamAV.
+
+
 ## [0.37.0] — alpha privée livrée le 9 novembre 2026 (PR #181, CI #261)
 ### BS-005b #179 — Recherche plein texte dans un ouvrage, avec pagination
 - Depuis la fiche d'ouvrage ou le Studio, **Rechercher dans ce livre** affiche les résultats des seuls chapitres actifs et des dernières révisions **sauvegardées** de ce livre ; pas de brouillons, autres workspaces, éditions historiques, archives ni chapitres retirés. La recherche globale est conservée.

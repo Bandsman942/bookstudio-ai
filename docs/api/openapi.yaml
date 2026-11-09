@@ -696,3 +696,9 @@ paths:
         '401': {description: Session absente ou expirée}
         '404': {description: Ouvrage ciblé archivé, inexistant ou non autorisé}
         '503': {description: Recherche momentanément indisponible}
+
+# v0.38.0-alpha / BS-005c #183 — NO NEW API ENDPOINT.
+# Live H1/H2/H3 section outlines are derived ONLY from the current in-memory
+# Tiptap/ProseMirror editor document. No API, AI provider, background job,
+# snapshot mutation, save, permission change, or data-leak surface added.
+# Existing chapter revision PATCH and same-workspace READ contracts unchanged.
