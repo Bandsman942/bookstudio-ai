@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Schema} from '@tiptap/pm/model';
 import {EditorState,TextSelection} from '@tiptap/pm/state';
-import {extractChapterSectionOutline,sameSectionAtPosition,MAX_SECTION_RESULTS}
+import {extractChapterSectionOutline,sameSectionAtPosition,
+ findChapterSectionByOrdinal,MAX_SECTION_RESULTS}
  from './section-outline.ts';
 const schema=new Schema({
  nodes:{
@@ -40,6 +41,9 @@ test('live H1-H3 outline preserves document order, ProseMirror positions and mar
    assert.equal(original.nodeAt(item.position)?.textContent.trim(),item.title);
    assert.equal(sameSectionAtPosition(original,item),true);
  }
+ assert.deepEqual(findChapterSectionByOrdinal(original,2),r.headings[2]);
+ assert.equal(findChapterSectionByOrdinal(original,100),null);
+ assert.equal(findChapterSectionByOrdinal(original,-1),null);
  assert.deepEqual(original.toJSON(),before,'outline never rewrites document');
  assert.equal(extractChapterSectionOutline(original,'SCIENTIFIQUE').matches,1);
  assert.equal(extractChapterSectionOutline(original,'🩺').matches,1);
@@ -74,6 +78,7 @@ test('long outline is explicitly bounded and filter reveals later headings',()=>
  assert.equal(r.headings.length,MAX_SECTION_RESULTS);
  assert.equal(r.matches,MAX_SECTION_RESULTS+11);
  assert.equal(r.hasMore,true);
+ assert.equal(findChapterSectionByOrdinal(original,MAX_SECTION_RESULTS+10)?.title,'Partie 311');
  const filtered=extractChapterSectionOutline(original,'Partie 310');
  assert.equal(filtered.matches,1);
  assert.equal(filtered.hasMore,false);

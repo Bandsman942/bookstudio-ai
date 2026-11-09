@@ -134,3 +134,9 @@ Avant fusion : `pnpm editorial-structure:check`, `pnpm mobile-workspace:check`, 
 ## Production vérifiée v0.39.0-alpha — 9 novembre 2026
 
 Après E2E propriétaire BON, CI #270 SUCCESS et snapshot Neon production `snap-calm-truth-bfjb7ftc` **avant merge**, PR #186 fusionnée sur main `626a718ad2f0`, déploiement Vercel `dpl_F21fTNTpn77U9FoHSBTNPJfeGkmg` READY, `GET /api/health` 200 DB ready et `GET /api/version` 200 v0.39.0-alpha. Aucun cluster d'erreurs runtime dans la fenêtre sondée, Preview OFF, `commandForIgnoringBuildStep=exit 0` restauré. Aucune migration ni nouveau secret/worker ; ClamAV OFF. Journal réel `docs/deployments/2026-11-09-v0.39.0-alpha.md`.
+
+## Candidate v0.40.0-alpha — sommaire global en lecture seule (#189)
+
+Nouvelle route privée `GET /api/v1/books/{bookId}/chapters/{chapterId}/outline`, 60 titres H1–H3 **sauvegardés** au maximum par page, filtre littéral et offset bornés, compteur exact, `Cache-Control: private,no-store`. Le serveur revérifie la session et l'appartenance livre/workspace/édition courante, puis lit le JSON **d'un seul chapitre actif**. La réponse ne contient pas les paragraphes ; ne pas journaliser les titres, filtres ni URL privées. Surveiller p95 latence, volume de requêtes par chapitre, 400/401/404/503 et charge Prisma. Aucune migration, variable, worker, IA ni flag ClamAV. Un navigateur qui garde un lien ancien doit recevoir un avertissement de révision, pas un saut incertain.
+
+**Avant fusion/production** : `pnpm release:check`, `pnpm book-outline:check`, `pnpm section-outline:check`, `pnpm test`, `pnpm ui:check`, `pnpm perf:check`, E2E HTTP PostgreSQL multi-tenant, Prisma, typecheck/build au **dernier SHA**, puis E2E propriétaire réel sur téléphone. Ne fusionner qu'après **`E2E v0.40.0-alpha BON`** ; prendre un snapshot Neon production protégé AVANT fusion, Vercel depuis `main` seulement, Preview OFF ; vérifier READY/health/version et journal rédigé après observation. ClamAV dédié OFF.

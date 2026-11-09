@@ -1561,6 +1561,74 @@ const v37SearchAfterArchive=await request('/api/v1/search?q='+v37ScopedWord,{coo
 assert.equal(v37SearchAfterArchive.data.hits.some(hit=>hit.bookId===v37ScopedId),false,
  'global search excludes archived sources');
 
+// BS-005e v0.40: read-only saved book outline. Verify latest revision,
+// heading ordinals across pages, no prose disclosure and multi-tenant ACL.
+const outlineBook=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Sommaire privé v40',bookType:'SCIENCE',language:'fr'}});
+assert.equal(outlineBook.status,201);
+const outlineBookId=outlineBook.data.book.id;
+const outlineFirstId=outlineBook.data.book.chapterId;
+const outlineBase='/api/v1/books/'+outlineBookId+'/chapters/'+outlineFirstId;
+const privateProse='PROSE_PRIVEE_NE_PAS_TRANSMETTRE';
+const headingsV40=Array.from({length:67},(_,index)=>({type:'heading',
+ attrs:{level:index%3+1},content:[{type:'text',text:'Titre '+(index+1)}]}));
+const outlineSaved=await request(outlineBase,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:{type:'doc',content:[
+  {type:'paragraph',content:[{type:'text',text:privateProse}]},...headingsV40
+ ]}}});
+assert.equal(outlineSaved.status,200,'outline test chapter saved');
+const outlineUrl=outlineBase+'/outline';
+assert.equal((await request(outlineUrl)).status,401,'anonymous outline refused');
+assert.equal((await request(outlineUrl,{cookie:outsider})).status,404,
+ 'another workspace cannot read heading titles');
+const outlineFirst=await request(outlineUrl,{cookie:author});
+assert.equal(outlineFirst.status,200);
+assert.equal(outlineFirst.data.revision,1);
+assert.equal(outlineFirst.data.total,67);
+assert.equal(outlineFirst.data.headings.length,60);
+assert.equal(outlineFirst.data.hasMore,true);
+assert.deepEqual(outlineFirst.data.headings[0],{ordinal:0,level:1,title:'Titre 1'});
+assert.equal(JSON.stringify(outlineFirst.data).includes(privateProse),false,
+ 'private paragraph prose never returned by saved outline');
+const outlineSecond=await request(outlineUrl+'?offset=60',{cookie:author});
+assert.equal(outlineSecond.status,200);
+assert.deepEqual(outlineSecond.data.headings.map(h=>h.ordinal),[60,61,62,63,64,65,66]);
+assert.equal(outlineSecond.data.hasMore,false);
+const outlineFiltered=await request(outlineUrl+'?'+new URLSearchParams({filter:'Titre 67'}),
+ {cookie:author});
+assert.deepEqual(outlineFiltered.data.headings.map(h=>h.ordinal),[66],
+ 'filter retains full-document ordinal for navigable anchors');
+for(const query of ['?offset=-1','?offset=1.5','?offset=100001','?filter=%0A',
+ '?offset=0&offset=0','?unknown=1']){
+ assert.equal((await request(outlineUrl+query,{cookie:author})).status,400,
+  'invalid outline query rejected: '+query);
+}
+const outlineNewest=await request(outlineBase,{method:'PATCH',cookie:author,
+ body:{baseRevision:1,content:{type:'doc',content:[
+  {type:'heading',attrs:{level:2},content:[{type:'text',text:'Nouvelle version uniquement'}]}
+ ]}}});
+assert.equal(outlineNewest.status,200);
+const outlineAfterSave=await request(outlineUrl,{cookie:author});
+assert.equal(outlineAfterSave.data.revision,2);
+assert.deepEqual(outlineAfterSave.data.headings.map(h=>h.title),['Nouvelle version uniquement'],
+ 'earlier revision headings excluded');
+const outlineSibling=await request('/api/v1/books/'+outlineBookId+'/chapters',{
+ method:'POST',cookie:author,body:{title:'Deuxième chapitre'}});
+assert.equal(outlineSibling.status,201);
+const siblingOutlineUrl='/api/v1/books/'+outlineBookId+'/chapters/'+
+ outlineSibling.data.chapter.id+'/outline';
+assert.equal((await request(siblingOutlineUrl,{cookie:author})).data.total,0,
+ 'new empty chapter has no saved headings');
+const outlineMeta=await request('/api/v1/books?'+new URLSearchParams({q:'Sommaire privé v40'}),
+ {cookie:author});
+const outlineUpdatedAt=outlineMeta.data.books.find(b=>b.id===outlineBookId)?.updatedAt;
+assert.ok(outlineUpdatedAt);
+const outlineArchived=await request('/api/v1/books/'+outlineBookId,{method:'PATCH',
+ cookie:author,body:{action:'archive',expectedUpdatedAt:outlineUpdatedAt}});
+assert.equal(outlineArchived.status,200);
+assert.equal((await request(outlineUrl,{cookie:author})).status,404,
+ 'archive makes outline inaccessible');
+
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});

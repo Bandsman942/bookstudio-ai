@@ -4,6 +4,14 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.40.0] — alpha candidate, non déployée (BS-005e #189)
+### Sommaire global du livre et navigation aux sections sauvegardées
+- Ajouté : sur la vue d'ensemble, un **sommaire transversal** liste tous les chapitres actifs de l'édition courante. Déplier une ligne charge uniquement les titres H1–H3 enregistrés, avec indentation, filtre et pagination de 60 titres, sans télécharger les paragraphes entiers dans cette vue.
+- Ajouté : lien direct vers une section précise du Studio, ancré par **numéro ordinal de titre + révision sauvegardée**. Si la révision a changé ou si un brouillon local attend restauration, la navigation automatique est suspendue avec un avertissement ; aucune transaction d'édition ni écrasement.
+- Sécurité : GET privé `/api/v1/books/{bookId}/chapters/{chapterId}/outline`, ACL membre workspace, livre non archivé, chapitre actif de la dernière édition, dernière révision exacte, `Cache-Control: private,no-store`, pas de texte hors titres. Refus 401/404/400/503 ; pas de mutation ni appel IA.
+- UX : FR/EN, clavier, mobile, clair/sombre ; chargement et erreurs explicites, aucun plafond masqué à 60 titres. Tests unitaires d'ordres/filtrage/limites et HTTP E2E PostgreSQL de permissions, confidentialité, pagination, archivage et dernière révision.
+- Aucune migration, secret, bucket, activation ClamAV, moteur de diagnostic IA ou parties persistantes. **CI et E2E propriétaire BON encore requis ; ne pas fusionner ni déployer depuis cette branche.**
+
 ## [0.39.0] — alpha privée livrée le 9 novembre 2026 (PR #186, CI #270)
 ### BS-005d #185 — Studio mobile et accès direct à l'intelligence éditoriale
 - Corrigé : à ≤760 px, `.studio-sidebar{display:flex}` écrasait le masquage mobile antérieur. La colonne Manuscrit restait visible (248 px) et réduisait le Studio à une bande étroite. Sous 900 px, la barre est désormais cachée par défaut et le hamburger de 44 px l'ouvre en tiroir flottant, en gardant les onglets Chapitres/Sections, les ⋯, le focus, les safe areas et la protection des brouillons.
