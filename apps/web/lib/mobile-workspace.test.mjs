@@ -20,6 +20,24 @@ test('all four central workspace pages use ONE accessible hamburger shell',()=>{
    assert.ok(shell.includes(token),'accessible mobile toggle '+token);
  }
 });
+test('tablet breakpoint and drawer lifecycle stay in sync',()=>{
+ const shell=fromFile('components/WorkspaceShell.tsx');
+ const studio=fromFile('components/StudioEditor.tsx');
+ const css=fromFile('app/styles.css');
+ for(const source of [shell,studio]){
+   assert.ok(source.includes("matchMedia('(max-width: 900px)')"),
+     'drawer closes at the same 900px breakpoint as tablet CSS');
+   assert.ok(source.includes("mobile.addEventListener('change',closeOnDesktop)"),
+     'drawer closes after device rotates from portrait to desktop');
+   assert.ok(source.includes("mobile.removeEventListener('change',closeOnDesktop)"),
+     'resize listener is removed at unmount');
+ }
+ assert.match(css, /@media \(min-width:761px\) and \(max-width:900px\)/);
+ assert.ok(css.includes('.mobile-workspace.mobile-workspace-open .workspace-drawer-host'));
+ assert.ok(css.includes('.studio.studio-mobile-navigation-open .studio-sidebar'));
+ assert.ok(css.includes('safe-area-inset-top'));
+});
+
 test('studio chapter drawer stays discoverable, safe and scrollable',()=>{
  const studio=fromFile('components/StudioEditor.tsx');
  const css=fromFile('app/styles.css');
