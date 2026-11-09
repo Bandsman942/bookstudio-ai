@@ -1459,106 +1459,106 @@ assert.equal(oldHistoryPreview.status,200,'previous edition remains readable');
 // BS-005b #179: private book-scoped search, stable 30-row paging and
 // explicit hasMore. Search must never expose historical, archived or other
 // tenants' manuscripts, even when the guessed book UUID exists.
-const scopedWord='UniqueBookSearchV37';
-const searchScopedBook=await request('/api/v1/books',{
+const v37ScopedWord='UniqueBookSearchV37';
+const v37SearchScopedBook=await request('/api/v1/books',{
  method:'POST',cookie:author,
  body:{title:'Ouvrage pour recherche multipage v37',bookType:'SCIENCE',language:'fr'}
 });
-assert.equal(searchScopedBook.status,201);
-const scopedId=searchScopedBook.data.book.id;
-const scopedFirstId=searchScopedBook.data.book.chapterId;
-const searchableContent={type:'doc',content:[{type:'paragraph',content:[
- {type:'text',text:scopedWord+' exemple de recherche exacte, été 2026.'}
+assert.equal(v37SearchScopedBook.status,201);
+const v37ScopedId=v37SearchScopedBook.data.book.id;
+const v37ScopedFirstId=v37SearchScopedBook.data.book.chapterId;
+const v37SearchableContent={type:'doc',content:[{type:'paragraph',content:[
+ {type:'text',text:v37ScopedWord+' exemple de recherche exacte, été 2026.'}
 ]}]};
-const firstSearchEdit=await request('/api/v1/books/'+scopedId+'/chapters/'+
- scopedFirstId,{method:'PATCH',cookie:author,
- body:{baseRevision:0,content:searchableContent}});
-assert.equal(firstSearchEdit.status,200);
+const v37FirstSearchEdit=await request('/api/v1/books/'+v37ScopedId+'/chapters/'+
+ v37ScopedFirstId,{method:'PATCH',cookie:author,
+ body:{baseRevision:0,content:v37SearchableContent}});
+assert.equal(v37FirstSearchEdit.status,200);
 for(let i=1;i<35;i++){
- const added=await request('/api/v1/books/'+scopedId+'/chapters',{
+ const added=await request('/api/v1/books/'+v37ScopedId+'/chapters',{
    method:'POST',cookie:author,body:{title:'Chapitre multipage n°'+i}
  });
  assert.equal(added.status,201,'search test chapter '+i+' created');
- const changed=await request('/api/v1/books/'+scopedId+'/chapters/'+
+ const changed=await request('/api/v1/books/'+v37ScopedId+'/chapters/'+
    added.data.chapter.id,{method:'PATCH',cookie:author,
-   body:{baseRevision:0,content:searchableContent}});
+   body:{baseRevision:0,content:v37SearchableContent}});
  assert.equal(changed.status,200,'search test chapter '+i+' saved');
 }
-const scopedBase='/api/v1/search?'+new URLSearchParams({
- q:scopedWord,bookId:scopedId
+const v37ScopedBase='/api/v1/search?'+new URLSearchParams({
+ q:v37ScopedWord,bookId:v37ScopedId
 });
-const firstPage=await request(scopedBase,{cookie:author});
-assert.equal(firstPage.status,200,'scoped current book search');
-assert.equal(firstPage.data.bookId,scopedId);
-assert.equal(firstPage.data.scope,'saved-current-book-revisions');
-assert.equal(firstPage.data.bookTitle,'Ouvrage pour recherche multipage v37');
-assert.equal(firstPage.data.pageSize,30);
-assert.equal(firstPage.data.hits.length,30);
-assert.equal(firstPage.data.hasMore,true);
-assert.equal(firstPage.data.nextOffset,30);
-assert.equal(firstPage.data.hits.every(hit=>hit.bookId===scopedId),true,
+const v37FirstPage=await request(v37ScopedBase,{cookie:author});
+assert.equal(v37FirstPage.status,200,'scoped current book search');
+assert.equal(v37FirstPage.data.bookId,v37ScopedId);
+assert.equal(v37FirstPage.data.scope,'saved-current-book-revisions');
+assert.equal(v37FirstPage.data.bookTitle,'Ouvrage pour recherche multipage v37');
+assert.equal(v37FirstPage.data.pageSize,30);
+assert.equal(v37FirstPage.data.hits.length,30);
+assert.equal(v37FirstPage.data.hasMore,true);
+assert.equal(v37FirstPage.data.nextOffset,30);
+assert.equal(v37FirstPage.data.hits.every(hit=>hit.bookId===v37ScopedId),true,
  'scoped search only returns current selected book');
-assert.equal(firstPage.data.hits.every(hit=>hit.revision===1),true,
+assert.equal(v37FirstPage.data.hits.every(hit=>hit.revision===1),true,
  'only latest saved revision is returned');
-const nextPage=await request(scopedBase+'&offset=30',{cookie:author});
-assert.equal(nextPage.status,200);
-assert.equal(nextPage.data.hits.length,5);
-assert.equal(nextPage.data.hasMore,false);
-assert.equal(nextPage.data.nextOffset,null);
-const foundIds=[...firstPage.data.hits,...nextPage.data.hits].map(hit=>hit.chapterId);
-assert.equal(new Set(foundIds).size,35,'no duplicate chapters across pages');
-const outsiderScope=await request(scopedBase,{cookie:outsider});
-assert.equal(outsiderScope.status,404,'known private book UUID never leaks');
-assert.equal((await request(scopedBase)).status,401);
-const outsiderSearchBook=await request('/api/v1/books',{
+const v37NextPage=await request(v37ScopedBase+'&offset=30',{cookie:author});
+assert.equal(v37NextPage.status,200);
+assert.equal(v37NextPage.data.hits.length,5);
+assert.equal(v37NextPage.data.hasMore,false);
+assert.equal(v37NextPage.data.nextOffset,null);
+const v37FoundIds=[...v37FirstPage.data.hits,...v37NextPage.data.hits].map(hit=>hit.chapterId);
+assert.equal(new Set(v37FoundIds).size,35,'no duplicate chapters across pages');
+const v37OutsiderScope=await request(v37ScopedBase,{cookie:outsider});
+assert.equal(v37OutsiderScope.status,404,'known private book UUID never leaks');
+assert.equal((await request(v37ScopedBase)).status,401);
+const v37OutsiderSearchBook=await request('/api/v1/books',{
  method:'POST',cookie:outsider,
  body:{title:'Le livre secret d un autre workspace',bookType:'ESSAY',language:'fr'}
 });
-assert.equal(outsiderSearchBook.status,201);
+assert.equal(v37OutsiderSearchBook.status,201);
 assert.equal((await request('/api/v1/search?'+new URLSearchParams({
- q:scopedWord,bookId:outsiderSearchBook.data.book.id
+ q:v37ScopedWord,bookId:v37OutsiderSearchBook.data.book.id
 }),{cookie:author})).status,404,'book scope rejects other workspaces');
-const cases=[
- '?q='+scopedWord+'&bookId=wrong',
- '?q='+scopedWord+'&bookId='+scopedId+'&bookId='+scopedId,
- '?q='+scopedWord+'&offset=1',
- '?q='+scopedWord+'&offset=30030',
- '?q='+scopedWord+'&offset=-30',
- '?q='+scopedWord+'&unexpected=true',
- '?q='+scopedWord+'&q=another'
+const v37Cases=[
+ '?q='+v37ScopedWord+'&bookId=wrong',
+ '?q='+v37ScopedWord+'&bookId='+v37ScopedId+'&bookId='+v37ScopedId,
+ '?q='+v37ScopedWord+'&offset=1',
+ '?q='+v37ScopedWord+'&offset=30030',
+ '?q='+v37ScopedWord+'&offset=-30',
+ '?q='+v37ScopedWord+'&unexpected=true',
+ '?q='+v37ScopedWord+'&q=another'
 ];
-for(const suffix of cases){
+for(const suffix of v37Cases){
  assert.equal((await request('/api/v1/search'+suffix,{cookie:author})).status,400,
    'invalid/duplicated or unbounded search parameter rejected: '+suffix);
 }
-const literalScoped=await request('/api/v1/search?'+new URLSearchParams({
- q:'%_',bookId:scopedId
+const v37LiteralScoped=await request('/api/v1/search?'+new URLSearchParams({
+ q:'%_',bookId:v37ScopedId
 }),{cookie:author});
-assert.equal(literalScoped.status,200);
-assert.deepEqual(literalScoped.data.hits,[],'LIKE metacharacters not wildcard');
-const globalFirst=await request('/api/v1/search?q='+scopedWord,{cookie:author});
-assert.equal(globalFirst.status,200);
-assert.equal(globalFirst.data.hits.length,30);
-assert.equal(globalFirst.data.hasMore,true);
-const globalSecond=await request('/api/v1/search?q='+scopedWord+'&offset=30',
+assert.equal(v37LiteralScoped.status,200);
+assert.deepEqual(v37LiteralScoped.data.hits,[],'LIKE metacharacters not wildcard');
+const v37GlobalFirst=await request('/api/v1/search?q='+v37ScopedWord,{cookie:author});
+assert.equal(v37GlobalFirst.status,200);
+assert.equal(v37GlobalFirst.data.hits.length,30);
+assert.equal(v37GlobalFirst.data.hasMore,true);
+const v37GlobalSecond=await request('/api/v1/search?q='+v37ScopedWord+'&offset=30',
  {cookie:author});
-assert.equal(globalSecond.status,200);
-assert.equal(globalSecond.data.hits.length,5);
-const scopedMeta=await request('/api/v1/books?'+new URLSearchParams({
+assert.equal(v37GlobalSecond.status,200);
+assert.equal(v37GlobalSecond.data.hits.length,5);
+const v37ScopedMeta=await request('/api/v1/books?'+new URLSearchParams({
  q:'Ouvrage pour recherche multipage v37',limit:'10'
 }),{cookie:author});
-assert.equal(scopedMeta.status,200);
-const scopedBookMeta=scopedMeta.data.books.find(b=>b.id===scopedId);
-assert.ok(scopedBookMeta?.updatedAt);
-const archivedScoped=await request('/api/v1/books/'+scopedId,{
+assert.equal(v37ScopedMeta.status,200);
+const v37ScopedBookMeta=v37ScopedMeta.data.books.find(b=>b.id===v37ScopedId);
+assert.ok(v37ScopedBookMeta?.updatedAt);
+const v37ArchivedScoped=await request('/api/v1/books/'+v37ScopedId,{
  method:'PATCH',cookie:author,
- body:{action:'archive',expectedUpdatedAt:scopedBookMeta.updatedAt}
+ body:{action:'archive',expectedUpdatedAt:v37ScopedBookMeta.updatedAt}
 });
-assert.equal(archivedScoped.status,200);
-assert.equal((await request(scopedBase,{cookie:author})).status,404,
+assert.equal(v37ArchivedScoped.status,200);
+assert.equal((await request(v37ScopedBase,{cookie:author})).status,404,
  'archived book no longer accessible to scoped search');
-const searchAfterArchive=await request('/api/v1/search?q='+scopedWord,{cookie:author});
-assert.equal(searchAfterArchive.data.hits.some(hit=>hit.bookId===scopedId),false,
+const v37SearchAfterArchive=await request('/api/v1/search?q='+v37ScopedWord,{cookie:author});
+assert.equal(v37SearchAfterArchive.data.hits.some(hit=>hit.bookId===v37ScopedId),false,
  'global search excludes archived sources');
 
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
