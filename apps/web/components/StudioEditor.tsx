@@ -8,6 +8,7 @@ import EditorRibbon from './EditorRibbon';
 import ChapterFindReplacePanel from './ChapterFindReplacePanel';
 import ChapterSectionOutline from './ChapterSectionOutline';
 import {sameSectionAtPosition,type SectionHeading} from '@/lib/section-outline';
+import {analyzeEditorialStructure} from '@/lib/editorial-structure';
 import {TextSelection} from '@tiptap/pm/state';
 import AppIcon from './AppIcon';
 import Link from 'next/link';
@@ -32,6 +33,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const [state,setState]=useState<SaveState>('saved');
  const [currentRevision,setRevision]=useState(revision);
  const [focus,setFocus]=useState(false),[rightPanel,setRightPanel]=useState(true),[compact,setCompact]=useState<boolean|null>(null),[mobilePanel,setMobilePanel]=useState(false),[mobileNav,setMobileNav]=useState(false),[wordCount,setWordCount]=useState(0),[errorDetail,setErrorDetail]=useState('');
+ const [structure,setStructure]=useState(()=>analyzeEditorialStructure(initialContent));
  const [recovery,setRecovery]=useState<string|null>(null);
  const [sidebarMode,setSidebarMode]=useState<'chapters'|'sections'>('chapters');
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
@@ -64,6 +66,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  },[state,canEdit,chapterId,chapterTitle,errorDetail,locale,notify]);
  const draftKey='bookstudio:draft:'+chapterId;
  const drawerCloseRef=useRef<HTMLButtonElement>(null);
+ const insightsToggleRef=useRef<HTMLButtonElement>(null),insightsWasOpen=useRef(false);
  const navCloseRef=useRef<HTMLButtonElement>(null),navListRef=useRef<HTMLDivElement>(null);
  const navToggleRef=useRef<HTMLButtonElement>(null),navWasOpen=useRef(false);
 
@@ -75,9 +78,26 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
    return ()=>query.removeEventListener('change',update);
  },[]);
  useEffect(()=>{
-   if(!mobilePanel)return;
+   if(!mobilePanel){
+     if(insightsWasOpen.current)insightsToggleRef.current?.focus();
+     insightsWasOpen.current=false;
+     return;
+   }
+   insightsWasOpen.current=true;
    drawerCloseRef.current?.focus();
-   const handler=(event:KeyboardEvent)=>{if(event.key==='Escape')setMobilePanel(false);};
+   const handler=(event:KeyboardEvent)=>{
+     if(document.querySelector('[role="dialog"][aria-modal="true"]:not(#studio-editorial-insights)'))return;
+     if(event.key==='Escape'){event.preventDefault();setMobilePanel(false);return;}
+     if(event.key!=='Tab')return;
+     const panel=document.getElementById('studio-editorial-insights');
+     const items=[...panel?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input,textarea,select')||[]]
+       .filter(item=>item.getClientRects().length>0);
+     const first=items[0],last=items[items.length-1];
+     if(!first||!last)return;
+     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+     else if(!panel?.contains(document.activeElement)){event.preventDefault();first.focus();}
+   };
    document.addEventListener('keydown',handler);
    return ()=>document.removeEventListener('keydown',handler);
  },[mobilePanel]);
@@ -139,8 +159,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
      if(serializeTimerRef.current)return;
      serializeTimerRef.current=setTimeout(()=>{
        serializeTimerRef.current=null;
-       lastJson.current=JSON.stringify(editor.getJSON());
+       const richContent=editor.getJSON();
+       lastJson.current=JSON.stringify(richContent);
        setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
+       setStructure(analyzeEditorialStructure(richContent));
        try{localStorage.setItem(draftKey,lastJson.current);}
        catch{setState('error');setErrorDetail(currentTRef.current('editor.storageUnavailable'));}
      },350);
@@ -323,6 +345,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  function protectNavigation(event:React.MouseEvent){
    if(!canLeaveEditor())event.preventDefault();else setMobileNav(false);
  }
+ function toggleEditorialPanel(){
+   if(compact){setMobileNav(false);setMobilePanel(open=>!open);}
+   else setRightPanel(open=>!open);
+ }
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open ':'')+
      (mobileNav?'studio-mobile-navigation-open':'')}>
   {mobileNav&&<button type="button" className="studio-nav-backdrop" aria-label={locale==='fr'?'Fermer la navigation':'Close navigation'} onClick={()=>setMobileNav(false)}/>}
@@ -370,7 +396,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <div className="studio-topbar">
       <div className="studio-quick-nav">
         <button type="button" className="studio-nav-toggle" ref={navToggleRef}
-          aria-controls="studio-manuscript-nav" onClick={()=>setMobileNav(v=>!v)}
+          aria-controls="studio-manuscript-nav" onClick={()=>{setMobilePanel(false);setMobileNav(v=>!v);}}
           aria-label={locale==='fr'?'Afficher les options et les chapitres à gauche':'Show left options and chapters'}
           aria-expanded={mobileNav}>☰</button>
         <Link className="studio-quick-overview" href={'/books/'+bookId} onClick={protectNavigation}>
@@ -392,13 +418,18 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
           canRestoreNow={()=>canEdit&&!pendingRef.current&&!savingRef.current&&
             !conflictRef.current&&state==='saved'&&!recovery}
           onRestored={()=>router.refresh()}/>
+        <button type="button" className="studio-insights-toggle" ref={insightsToggleRef}
+          title={t('editor.editorial')} aria-label={t('editor.editorial')}
+          aria-controls={(compact===true?mobilePanel:compact===false&&rightPanel)?'studio-editorial-insights':undefined}
+          aria-expanded={compact===true?mobilePanel:compact===false&&rightPanel}
+          onClick={toggleEditorialPanel}><AppIcon name="sparkles" size={20}/></button>
         <ActionMenu label={t('editor.display')} actions={[
           {label:locale==='fr'?'Rechercher dans tous les chapitres du livre':'Search across book chapters',
             onSelect:()=>{if(canLeaveEditor())router.push('/search?bookId='+bookId);}},
           {label:t(focus?'editor.focusOff':'editor.focusOn'),
             onSelect:()=>setFocus(value=>!value)},
           {label:compact?t(mobilePanel?'editor.panelClose':'editor.panelOn'):t(rightPanel?'editor.panelOff':'editor.panelOn'),
-            onSelect:()=>{if(compact)setMobilePanel(value=>!value);else setRightPanel(value=>!value);}},
+            onSelect:toggleEditorialPanel},
           ...preferenceActions
         ]}/>
       </div>
@@ -413,9 +444,27 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
     <div className="editor-status"><span>{t('editor.wordCount',{count:wordCount.toLocaleString(locale==='fr'?'fr-FR':'en-US')})}</span><span>{t('editor.revision',{count:currentRevision})}</span><span>{t('editor.autosave')}</span></div>
   </main>
   {compact&&mobilePanel&&<button type="button" className="studio-insights-backdrop" aria-label={t('editor.panelClose')} onClick={()=>setMobilePanel(false)}/>}
-  {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside className="studio-insights" aria-label="Panneau éditorial">
-    <button ref={drawerCloseRef} type="button" className="studio-insights-close" aria-label="Fermer le panneau éditorial" onClick={()=>setMobilePanel(false)}>×</button>
+  {((compact===false&&rightPanel)||(compact===true&&mobilePanel))&&<aside id="studio-editorial-insights"
+    className="studio-insights" aria-label={t('editor.editorial')}
+    role={compact?'dialog':undefined} aria-modal={compact?true:undefined}>
+    <button ref={drawerCloseRef} type="button" className="studio-insights-close"
+      aria-label={t('editor.panelClose')} onClick={()=>setMobilePanel(false)}>×</button>
     <div className="insights-header"><span><AppIcon name="sparkles"/></span><strong>{t('editor.editorial')}</strong><small>{t('editor.coming')}</small></div>
+    <section className="insight-card studio-structure-card" aria-label={locale==='fr'?'Repères éditoriaux locaux':'Local editorial indicators'}>
+      <span className="eyebrow">{locale==='fr'?'Structure du chapitre':'Chapter structure'}</span>
+      <div className="studio-structure-stats">
+        <div><strong>{structure.words.toLocaleString(locale==='fr'?'fr-FR':'en-US')}</strong><span>{locale==='fr'?'mots':'words'}</span></div>
+        <div><strong>{structure.paragraphs.toLocaleString(locale==='fr'?'fr-FR':'en-US')}</strong><span>{locale==='fr'?'paragraphes':'paragraphs'}</span></div>
+        <div><strong>{structure.headings.toLocaleString(locale==='fr'?'fr-FR':'en-US')}</strong><span>{locale==='fr'?'titres':'headings'}</span></div>
+      </div>
+      {structure.longParagraphs>0&&<p className="studio-structure-warning">
+        {locale==='fr'?`${structure.longParagraphs} paragraphe(s) de plus de 180 mots à relire pour la lisibilité.`:
+          `${structure.longParagraphs} paragraph(s) over 180 words to review for readability.`}
+      </p>}
+      <p className="studio-structure-disclaimer">{locale==='fr'?
+        'Repères calculés sur ce chapitre, dans votre navigateur. Aucune transmission à un service IA ; les suggestions automatiques restent à venir.':
+        'Indicators are calculated on this chapter in your browser. Nothing is sent to an AI service; automatic suggestions are not yet available.'}</p>
+    </section>
     <div className="insight-card"><span className="eyebrow">{t('editor.yourWriting')}</span><h3>{t('editor.ideas')}</h3><p>{t('editor.editorialCopy')}</p></div>
     <ChapterComments bookId={bookId} chapterId={chapterId} revision={currentRevision} saveState={state} canEdit={canEdit}/>
     <div className="insight-card pale"><span className="eyebrow">{t('editor.next')}</span><p>✧ {t('editor.style')}</p><p>✧ {t('editor.suggestions')}</p><p>✧ {t('editor.bibliography')}</p></div>

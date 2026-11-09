@@ -1410,3 +1410,65 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
  .studio .chapter-outline-list{flex:1 1 auto;min-height:0;
   -webkit-overflow-scrolling:touch}
 }
+
+/* v0.39 — Regression guard: the later, unconditional .studio-sidebar
+ * display:flex (manuscript scrolling) used to override the original
+ * @media(max-width:760px) display:none. On Android this left the 248px
+ * sidebar in the flex row and squeezed Studio off-screen. */
+.studio-insights-toggle{display:none}
+.studio-structure-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;margin-top:15px}
+.studio-structure-stats>div{min-width:0;display:flex;flex-direction:column;
+ align-items:center;gap:4px;padding:12px 3px;border-radius:9px;
+ background:var(--surface-muted,#f3f6f5)}
+.studio-structure-stats strong{color:var(--green);font-size:19px;font-variant-numeric:tabular-nums}
+.studio-structure-stats span{font-size:10px;color:var(--muted);text-align:center}
+.studio-structure-warning{padding:9px;border-radius:8px;
+ background:var(--surface-muted,#f3f6f5);border-left:3px solid var(--green)}
+.studio-structure-disclaimer{font-size:11px!important;line-height:1.5!important}
+@media(max-width:1150px){
+ .studio .studio-insights-toggle{display:grid;place-items:center;
+  flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;
+  background:var(--surface,#fff);border:1px solid var(--line);
+  border-radius:10px;color:var(--green);padding:0}
+ .studio .studio-insights-toggle[aria-expanded="true"]{
+  background:var(--surface-hover,#eaf3ed);border-color:var(--green)}
+ .studio .studio-insights-toggle:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+ .studio .studio-insights-close{width:44px;height:44px}
+}
+@media(max-width:900px){
+ .studio{width:100%;max-width:100vw;min-width:0;height:100dvh}
+ .studio>.studio-sidebar{display:none!important}
+ .studio.studio-mobile-navigation-open>.studio-sidebar{
+  display:flex!important;position:fixed;top:0;bottom:0;left:0;
+  z-index:601;width:min(330px,calc(100vw - 34px));max-width:100%;
+  height:100dvh;padding:calc(60px + env(safe-area-inset-top,0px))
+  12px calc(16px + env(safe-area-inset-bottom,0px));
+  background:var(--surface,#fff);box-shadow:16px 0 45px #132d4940}
+ .studio>.studio-center{width:100%;max-width:100%;min-width:0;
+  flex:1 1 100%;overflow:hidden}
+ .studio .studio-nav-toggle{display:grid;place-items:center;
+  flex:0 0 44px;width:44px;height:44px;min-width:44px;min-height:44px;
+  background:var(--surface,#fff);border:1px solid var(--line);
+  border-radius:10px;color:var(--ink);font-size:22px;padding:0}
+ .studio .studio-quick-nav .breadcrumb{display:none}
+ .studio .studio-topbar{width:100%;min-width:0;gap:4px;
+  padding:0 calc(6px + env(safe-area-inset-right,0px))
+  0 calc(6px + env(safe-area-inset-left,0px))}
+ .studio .studio-quick-nav{flex:0 0 44px;min-width:44px}
+ .studio .studio-quick-overview{display:none}
+ .studio .studio-actions{flex:1 1 auto;min-width:0;gap:3px;
+  justify-content:flex-end}
+ .studio .studio-actions .save-state{max-width:70px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .studio .studio-nav-backdrop{display:block}
+ .studio .studio-nav-close{display:grid;place-items:center;
+  width:44px;height:44px;top:calc(10px + env(safe-area-inset-top,0px))}
+ .studio .editor-scroll,.studio .ribbon{min-width:0;max-width:100%;width:100%}
+ .studio .ribbon-scroll{max-width:100%;overscroll-behavior-inline:contain}
+ .studio .editor-sheet{min-width:0;max-width:100%;overflow-wrap:anywhere}
+ .studio .studio-mobile-insights-open .studio-insights{max-width:100vw;
+  padding-top:calc(62px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+ .studio .studio-insights-close{top:calc(10px + env(safe-area-inset-top,0px))}
+}
