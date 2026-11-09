@@ -23,3 +23,5 @@
 ## Gate avant publication
 
 `pnpm release:check`, `pnpm search-paging:check`, `pnpm mobile-workspace:check`, `pnpm ui:check`, `pnpm perf:check`, `pnpm test`, tests du worker, E2E PostgreSQL, `pnpm typecheck`, `pnpm build`. Guide, conception, OpenAPI, ops, QA, release, README, changelog et roadmap **actualisés dans la PR fonctionnelle avant Vercel**. Après **E2E propriétaire BON** uniquement : snapshot Neon **production** avant squash main, déploiement Vercel production `main` seulement Preview OFF, sondes health/version + logs et journal postproduction documenté. ClamAV reste OFF.
+
+**Régression petits écrans / offset extrême :** à 320 px, vérifier que le hamburger du Studio reste visible alors que le raccourci « Retour à l'ouvrage » est déplacé dans le drawer ; les actions et le statut de sauvegarde ne dépassent pas la largeur. La réponse API à offset=30000 avec davantage de résultats doit exposer `limitReached:true` et `nextOffset:null` ; l'UI doit inviter à affiner sans proposer un bouton impossible à utiliser.

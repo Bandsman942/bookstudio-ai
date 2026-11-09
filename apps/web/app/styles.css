@@ -1270,3 +1270,14 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
  .search-load-more{flex-direction:column;align-items:stretch}
  .search-load-more .button{width:100%}
 }
+
+/* Tiny phones: the hamburger retains its 44px target while the overview
+ * back link moves into its fully accessible left drawer, avoiding topbar
+ * horizontal overflow at 320px. */
+@media(max-width:390px){
+ .studio .studio-quick-overview{display:none}
+ .studio .studio-quick-nav{flex:0 0 44px;min-width:44px}
+ .studio .studio-actions{flex:1 1 auto;min-width:0;
+  justify-content:flex-end;gap:2px}
+ .studio .studio-topbar{padding-left:6px;padding-right:6px}
+}

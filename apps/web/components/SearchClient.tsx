@@ -11,7 +11,7 @@ type Hit={
 };
 type SearchPageResult={
  hits?:Hit[];query?:string;bookId?:string|null;
- hasMore?:boolean;nextOffset?:number|null;offset?:number;
+ hasMore?:boolean;limitReached?:boolean;nextOffset?:number|null;offset?:number;
  pageSize?:number;error?:string
 };
 /** Search only saved CURRENT editions; the server enforces membership and
@@ -26,7 +26,7 @@ export default function SearchClient({bookId=null,bookTitle=null}:{
  const [hits,setHits]=useState<Hit[]>([]);
  const [searched,setSearched]=useState(false),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[lastQuery,setLastQuery]=useState('');
- const [hasMore,setHasMore]=useState(false);
+ const [hasMore,setHasMore]=useState(false),[limitReached,setLimitReached]=useState(false);
  const [nextOffset,setNextOffset]=useState<number|null>(null);
  const sequence=useRef(0),abort=useRef<AbortController|null>(null);
  useEffect(()=>()=>abort.current?.abort(),[]);
@@ -62,7 +62,7 @@ export default function SearchClient({bookId=null,bookTitle=null}:{
          old.bookId===hit.bookId&&old.chapterId===hit.chapterId))
      ]:body.hits!);
      setLastQuery(q);setSearched(true);
-     setHasMore(body.hasMore);
+     setHasMore(body.hasMore);setLimitReached(Boolean(body.limitReached));
      setNextOffset(typeof body.nextOffset==='number'?body.nextOffset:null);
      if(!append){
        notify({tone:'info',title:locale==='fr'?'Recherche terminée':'Search finished',
@@ -84,7 +84,7 @@ export default function SearchClient({bookId=null,bookTitle=null}:{
      notify({tone:'warning',title:locale==='fr'?'Recherche non lancée':
        'Search not started',detail});return;
    }
-   setHits([]);setHasMore(false);setNextOffset(null);
+   setHits([]);setHasMore(false);setLimitReached(false);setNextOffset(null);
    setSearched(false);
    void load(q,0);
  }
@@ -133,7 +133,12 @@ export default function SearchClient({bookId=null,bookTitle=null}:{
        <span className="search-hit-snippet">{hit.snippet}</span>
        <small>{t('search.resultRevision',{count:hit.revision})}</small>
      </Link>)}
-     {searched&&hasMore&&<div className="search-load-more">
+     {searched&&limitReached&&<p role="status" className="source-note">
+       {locale==='fr'?
+         'La recherche a atteint la limite de pagination autorisée (30 000). Affinez le terme ou choisissez un ouvrage précis pour consulter la suite sans masquer cette limite.':
+         'Search reached the authorized 30,000 pagination limit. Narrow the term or select a specific book; this limit is not hidden.'}
+     </p>}
+     {searched&&hasMore&&!limitReached&&<div className="search-load-more">
        <button type="button" className="button secondary" disabled={busy||nextOffset===null}
          onClick={()=>{if(nextOffset!==null)void load(lastQuery,nextOffset,true);}}>
          {busy?(locale==='fr'?'Chargement…':'Loading…'):

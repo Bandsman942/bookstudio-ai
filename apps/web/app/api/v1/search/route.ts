@@ -2,7 +2,7 @@ import {Prisma} from '@prisma/client';
 import { prisma } from '@bookstudio/database';
 import { activeUser } from '@/lib/auth';
 import { errorResponse } from '@/lib/security';
-import {parseSearchParams,escapeLikeLiteral,SEARCH_PAGE_SIZE,SearchQueryError}
+import {parseSearchParams,escapeLikeLiteral,SEARCH_PAGE_SIZE,SEARCH_MAX_OFFSET,SearchQueryError}
  from '@/lib/search-paging';
 
 export const runtime = 'nodejs';
@@ -74,11 +74,13 @@ export async function GET(request:Request){
       LIMIT ${SEARCH_PAGE_SIZE+1} OFFSET ${offset}
     `);
     const hasMore=rows.length>SEARCH_PAGE_SIZE;
+    const limitReached=hasMore&&offset>=SEARCH_MAX_OFFSET;
     const hits=rows.slice(0,SEARCH_PAGE_SIZE);
     return Response.json({
       query:q,bookId,bookTitle:scopeTitle,
       hits,offset,pageSize:SEARCH_PAGE_SIZE,
-      nextOffset:hasMore?offset+SEARCH_PAGE_SIZE:null,hasMore,
+      nextOffset:hasMore&&!limitReached?offset+SEARCH_PAGE_SIZE:null,
+      hasMore,limitReached,
       limitedTo:SEARCH_PAGE_SIZE,
       scope:bookId?'saved-current-book-revisions':'saved-current-revisions'
     },{headers:{'Cache-Control':'private, no-store',
