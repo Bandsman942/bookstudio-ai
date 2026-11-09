@@ -99,8 +99,14 @@ Deux évolutions : **Recherche dans un seul livre** (issue #179) depuis la vue d
 
 [Release candidate](docs/releases/v0.37.0.md) · [Conception](docs/design/BOOK-SEARCH-MOBILE-0.37.0.md) · [E2E](docs/qa/E2E-BOOK-SEARCH-MOBILE-0.37.0.md). **Production actuelle v0.37.0-alpha**, propriétaire E2E BON, GitHub CI #261 SUCCESS au SHA final, snapshot Neon protégé avant fusion, Vercel READY. Preview OFF. ClamAV toujours reporté/OFF. ClamAV toujours reporté/OFF.
 
-## Candidate v0.38.0-alpha — NON DÉPLOYÉE
+## v0.38.0-alpha — validée E2E, fusionnée dans main (publication à confirmer)
 
 BS-005c issue #183, suite du cahier des charges §5.1 : **sommaire dynamique des sections H1–H3 dans le Studio**. Dans le menu gauche (hamburger sur mobile/tablette), basculez entre **Chapitres** et **Sections** ; les titres de section de votre chapitre courant apparaissent avec indentation, filtre Unicode, compteur réel et navigation directe sans modifier le texte ni la révision. Les listes dépassant 300 titres affichent une limite explicite et restent consultables via filtre. Les menus contextuels des chapitres restent dans l'onglet Chapitres, les brouillons sont protégés. Aucun endpoint, migration ou IA ajoutés. [Release](docs/releases/v0.38.0.md) · [QA](docs/qa/E2E-SECTION-OUTLINE-0.38.0.md).
 
-**Production reste v0.37.0-alpha** en attente de la CI finale et de la validation propriétaire `E2E v0.38.0-alpha BON`. Pas de Preview ; ClamAV toujours reporté/OFF.
+**E2E v0.38.0-alpha BON** confirmé le 9 novembre 2026, GitHub CI #265 SUCCESS, snapshot de protection Neon `snap-curly-recipe-bfml77am` puis PR #184 fusionnée (`393ac0c76d13f71e4efae524daafa0d2adaa9b08`). Le déclenchement Vercel initial a été **annulé par le verrou de build** ; ne pas présenter la production comme mise à jour avant son déploiement READY et ses sondes. Pas de Preview ; ClamAV toujours reporté/OFF.
+
+## Candidate v0.39.0-alpha — correctif Android / Studio et Intelligence éditoriale
+
+Issue #185 : correction du Studio **écrasé sur téléphone** par la barre Manuscrit persistante ; sous 900px, l'éditeur retrouve la largeur utile et le hamburger ☰ ouvre le panneau gauche en surimpression. Un bouton **étincelles** offre un accès direct au panneau droit **Intelligence éditoriale**, avec commentaires et premiers repères locaux (mots, paragraphes, titres et paragraphes longs). Il ne s'agit **pas** d'une correction par IA ; aucun texte n'est transmis à un fournisseur IA. Vues exclusives, fermeture accessible, FR/EN, thèmes, brouillons et sommaire H1–H3 préservés. [Release candidate](docs/releases/v0.39.0.md) · [Design](docs/design/STUDIO-MOBILE-EDITORIAL-0.39.0.md) · [Recette mobile](docs/qa/E2E-STUDIO-MOBILE-0.39.0.md).
+
+**Non fusionnée/non déployée**, en attente CI sur SHA final et validation propriétaire `E2E v0.39.0-alpha BON`. Documentation complète avant publication, snapshot Neon avant fusion, Vercel depuis main uniquement, Preview OFF et ClamAV OFF.

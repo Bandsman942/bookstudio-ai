@@ -1,6 +1,6 @@
 # Guide utilisateur — gestion des ouvrages et des chapitres
 
-**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.38.0-alpha (non publiée).**
+**BookStudio AI | Français / English | Guide actualisé pour la candidate v0.39.0-alpha (non publiée).**
 Accès privé : les capacités réelles dépendent de votre rôle dans l'espace de travail.
 
 ## 1. Bibliothèque et livres
@@ -290,3 +290,17 @@ Cette première version est un sommaire **interne au chapitre courant**, pas enc
 ### English — Live section outline
 
 In Studio's left sidebar (or the **☰** mobile drawer), switch between **Chapters** and **Sections**. Chapters keeps the complete chapter list and ⋯ action menus. Sections lists the current open document's real **H1/H2/H3** headings with hierarchical indentation, title filtering and accurate result counts. The outline includes local unsaved drafts, but clicking a section **only moves the caret and viewport**, without editing or saving the document. More than 300 headings are signaled explicitly; refine the filter to find later matches. Reader roles can navigate. Whole-book tables of contents and publication exports are not part of this release.
+
+## 24. Studio et intelligence éditoriale sur téléphone (candidate v0.39.0-alpha)
+
+Sur **Android Chrome**, la colonne Manuscrit pouvait rester affichée en permanence et ne laisser qu'une bande minuscule pour écrire. Cette anomalie est corrigée dans la **candidate v0.39** : le Studio apparaît désormais **plein écran**, même sur un petit téléphone. La navigation à gauche reste accessible par le **☰** du coin supérieur gauche, qui ouvre un volet **par-dessus** le Studio. Fermez-le avec la croix **×**, le fond sombre ou Échap. Les onglets **Chapitres** et **Sections**, avec les commandes ⋯ et le sommaire H1–H3, restent disponibles.
+
+Pour ouvrir l'**Intelligence éditoriale**, touchez directement le bouton **étincelles ✧** dans la barre supérieure du Studio (téléphone et tablette). Le panneau s'ouvre **à droite** avec ses commentaires éditoriaux habituels ; sa fermeture redonne immédiatement toute la place au manuscrit. On ne peut pas ouvrir simultanément la navigation gauche et le panneau droit. La barre des styles/d'édition se parcourt horizontalement, sans faire glisser la page.
+
+Le panneau présente maintenant des **repères locaux** du chapitre : nombre de mots, de paragraphes non vides, de titres et avertissement lorsque des paragraphes dépassent **180 mots**. Ces repères aident à repérer une structure dense, mais **ne constituent pas une évaluation scientifique, linguistique ou médicale**. Ils se mettent à jour pendant la rédaction dans le navigateur et n'envoient aucun texte à un fournisseur IA. Les fonctions futures de correction et d'analyse IA restent distinctes et ne sont **pas encore activées**.
+
+**Attention :** v0.39 reste une candidate jusqu'à validation E2E. La version actuellement publiée peut encore présenter la disposition antérieure.
+
+### English — Mobile Studio and editorial indicators
+
+On small phones, Studio now takes the full viewport instead of being squeezed beside a persistent manuscript sidebar. Use the **☰** button to show Chapters or Sections in an overlay, and the **sparkles ✧** button in the Studio header to open the **Editorial Intelligence** drawer from the right. Close with ×, backdrop or Escape. Only one drawer opens at once. The panel includes local chapter word/paragraph/heading counts and a hint about paragraphs over 180 words; it **does not perform AI-powered editing** or transmit prose to an AI provider. Mobile visual acceptance testing is required before release.

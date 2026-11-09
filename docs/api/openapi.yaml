@@ -2,7 +2,10 @@ openapi: 3.1.0
 info:
   title: BookStudio AI API
   version: 0.1.0
-  description: API autonome, aucune connexion directe à DTSC Platform.
+  description: >-
+    API autonome, aucune connexion directe à DTSC Platform. v0.39.0-alpha
+    corrige uniquement le Studio mobile et ajoute des indicateurs éditoriaux
+    calculés dans le navigateur : aucune nouvelle route API, aucun appel IA.
 servers:
   - url: /api/v1
 paths:

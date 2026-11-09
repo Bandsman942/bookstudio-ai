@@ -4,6 +4,13 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
+## [0.39.0] — alpha candidate (NON DÉPLOYÉE)
+### BS-005d #185 — Studio mobile et accès direct à l'intelligence éditoriale
+- Corrigé : à ≤760 px, `.studio-sidebar{display:flex}` écrasait le masquage mobile antérieur. La colonne Manuscrit restait visible (248 px) et réduisait le Studio à une bande étroite. Sous 900 px, la barre est désormais cachée par défaut et le hamburger de 44 px l'ouvre en tiroir flottant, en gardant les onglets Chapitres/Sections, les ⋯, le focus, les safe areas et la protection des brouillons.
+- Ajouté : accès **direct** au panneau droit « Intelligence éditoriale » par bouton étincelles dans la topbar des téléphones/tablettes ; tiroir non destructif avec fond, fermeture/Escape, focus et exclusivité des tiroirs gauche/droit. Document et ruban gardent la largeur utile.
+- Ajouté : premiers **repères éditoriaux locaux** (mots, paragraphes non vides, titres et alerte de paragraphes >180 mots) actualisés sur le document courant ; ces indicateurs ne sont **pas** une analyse générative, aucun appel au fournisseur IA et aucune transmission de prose.
+- Tests CSS/mobile et métriques, gate documentaire, QA Android propriétaire obligatoire. Aucune migration/API/secret ni activation ClamAV. Attente CI finale et `E2E v0.39.0-alpha BON` avant fusion et production.
+
 ## [0.38.0] — alpha candidate (NON DÉPLOYÉE)
 ### BS-005c #183 — sommaire dynamique des sections H1–H3 dans le Studio
 - La barre latérale du Studio, y compris via hamburger mobile/tablette, dispose d'onglets **Chapitres** et **Sections**. Le premier conserve toutes les actions contextuelles ⋯ et la navigation existante ; le second construit localement un sommaire hiérarchique depuis les véritables titres ProseMirror H1/H2/H3 du **chapitre courant**, y compris les brouillons locaux, sans appel IA/serveur.

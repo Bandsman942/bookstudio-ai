@@ -53,3 +53,32 @@ test('studio chapter drawer stays discoverable, safe and scrollable',()=>{
    assert.ok(css.includes(token),'mobile styles: '+token);
  }
 });
+
+test('v0.39 mobile Studio fixes the CSS cascade and exposes editorial intelligence',()=>{
+ const css=fromFile('app/styles.css');
+ const studio=fromFile('components/StudioEditor.tsx');
+ const originalSidebar=css.lastIndexOf('.studio-sidebar{min-height:0;overflow:hidden;height:100%;display:flex');
+ const finalGuard=css.lastIndexOf('/* v0.39');
+ assert.ok(finalGuard>originalSidebar,'mobile sidebar override must follow legacy display:flex');
+ const responsive=css.slice(finalGuard);
+ for(const token of ['@media(max-width:900px)',
+   '.studio>.studio-sidebar{display:none!important}',
+   '.studio.studio-mobile-navigation-open>.studio-sidebar',
+   'display:flex!important;position:fixed',
+   '.studio>.studio-center{width:100%;max-width:100%',
+   '.studio .studio-nav-toggle{display:grid',
+   '.studio .studio-insights-toggle{display:grid',
+   '.studio .editor-sheet{min-width:0;max-width:100%']){
+   assert.ok(responsive.includes(token),'small-screen invariant '+token);
+ }
+ for(const token of ['studio-insights-toggle','aria-label={t(\'editor.editorial\')}',
+   'aria-expanded={compact?mobilePanel:rightPanel}',
+   'role={compact?\'dialog\':undefined}',
+   'aria-modal={compact?true:undefined}',
+   'setMobileNav(false);setMobilePanel(open=>!open)',
+   "event.key==='Escape'",'insightsToggleRef.current?.focus()']){
+   assert.ok(studio.includes(token),'editorial drawer invariant '+token);
+ }
+ assert.ok(studio.includes('setStructure(analyzeEditorialStructure(richContent))'),
+   'editorial indicators refresh from local current document');
+});
