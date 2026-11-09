@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.39.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.39.0] — alpha privée livrée le 9 novembre 2026 (PR #186, CI #270)
 ### BS-005d #185 — Studio mobile et accès direct à l'intelligence éditoriale
 - Corrigé : à ≤760 px, `.studio-sidebar{display:flex}` écrasait le masquage mobile antérieur. La colonne Manuscrit restait visible (248 px) et réduisait le Studio à une bande étroite. Sous 900 px, la barre est désormais cachée par défaut et le hamburger de 44 px l'ouvre en tiroir flottant, en gardant les onglets Chapitres/Sections, les ⋯, le focus, les safe areas et la protection des brouillons.
 - Ajouté : accès **direct** au panneau droit « Intelligence éditoriale » par bouton étincelles dans la topbar des téléphones/tablettes ; tiroir non destructif avec fond, fermeture/Escape, focus et exclusivité des tiroirs gauche/droit. Document et ruban gardent la largeur utile.
