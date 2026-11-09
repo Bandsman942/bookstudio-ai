@@ -3,6 +3,7 @@ import {redirect} from 'next/navigation';
 import {activeUser} from '@/lib/auth';
 import SearchClient from '@/components/SearchClient';
 import AppIcon from '@/components/AppIcon';
+import WorkspaceShell from '@/components/WorkspaceShell';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -13,7 +14,7 @@ export default async function SearchPage(){
   const jar=await cookies();
   const locale=parseLocale(jar.get(LOCALE_COOKIE)?.value);
   const t=(key:Parameters<typeof translate>[1])=>translate(locale,key);
-  return <div className="workspace">
+  return <WorkspaceShell sidebar={<aside className="nav">
     <aside className="nav">
       <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
       <div className="nav-section">{t('library.mySpace')}</div>
@@ -22,10 +23,10 @@ export default async function SearchPage(){
       <Link href="/library/archives" className="nav-link"><AppIcon name="archive"/><span>{t('common.archives')}</span></Link>
       <div className="nav-spacer"/>
       <div className="nav-user"><span className="avatar">{user.name.charAt(0).toUpperCase()}</span><span>{user.name}<small>{t('common.author')}</small></span></div>
-    </aside>
+    </aside>}>
     <main className="content">
       <header className="content-top"><span className="breadcrumb"><Link href="/library" >{t('library.mySpace')}</Link> / <strong>{t('common.search')}</strong></span><span className="save-badge">● {t('search.private')}</span></header>
       <SearchClient/>
     </main>
-  </div>;
+  </WorkspaceShell>;
 }
