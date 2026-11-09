@@ -23,8 +23,7 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
   // Progress may fail independently: a transient analytics error must not
   // prevent an author from opening or editing a manuscript.
   const progress=await getBookProgress(bookId,user.id).catch(()=>null);
-  return <WorkspaceShell sidebar={<aside className="nav">
-    <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
+  return <WorkspaceShell sidebar={<aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
       <div className="nav-section">{t('book.navigation')}</div>
       <Link className="nav-link" href="/library"><AppIcon name="arrowLeft"/><span>{t('library.myLibrary')}</span></Link>
       <div className="nav-section">{t('book.myBook')}</div>

@@ -15,7 +15,6 @@ export default async function SearchPage(){
   const locale=parseLocale(jar.get(LOCALE_COOKIE)?.value);
   const t=(key:Parameters<typeof translate>[1])=>translate(locale,key);
   return <WorkspaceShell sidebar={<aside className="nav">
-    <aside className="nav">
       <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
       <div className="nav-section">{t('library.mySpace')}</div>
       <Link href="/library" className="nav-link"><AppIcon name="library"/><span>{t('common.library')}</span></Link>
