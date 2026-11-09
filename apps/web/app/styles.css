@@ -1240,3 +1240,33 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
 @media(prefers-reduced-motion:reduce){
  .workspace-drawer-host{transition:none}
 }
+
+
+/* v0.37 — explicit scope and pagination for book-wide saved-text search. */
+.search-book-scope{
+ display:flex;align-items:center;flex-wrap:wrap;gap:10px 17px;
+ min-width:0;margin:10px 0 18px;padding:15px 18px;
+ border-radius:12px;border:1px solid var(--line);
+ background:var(--surface-muted,#f2f7f4);color:var(--ink)
+}
+.search-book-scope>span{font-size:13px;flex:1 1 230px;min-width:0;
+ overflow-wrap:anywhere}
+.search-book-scope a{display:inline-flex;align-items:center;gap:7px;
+ min-height:39px;color:var(--green);font-size:12px;font-weight:800;
+ text-decoration:underline;text-underline-offset:3px}
+.search-book-scope p{flex:1 1 100%;margin:0;font-size:12px}
+.search-load-more{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+ justify-content:center;margin:23px 0;padding-bottom:12px}
+.search-load-more .button{min-height:44px}
+.search-hit{min-width:0;overflow-wrap:anywhere}
+.search-space .section-header{gap:8px;flex-wrap:wrap}
+.search-space .section-header span{font-size:12px;color:var(--muted)}
+@media(max-width:540px){
+ .search-space .search-form{display:flex;flex-wrap:wrap;gap:9px}
+ .search-space .search-form input{min-width:0;flex:1 1 100%;
+   font-size:16px;max-width:100%}
+ .search-space .search-form button{flex:1 1 auto;min-height:44px}
+ .search-book-scope{padding:12px;gap:7px}
+ .search-load-more{flex-direction:column;align-items:stretch}
+ .search-load-more .button{width:100%}
+}
