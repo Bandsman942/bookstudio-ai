@@ -32,8 +32,7 @@ export default function ChapterSectionOutline({editor,onJump}:{
  const active=outline.headings.reduce<number>((result,item,index)=>
    item.position<selectionPos?index:result,-1);
  return <section className="chapter-section-outline"
-   role="tabpanel" id="studio-section-panel"
-   aria-labelledby="studio-section-tab"
+   role="region" id="studio-section-panel"
    aria-label={locale==='fr'?'Sections du chapitre courant':'Sections in current chapter'}>
    <label className="section-outline-search">
      <span>{locale==='fr'?'Filtrer les titres H1–H3':'Filter H1–H3 headings'}</span>
