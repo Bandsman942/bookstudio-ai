@@ -199,3 +199,11 @@ Poursuite du cahier §5.1 : **table des matières globale en lecture seule**, to
 ## Livraison vérifiée v0.40.0-alpha — 9 novembre 2026
 
 Issue #189 / PR #190 : propriétaire **E2E BON**, CI #274 SUCCESS au SHA final `bfb7e5900abb7c40dd96a417e0ecafa99c1e8e0a`, snapshot Neon production `snap-cool-leaf-bfuba2fm` **avant fusion**, main `3ecb8c9b9295f86605bddcf9ea613f831ddbe8dc`, Vercel `dpl_4vK7iFvxaZTqAcijyAwY1LV3HUdL` READY, santé/version 200 et DB ready, verrou `exit 0`/Preview OFF rétabli. Journal `docs/deployments/2026-11-09-v0.40.0-alpha.md`. Aucun déploiement de branche feature, aucun nouvel outil IA/scan. Poursuite P0 #6 : parties persistantes et renumérotation.
+
+## Candidate P0 BS-005f #192 — parties persistantes et sommaire hiérarchique (v0.41.0-alpha)
+
+- Nouveau registre `manuscript_parts` par édition + `chapters.part_id` nullable, FK composée pour empêcher un rattachement à une autre édition ; migration additive, aucun changement des révisions historiques ni de la position actuelle.
+- API privées : création, renommage, suppression explicite des **parties vides**, affectation/détachement de chapitre ; chaque partie doit représenter une plage de chapitres **contigus**. Reorder bloqué si séparation ; RBAC/Origin/édition/conflits/audit transactionnels. Copie des parties en clonage d'édition ou d'ouvrage ; nouveaux UUID.
+- UI FR/EN/mobiles : panneaux de parties sur fiche d'ouvrage, sous-titres hiérarchiques dans le sommaire global et le drawer de chapitres Studio ; aucun masquage des chapitres sans partie, aucune perte de texte. Tests E2E PostgreSQL multi-tenant et scénarios Android.
+- **Gate** : documentation guide/design/API/ops/QA/roadmap, CI SHA final, E2E manuel propriétaire `v0.41.0-alpha BON` nécessaires avant snapshot Neon protégé et merge main. Preview OFF, aucun déploiement feature. **ClamAV installé : non ; activation : OFF.**
+- **Tranches suivantes toujours ouvertes** : réordonner des parties entières/renuméroter le livre de façon atomique ; intégrer tables des matières dans les exports DOCX/PDF ; stocker des métadonnées de parties dans les snapshots futurs ; sous-parties, front-matter, styles d'édition ; correction et analyse IA, RAG/citations sous consentement. Ne pas fermer prématurément BS-004 #5, BS-005 #6 ni P1 IA.

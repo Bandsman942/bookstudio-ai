@@ -67,7 +67,7 @@ export async function POST(request:Request,{params}:Ctx){
          language:true,editions:{orderBy:{number:'desc'},take:1,
            select:{id:true,language:true,manuscript:{select:{id:true,chapters:{
              where:{deletedAt:null},orderBy:[{position:'asc'},{id:'asc'}],
-             select:{id:true,title:true,position:true,revisionSeq:true}
+             select:{id:true,title:true,position:true,partId:true,revisionSeq:true}
            }}}}}
        }
      });
@@ -94,6 +94,8 @@ export async function POST(request:Request,{params}:Ctx){
         edition.id!==data.expectedEditionId)
        return {kind:'BOOK_DUPLICATE_CONFLICT'} as const;
      const chapters=manuscript.chapters;
+     const parts=await tx.manuscriptPart.findMany({where:{manuscriptId:manuscript.id},
+       orderBy:[{createdAt:'asc'},{id:'asc'}],select:{id:true,title:true}});
      if(chapters.length>BOOK_DUPLICATE_MAX_CHAPTERS)
        return {kind:'BOOK_DUPLICATE_TOO_LARGE'} as const;
      const revisions=chapters.length?await tx.documentRevision.findMany({
@@ -112,11 +114,19 @@ export async function POST(request:Request,{params}:Ctx){
      const newManuscript=await tx.manuscript.create({
        data:{editionId:newEdition.id}
      });
+     const partIds=new Map(parts.map(part=>[part.id,randomUUID()]));
+     if(parts.length)await tx.manuscriptPart.createMany({data:parts.map(part=>({
+       id:partIds.get(part.id)!,manuscriptId:newManuscript.id,title:part.title
+     }))});
+     const sourcePartByChapter=new Map(chapters.map(chapter=>[chapter.id,chapter.partId]));
      const ids=new Map(plan.map(item=>[item.sourceChapterId,randomUUID()]));
      if(plan.length){
        await tx.chapter.createMany({data:plan.map(item=>({
          id:ids.get(item.sourceChapterId)!,manuscriptId:newManuscript.id,
-         title:item.title,position:item.position,revisionSeq:0
+         title:item.title,position:item.position,
+         partId:sourcePartByChapter.get(item.sourceChapterId)?
+           partIds.get(sourcePartByChapter.get(item.sourceChapterId)!)??null:null,
+         revisionSeq:0
        }))});
        await tx.documentRevision.createMany({data:plan.map(item=>({
          chapterId:ids.get(item.sourceChapterId)!,sequence:0,
@@ -129,7 +139,7 @@ export async function POST(request:Request,{params}:Ctx){
        action:'BOOK_DUPLICATED',
        metadata:{operationId,newBookId:created.id,
          sourceEditionId:edition.id,newEditionId:newEdition.id,
-         chapters:plan.length,mode:'CURRENT_SAVED_MANUSCRIPT_ONLY'}
+         chapters:plan.length,parts:parts.length,mode:'CURRENT_SAVED_MANUSCRIPT_ONLY'}
      }});
      return {kind:'CREATED',book:{id:created.id,title:created.title,
        chapterCount:plan.length,editionId:newEdition.id}} as const;

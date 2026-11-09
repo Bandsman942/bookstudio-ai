@@ -19,11 +19,13 @@ import ChapterActionsMenu from './ChapterActionsMenu';
 import ShortcutsHelp from './ShortcutsHelp';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import {useToast} from './ToastProvider';
-type Chapter={id:string;title:string;updatedAt:string;revision:number};
+import {partBoundaryIndices} from '@/lib/book-parts';
+import {Fragment} from 'react';
+type Chapter={id:string;title:string;partId:string|null;updatedAt:string;revision:number};
 type SaveState='saved'|'editing'|'saving'|'conflict'|'error'|'offline';
-type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];canEdit:boolean;orderToken:string;
+type Props={bookId:string;bookTitle:string;chapterId:string;chapterTitle:string;revision:number;initialContent:Record<string,unknown>;chapters:Chapter[];parts:{id:string;title:string}[];canEdit:boolean;orderToken:string;
  outlineTarget:{revision:number;ordinal:number}|null};
-export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,canEdit,orderToken,outlineTarget}:Props){
+export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,revision,initialContent,chapters,parts,canEdit,orderToken,outlineTarget}:Props){
  const {t,locale}=useAppPreferences();
  const router=useRouter();
  const preferenceActions=usePreferenceActions();
@@ -37,6 +39,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const [structure,setStructure]=useState(()=>analyzeEditorialStructure(initialContent));
  const [recovery,setRecovery]=useState<string|null>(null);
  const [sidebarMode,setSidebarMode]=useState<'chapters'|'sections'>('chapters');
+ const partStarts=new Set(partBoundaryIndices(chapters));
  const revisionRef=useRef(revision),savedContentRef=useRef(JSON.stringify(initialContent)),pendingRef=useRef(false),savingRef=useRef(false),lastJson=useRef(JSON.stringify(initialContent));
  const outlineHandledRef=useRef<string|null>(null);
  const serializeTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -408,7 +411,11 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
       <div ref={navListRef} className="chapter-navigation"
         role="navigation" aria-label={locale==='fr'?'Liste des chapitres':'Chapter list'}>
         {chapters.map((c,i)=>
-          <div key={c.id} className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
+          <Fragment key={c.id}>
+           {partStarts.has(i)&&<div className="studio-chapter-part" role="heading" aria-level={3}>
+             {parts.find(part=>part.id===c.partId)?.title??(locale==='fr'?'Partie':'Part')}
+           </div>}
+          <div className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
             <Link href={'/books/'+bookId+'/chapters/'+c.id} onClick={protectNavigation}
               className={'chapter-nav-link '+(c.id===chapterId?'selected':'')}
               aria-current={c.id===chapterId?'page':undefined}>
@@ -418,7 +425,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
               revision={c.revision} updatedAt={c.updatedAt} editable={canEdit}
               beforeNavigate={canLeaveEditor}
               reorder={{token:orderToken,index:i,total:chapters.length}}/>
-          </div>)}
+          </div></Fragment>)}
       </div>:
       <ChapterSectionOutline editor={editor} onJump={jumpToSection}/>}
 

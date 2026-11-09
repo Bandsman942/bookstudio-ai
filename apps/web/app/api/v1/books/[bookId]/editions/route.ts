@@ -74,7 +74,7 @@ export async function POST(request:Request,{params}:Ctx){
          select:{id:true,number:true,language:true,
            manuscript:{select:{id:true,chapters:{
              where:{deletedAt:null},orderBy:[{position:'asc'},{id:'asc'}],
-             select:{id:true,title:true,position:true}
+             select:{id:true,title:true,position:true,partId:true}
            }}}
          }
        }}
@@ -88,6 +88,8 @@ export async function POST(request:Request,{params}:Ctx){
        return {kind:'CONFLICT'} as const;
      if(chapters.length>MAX_CHAPTERS||old.number>=10000)
        return {kind:'TOO_LARGE'} as const;
+     const parts=await tx.manuscriptPart.findMany({where:{manuscriptId:sourceManuscript.id},
+       orderBy:[{createdAt:'asc'},{id:'asc'}],select:{id:true,title:true}});
      const latest=await tx.$queryRaw<LastRevision[]>`
        SELECT DISTINCT ON (r.chapter_id)
          r.chapter_id::text AS "chapterId",r.content,r.text,
@@ -120,11 +122,16 @@ export async function POST(request:Request,{params}:Ctx){
        data:{bookId,number:old.number+1,language:old.language}
      });
      const manuscript=await tx.manuscript.create({data:{editionId:created.id}});
+     const partIds=new Map(parts.map(part=>[part.id,randomUUID()]));
+     if(parts.length)await tx.manuscriptPart.createMany({data:parts.map(part=>({
+       id:partIds.get(part.id)!,manuscriptId:manuscript.id,title:part.title
+     }))});
      const ids=new Map(chapters.map(chapter=>[chapter.id,randomUUID()]));
      if(chapters.length){
        await tx.chapter.createMany({data:chapters.map(chapter=>({
          id:ids.get(chapter.id)!,manuscriptId:manuscript.id,
-         title:chapter.title,position:chapter.position,revisionSeq:0
+         title:chapter.title,position:chapter.position,
+         partId:chapter.partId?partIds.get(chapter.partId)??null:null,revisionSeq:0
        }))});
        await tx.documentRevision.createMany({data:chapters.map(chapter=>{
          const revision=byChapter.get(chapter.id)!;
@@ -138,7 +145,7 @@ export async function POST(request:Request,{params}:Ctx){
        action:'EDITION_CREATED',metadata:{
          previousEditionId:old.id,previousNumber:old.number,
          newEditionId:created.id,newNumber:created.number,
-         copiedActiveChapters:chapters.length,mode:'COPY_LATEST_SAVED'
+         copiedActiveChapters:chapters.length,copiedParts:parts.length,mode:'COPY_LATEST_SAVED'
        }
      }});
      return {kind:'OK',edition:{id:created.id,number:created.number,

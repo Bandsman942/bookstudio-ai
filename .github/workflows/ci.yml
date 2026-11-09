@@ -39,6 +39,7 @@ jobs:
       - run: pnpm test
       - run: pnpm editorial-structure:check
       - run: pnpm book-outline:check
+      - run: pnpm book-parts:check
       - run: python -m unittest discover -s apps/worker-documents/tests -v
       - run: pnpm db:generate
       - run: pnpm db:deploy

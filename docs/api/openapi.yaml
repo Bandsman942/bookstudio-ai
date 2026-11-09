@@ -3,12 +3,82 @@ info:
   title: BookStudio AI API
   version: 0.1.0
   description: >-
-    API autonome, aucune connexion directe à DTSC Platform. v0.40.0-alpha
-    ajoute la projection privée en lecture seule des titres sauvegardés H1-H3
-    d'un chapitre autorisé pour le sommaire global, sans appel IA.
+    API autonome, aucune connexion directe à DTSC Platform. v0.41.0-alpha
+    ajoute les parties persistantes d'un manuscrit et le rattachement strict
+    de chapitres contigus, avec ACL et vérification d'édition courante.
 servers:
   - url: /api/v1
 paths:
+  /books/{bookId}/parts:
+    get:
+      summary: Lister les parties de l'édition courante autorisée (v0.41)
+      description: Réponse privée sans texte, tri création/UUID, cache no-store.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200': {description: 'editionId, parts[]: id, title, updatedAt'}
+        '401': {description: Session requise}
+        '404': {description: Livre inaccessible ou archivé}
+        '503': {description: Parties temporairement indisponibles}
+    post:
+      summary: Créer une partie vide dans le manuscrit courant
+      description: >-
+        OWNER/EDITOR uniquement, Origin identique, JSON title validé (2–180)
+        et expectedEditionId courant, limite 100 parties. Verrou livre,
+        transaction Serializable, audit et cache privé.
+      responses:
+        '201': {description: Partie créée}
+        '400': {description: Paramètres invalides}
+        '401': {description: Session manquante}
+        '403': {description: Origine invalide}
+        '404': {description: Rôle insuffisant ou livre absent}
+        '409': {description: Édition périmée ou écriture concurrente}
+        '422': {description: Limite 100 parties atteinte}
+        '503': {description: Erreur base temporaire}
+  /books/{bookId}/parts/{partId}:
+    patch:
+      summary: Renommer une partie de l'édition courante
+      description: >-
+        OWNER/EDITOR et Origin. title validé, expectedEditionId et
+        expectedUpdatedAt ISO de la partie; 409 si conflit, audit.
+      responses:
+        '200': {description: Métadonnées renommées, aucun texte modifié}
+        '400': {description: Titre ou préconditions invalides}
+        '401': {description: Session requise}
+        '403': {description: Origin rejeté}
+        '404': {description: Partie non trouvée dans l'édition actuelle}
+        '409': {description: Version de partie ou édition périmée}
+    delete:
+      summary: Supprimer une partie uniquement si elle est vide
+      description: >-
+        Même contrôles avec confirm DELETE_EMPTY_PART, expectedEditionId,
+        expectedUpdatedAt. Refus 409 si des chapitres actifs ou retirés
+        y sont encore rattachés. Jamais de suppression de chapitre.
+      responses:
+        '200': {description: Partie vide supprimée}
+        '409': {description: Partie non vide ou précondition périmée}
+        '404': {description: Partie ou permission absente}
+  /books/{bookId}/chapters/{chapterId}/part:
+    patch:
+      summary: Affecter ou détacher un chapitre d'une partie de l'édition courante
+      description: >-
+        JSON partId UUID ou null, expectedEditionId et
+        expectedChapterUpdatedAt ISO. Valide que la partie appartient au
+        même manuscrit et que chaque partie forme une séquence contiguë
+        dans l'ordre actuel. OWNER/EDITOR, Origin, verrou livre, transaction
+        Serializable. Ne modifie ni prose ni revisionSeq.
+      responses:
+        '200': {description: 'ok, changed; metadata de chapitre mise à jour'}
+        '400': {description: Requête invalide}
+        '401': {description: Non authentifié}
+        '403': {description: Origin rejeté}
+        '404': {description: Chapitre/partie inaccessible ou rôle insuffisant}
+        '409': {description: Édition/concurrence/continuité BOOK_PART_NOT_CONTIGUOUS}
+        '422': {description: Taille de manuscrit trop grande pour la vérification}
+        '503': {description: Mutation indisponible}
   /auth/login:
     post:
       summary: Authentification locale

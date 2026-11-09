@@ -1,0 +1,21 @@
+# Architecture — parties persistantes v0.41.0-alpha (BS-005f, issue #192)
+
+## Modèle et propriété des données
+
+Une `ManuscriptPart` appartient à **un seul Manuscript**, lui-même à une seule Edition d'un Book. `chapters.part_id` est nullable et ne stocke pas une position nouvelle : l'ordre global continue de dépendre de `(manuscript_id, position, id)`. La FK composite `(part_id, manuscript_id) → manuscript_parts(id, manuscript_id)` interdit à la base un rattachement d'une autre édition même si une vérification applicative est contournée. Les anciens chapitres restent sans partie par défaut, sans réécriture de révision. Un retrait doux de chapitre détache sa partie afin qu'une restauration en fin de livre ne crée pas un groupe fragmenté.
+
+Chaque partie doit occuper un **segment unique de chapitres actifs consécutifs**. Une plage non affectée sépare deux segments ; deux passages de la même partie séparés par un autre groupe ou un chapitre sans partie sont invalides. `partsAreContiguous` est purement déterministe, utilisée pour l'affectation et le déplacement de chapitre. La transaction sérialisable sur le livre courant vérifie la continuité et refuse toute mutation partielle avec `BOOK_PART_NOT_CONTIGUOUS` (409). Les opérations métier existantes de création/copie de chapitre ajoutent par défaut un chapitre sans partie en dernière position : elles ne brisent pas les groupes déjà contigus.
+
+## API et concurrence
+
+`GET /api/v1/books/{bookId}/parts` accepte OWNER/EDITOR/REVIEWER/VIEWER du workspace ; toutes les mutations nécessitent OWNER/EDITOR, session active, livre non archivé, Origin autorisé, **édition courante** et transactions `Serializable`. Le livre est verrouillé par `FOR UPDATE` pour la gestion des parties ; les mutations de chapitre valident `expectedChapterUpdatedAt`, les renames/deletes `expectedUpdatedAt` de partie. La création limite le manuscrit à 100 parties ; l'affectation refuse de traiter plus de 2000 chapitres actifs. Les actions sensibles sont auditées sans copie de prose ni de documents.
+
+La partie n'est pas un paragraphe de l'éditeur, pas une révision et pas une entrée exportée automatiquement. Les nouveaux IDs sont recréés lors d'une nouvelle édition et d'une copie complète du livre : parties et chapitres dupliqués appartiennent à leur nouveau manuscrit sans liens permanents vers l'original. Le parcours de restauration d'un **snapshot historique v1** reste volontairement limité à ses chapitres/révisions ; ces snapshots ne contenaient pas de métadonnées de parties. Un futur manifeste versionné devra les sérialiser explicitement avant d'annoncer une restauration complète de la hiérarchie.
+
+## Interface mobile et accessibilité
+
+La vue d'ensemble charge les parties **après la vérification d'accès serveur** et affiche un formulaire de création, une liste d'actions et le rattachement chapitre par chapitre. La vue est responsive, boutons >=44 px sur mobile, labels et focus, FR/EN/clair-sombre. `BookOutline` ajoute une étiquette de partie **avant son premier chapitre**, sans charger tous les titres H1–H3 : la pagination de v0.40 et les liens protégés par révision restent inchangés. `StudioEditor` ajoute les mêmes repères dans son drawer Manuscrit ; le hamburger, la protection des brouillons et le panneau droit d'intelligence éditoriale ne sont pas modifiés.
+
+## Exclusions et risques
+
+Pas de glisser-déposer de parties, renumérotation des parties, sous-parties, sommaire DOCX/PDF ni réattribution massive. Une partie vide peut être supprimée ; une partie non vide est protégée, **et aucun chapitre n'est jamais supprimé par cette action**. Les validations applicatives garantissent l'invariant pour les API connues ; un import SQL hors API doit respecter les mêmes règles. La migration nécessite un contrôle CI sur Postgres et un snapshot Neon avant tout merge en production ; ne pas pré-déployer la migration sur la base réelle. ClamAV toujours indisponible/OFF.

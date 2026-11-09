@@ -1629,6 +1629,141 @@ assert.equal(outlineArchived.status,200);
 assert.equal((await request(outlineUrl,{cookie:author})).status,404,
  'archive makes outline inaccessible');
 
+// BS-005f v0.41: durable manuscript parts, contiguous chapter groups, ACL,
+// immutable text history, edition/whole-book copies, and reversible grouping.
+const partBook=await request('/api/v1/books',{method:'POST',cookie:author,
+ body:{title:'Manuscrit structuré en parties v41',bookType:'SCIENCE',language:'fr'}});
+assert.equal(partBook.status,201);
+const partBookId=partBook.data.book.id;
+const partBase='/api/v1/books/'+partBookId;
+for(const label of ['B — Développement','C — Discussion','D — Bibliographie']){
+ const added=await request(partBase+'/chapters',{method:'POST',cookie:author,
+  body:{title:label}});
+ assert.equal(added.status,201,'create structural chapter '+label);
+}
+const partInitialChapters=await request(partBase+'/chapters',{cookie:author});
+assert.equal(partInitialChapters.status,200);
+const [partA,partB,partC,partD]=partInitialChapters.data.chapters;
+const initialChapterRevision=partA.revision;
+const partsPath=partBase+'/parts';
+assert.equal((await request(partsPath)).status,401,'part catalogue requires auth');
+assert.equal((await request(partsPath,{cookie:outsider})).status,404,
+ 'part catalogue must not reveal foreign book');
+assert.equal((await request(partsPath,{method:'POST',cookie:outsider,
+ body:{title:'Injection',expectedEditionId:randomUUID()}})).status,404,
+ 'foreign user cannot create parts');
+assert.equal((await request(partsPath,{method:'POST',cookie:author,
+ omitOrigin:true,body:{title:'Injection',expectedEditionId:randomUUID()}})).status,403,
+ 'part creation requires same Origin');
+const partsStart=await request(partsPath,{cookie:author});
+assert.equal(partsStart.status,200);
+assert.deepEqual(partsStart.data.parts,[]);
+const editionV41=partsStart.data.editionId;
+assert.equal((await request(partsPath,{method:'POST',cookie:author,
+ body:{title:'Partie A',expectedEditionId:randomUUID()}})).status,409,
+ 'part creation requires current edition');
+const partCreated1=await request(partsPath,{method:'POST',cookie:author,
+ body:{title:'Partie A',expectedEditionId:editionV41}});
+const partCreated2=await request(partsPath,{method:'POST',cookie:author,
+ body:{title:'Partie B',expectedEditionId:editionV41}});
+assert.equal(partCreated1.status,201);
+assert.equal(partCreated2.status,201);
+const partAId=partCreated1.data.part.id,partBId=partCreated2.data.part.id;
+assert.notEqual(partAId,partBId);
+const assignPart=async(chapter,targetPart)=>request(partBase+'/chapters/'+chapter.id+'/part',{
+ method:'PATCH',cookie:author,body:{partId:targetPart,
+ expectedChapterUpdatedAt:chapter.updatedAt,expectedEditionId:editionV41}});
+assert.equal((await assignPart(partA,partAId)).status,200);
+assert.equal((await assignPart(partB,partAId)).status,200);
+assert.equal((await assignPart(partD,partBId)).status,200);
+assert.equal((await assignPart(partC,partBId)).status,200,
+ 'adjacent parts may be assigned from the edge');
+assert.equal((await assignPart(partA,partBId)).status,409,
+ 'cannot create a disjoint run of the target part');
+assert.equal((await request(partBase+'/chapters/'+partB.id+'/part',{
+ method:'PATCH',cookie:outsider,body:{partId:partBId,
+ expectedChapterUpdatedAt:partB.updatedAt,expectedEditionId:editionV41}
+ })).status,404,'outsider cannot reassign chapters');
+assert.equal((await request(partBase+'/chapters/'+partB.id+'/part',{
+ method:'PATCH',cookie:author,omitOrigin:true,body:{partId:null,
+ expectedChapterUpdatedAt:partB.updatedAt,expectedEditionId:editionV41}
+ })).status,403,'part assignments enforce CSRF');
+const partGroupedChapters=await request(partBase+'/chapters',{cookie:author});
+assert.deepEqual(partGroupedChapters.data.chapters.map(c=>c.partId),
+ [partAId,partAId,partBId,partBId], 'all part membership persisted');
+const partInvalidOrder=await request(partBase+'/chapters/reorder',{
+ method:'PATCH',cookie:author,body:{chapterId:partB.id,direction:'down',
+ expectedOrderToken:partGroupedChapters.data.orderToken}});
+assert.equal(partInvalidOrder.status,409,'reorder cannot split an assigned part');
+assert.equal(partInvalidOrder.data.error,'BOOK_PART_NOT_CONTIGUOUS');
+const partGroupedAfter=await request(partBase+'/chapters',{cookie:author});
+assert.deepEqual(partGroupedAfter.data.chapters.map(c=>c.id),
+ partGroupedChapters.data.chapters.map(c=>c.id),'refused reorder leaves IDs in order');
+assert.equal(partGroupedAfter.data.chapters[0].revision,initialChapterRevision,
+ 'part assignments never create prose revisions');
+const nonEmptyDelete=await request(partsPath+'/'+partAId,{method:'DELETE',cookie:author,
+ body:{confirm:'DELETE_EMPTY_PART',expectedEditionId:editionV41,
+ expectedUpdatedAt:partCreated1.data.part.updatedAt}});
+assert.equal(nonEmptyDelete.status,409,'cannot delete a part with chapters');
+assert.equal(nonEmptyDelete.data.error,'BOOK_PART_NOT_EMPTY');
+const renamedPart=await request(partsPath+'/'+partBId,{method:'PATCH',cookie:author,
+ body:{title:'Partie B — Études',expectedEditionId:editionV41,
+ expectedUpdatedAt:partCreated2.data.part.updatedAt}});
+assert.equal(renamedPart.status,200,'rename preserves part identity');
+const partCatalogue=await request(partsPath,{cookie:author});
+assert.equal(partCatalogue.data.parts.find(p=>p.id===partBId)?.title,
+ 'Partie B — Études');
+const v41EditionBefore=await request(partBase+'/editions',{cookie:author});
+const v41DuplicateBefore=await request(partBase+'/duplicate',{cookie:author});
+assert.equal(v41DuplicateBefore.status,405,'book duplication is POST-only');
+const v41BookClone=await request(partBase+'/duplicate',{method:'POST',cookie:author,
+ body:{confirm:'DUPLICATE_BOOK_FROM_SAVED_EDITION',title:'Livre v41 — copie structurée',
+ operationId:randomUUID(),expectedEditionId:editionV41,
+ expectedUpdatedAt:v41EditionBefore.data.expectedUpdatedAt}});
+assert.equal(v41BookClone.status,201,'book duplicate preserves chapter metadata');
+const cloneParts=await request('/api/v1/books/'+v41BookClone.data.book.id+'/parts',{cookie:author});
+const cloneChapters=await request('/api/v1/books/'+v41BookClone.data.book.id+'/chapters',{cookie:author});
+assert.equal(cloneParts.data.parts.length,2,'copy creates independent parts');
+assert.deepEqual(cloneParts.data.parts.map(p=>p.title),['Partie A','Partie B — Études']);
+assert.deepEqual(cloneChapters.data.chapters.map(c=>c.partId),
+ [cloneParts.data.parts[0].id,cloneParts.data.parts[0].id,
+ cloneParts.data.parts[1].id,cloneParts.data.parts[1].id]);
+assert.ok(cloneParts.data.parts.every(p=>p.id!==partAId&&p.id!==partBId),
+ 'book duplicate must not reuse source part identifiers');
+const v41EditionBeforeCopy=await request(partBase+'/editions',{cookie:author});
+const v41EditionCopy=await request(partBase+'/editions',{method:'POST',cookie:author,
+ body:{confirm:'CREATE_EDITION_FROM_SAVED',expectedEditionId:editionV41,
+ expectedUpdatedAt:v41EditionBeforeCopy.data.expectedUpdatedAt}});
+assert.equal(v41EditionCopy.status,201,'new edition copies parts');
+const editionParts=await request(partsPath,{cookie:author});
+assert.equal(editionParts.data.parts.length,2);
+assert.deepEqual(editionParts.data.parts.map(p=>p.title),['Partie A','Partie B — Études']);
+assert.notEqual(editionParts.data.parts[0].id,partAId,
+ 'new edition creates independent part IDs');
+const editionChapters=await request(partBase+'/chapters',{cookie:author});
+assert.deepEqual(editionChapters.data.chapters.map(c=>c.partId),
+ [editionParts.data.parts[0].id,editionParts.data.parts[0].id,
+ editionParts.data.parts[1].id,editionParts.data.parts[1].id]);
+assert.equal((await request(partsPath+'/'+partAId,{method:'PATCH',cookie:author,
+ body:{title:'Outdated edition',expectedEditionId:editionV41,
+ expectedUpdatedAt:partCreated1.data.part.updatedAt}})).status,409,
+ 'stale edition cannot mutate historical part');
+const editionPartA=editionParts.data.parts[0];
+const currentPartsEdition=editionParts.data.editionId;
+for(const chapter of editionChapters.data.chapters.slice(0,2)){
+ const detached=await request(partBase+'/chapters/'+chapter.id+'/part',{
+  method:'PATCH',cookie:author,body:{partId:null,
+  expectedChapterUpdatedAt:chapter.updatedAt,expectedEditionId:currentPartsEdition}});
+ assert.equal(detached.status,200,'detach without deleting chapter');
+}
+const removedEmpty=await request(partsPath+'/'+editionPartA.id,{
+ method:'DELETE',cookie:author,body:{confirm:'DELETE_EMPTY_PART',
+ expectedEditionId:currentPartsEdition,expectedUpdatedAt:editionPartA.updatedAt}});
+assert.equal(removedEmpty.status,200,'explicit empty part deletion succeeds');
+assert.equal((await request(partsPath,{cookie:author})).data.parts.length,1);
+assert.equal((await request(partBase+'/chapters',{cookie:author})).data.chapters.length,4,
+ 'part removal never deletes chapters');
+
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');
 const logout=await request('/api/v1/auth/logout',{method:'POST',cookie:author});
