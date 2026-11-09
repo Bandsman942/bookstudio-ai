@@ -299,7 +299,7 @@ Pour ouvrir l'**Intelligence éditoriale**, touchez directement le bouton **éti
 
 Le panneau présente maintenant des **repères locaux** du chapitre : nombre de mots, de paragraphes non vides, de titres et avertissement lorsque des paragraphes dépassent **180 mots**. Ces repères aident à repérer une structure dense, mais **ne constituent pas une évaluation scientifique, linguistique ou médicale**. Ils se mettent à jour pendant la rédaction dans le navigateur et n'envoient aucun texte à un fournisseur IA. Les fonctions futures de correction et d'analyse IA restent distinctes et ne sont **pas encore activées**.
 
-**Attention :** v0.39 reste une candidate jusqu'à validation E2E. La version actuellement publiée peut encore présenter la disposition antérieure.
+**Historique :** la v0.39 a été validée E2E et livrée le 9 novembre 2026 ; la correction mobile est conservée dans les versions suivantes.
 
 ### English — Mobile Studio and editorial indicators
 
