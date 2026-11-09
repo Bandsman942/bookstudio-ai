@@ -11,7 +11,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 - Ajouté : premiers **repères éditoriaux locaux** (mots, paragraphes non vides, titres et alerte de paragraphes >180 mots) actualisés sur le document courant ; ces indicateurs ne sont **pas** une analyse générative, aucun appel au fournisseur IA et aucune transmission de prose.
 - Tests CSS/mobile et métriques, gate documentaire, QA Android propriétaire obligatoire. Aucune migration/API/secret ni activation ClamAV. Attente CI finale et `E2E v0.39.0-alpha BON` avant fusion et production.
 
-## [0.38.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.38.0] — alpha privée livrée le 9 novembre 2026 (PR #184, CI #265)
 ### BS-005c #183 — sommaire dynamique des sections H1–H3 dans le Studio
 - La barre latérale du Studio, y compris via hamburger mobile/tablette, dispose d'onglets **Chapitres** et **Sections**. Le premier conserve toutes les actions contextuelles ⋯ et la navigation existante ; le second construit localement un sommaire hiérarchique depuis les véritables titres ProseMirror H1/H2/H3 du **chapitre courant**, y compris les brouillons locaux, sans appel IA/serveur.
 - Recherche/filtrage Unicode par titre, indentation selon niveau, indication du nombre réel de résultats ; affichage borné à 300 titres avec avertissement explicite et filtre pour retrouver les autres, sans découper ou tronquer le document.

@@ -6,6 +6,7 @@ const countWords=(value:string)=>value.trim().split(/\s+/u).filter(Boolean).leng
 
 function nodeText(node:RichNode):string{
   if(node.type==='text')return typeof node.text==='string'?node.text:'';
+  if(node.type==='hardBreak')return ' ';
   if(!Array.isArray(node.content))return '';
   return node.content.map(child=>child&&typeof child==='object'?nodeText(child as RichNode):'').join('');
 }

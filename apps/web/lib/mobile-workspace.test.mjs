@@ -72,7 +72,7 @@ test('v0.39 mobile Studio fixes the CSS cascade and exposes editorial intelligen
    assert.ok(responsive.includes(token),'small-screen invariant '+token);
  }
  for(const token of ['studio-insights-toggle','aria-label={t(\'editor.editorial\')}',
-   'aria-expanded={compact?mobilePanel:rightPanel}',
+   'aria-expanded={compact===true?mobilePanel:compact===false&&rightPanel}',
    'role={compact?\'dialog\':undefined}',
    'aria-modal={compact?true:undefined}',
    'setMobileNav(false);setMobilePanel(open=>!open)',

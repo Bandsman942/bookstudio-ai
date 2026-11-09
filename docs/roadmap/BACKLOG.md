@@ -180,7 +180,7 @@ Selon le cahier des charges §5.1, deux onglets **Chapitres / Sections** dans la
 
 ## Validation v0.38.0-alpha et état de publication — 9 novembre 2026
 
-E2E propriétaire **BON** ; CI GitHub #265 SUCCESS sur la tête de PR #184 `71ccf004d68426419b609b428ac82d8ba6a204be`, snapshot Neon production `snap-curly-recipe-bfml77am` pris avant fusion, puis squash sur `main` `393ac0c76d13f71e4efae524daafa0d2adaa9b08`. Le déclenchement Vercel de `main` `dpl_FeMU4pUgnJpazDmc4KbvPodMj98t` a été **CANCELED** par le verrou de production courant ; rester sur v0.37 en exploitation jusqu'à vérification de la publication v0.38 READY et des sondes. Pas de Preview, ClamAV OFF.
+E2E propriétaire **BON** ; CI GitHub #265 SUCCESS sur la tête de PR #184 `71ccf004d68426419b609b428ac82d8ba6a204be`, snapshot Neon production `snap-curly-recipe-bfml77am` pris avant fusion, puis squash sur `main` `393ac0c76d13f71e4efae524daafa0d2adaa9b08`. Le déclenchement Vercel initial `dpl_FeMU4pUgnJpazDmc4KbvPodMj98t` a été **CANCELED** par le verrou ; publication contrôlée depuis ce même SHA `main` : `dpl_DNXRdpPCD6z1yHiWoBfknm3g6r3F` **READY**, `/api/health` et `/api/version` HTTP 200 (DB ready, v0.38). Verrou rétabli, Preview OFF, ClamAV OFF. Journal `docs/deployments/2026-11-09-v0.38.0-alpha.md` (PR #187).
 
 ## Candidate P0 BS-005d #185 — Studio mobile et repères éditoriaux locaux (v0.39.0-alpha)
 

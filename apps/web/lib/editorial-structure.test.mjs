@@ -20,3 +20,11 @@ test('flags long paragraphs but does not truncate or transmit content',()=>{
   assert.deepEqual(result,{words:181,paragraphs:1,headings:0,longParagraphs:1});
   assert.deepEqual(analyzeEditorialStructure(null),{words:0,paragraphs:0,headings:0,longParagraphs:0});
 });
+
+test('hard breaks separate words and accented text is preserved',()=>{
+  const document={type:'doc',content:[{type:'paragraph',content:[
+    {type:'text',text:'Santé'},{type:'hardBreak'},{type:'text',text:'publique'}
+  ]}]};
+  assert.deepEqual(analyzeEditorialStructure(document),
+    {words:2,paragraphs:1,headings:0,longParagraphs:0});
+});

@@ -420,8 +420,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
           onRestored={()=>router.refresh()}/>
         <button type="button" className="studio-insights-toggle" ref={insightsToggleRef}
           title={t('editor.editorial')} aria-label={t('editor.editorial')}
-          aria-controls={(compact?mobilePanel:rightPanel)?'studio-editorial-insights':undefined}
-          aria-expanded={compact?mobilePanel:rightPanel}
+          aria-controls={(compact===true?mobilePanel:compact===false&&rightPanel)?'studio-editorial-insights':undefined}
+          aria-expanded={compact===true?mobilePanel:compact===false&&rightPanel}
           onClick={toggleEditorialPanel}><AppIcon name="sparkles" size={20}/></button>
         <ActionMenu label={t('editor.display')} actions={[
           {label:locale==='fr'?'Rechercher dans tous les chapitres du livre':'Search across book chapters',
