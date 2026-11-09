@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {partsAreContiguous,assignChapterPart,partBoundaryIndices} from './book-parts.ts';
+import {partsAreContiguous,assignChapterPart,partBoundaryIndices,
+ orderPartsByChapters} from './book-parts.ts';
 
 const rows=(...ids)=>ids.map((partId,index)=>({id:String(index),partId}));
 test('parts form contiguous spans, including between unassigned chapters',()=>{
@@ -22,4 +23,12 @@ test('assigning adjacent chapters preserves order and never mutates input',()=>{
   'b must not be duplicated in a distant span');
  assert.equal(assignChapterPart(initial,'missing','a'),null);
  assert.equal(JSON.stringify(initial),before);
+});
+test('part order follows chapter positions even with identical createdAt',()=>{
+ const unordered=[{id:'b',title:'B'},{id:'empty',title:'Empty'},
+  {id:'a',title:'A'}];
+ assert.deepEqual(orderPartsByChapters(unordered,rows('a','a','b','b'))
+   .map(item=>item.id),['a','b','empty']);
+ assert.deepEqual(unordered.map(item=>item.id),['b','empty','a'],
+  'input and original order of empty parts are preserved');
 });

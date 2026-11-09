@@ -26,3 +26,13 @@ test('book and chapter operations use the exact action in a failed request',()=>
  const restored=explainActionError({locale:'fr',operation:'book-restore',status:0});
  assert.match(restored,/restauration du livre/);
 });
+
+test('part boundaries have a contextual chapter-move warning in both languages',()=>{
+ const fr=explainActionError({locale:'fr',operation:'chapter-reorder',status:409,
+   code:'BOOK_PART_NOT_CONTIGUOUS'});
+ assert.match(fr,/partie/);
+ assert.match(fr,/aucun texte/i);
+ const en=explainActionError({locale:'en',operation:'chapter-reorder',status:409,
+   code:'BOOK_PART_NOT_CONTIGUOUS'});
+ assert.match(en,/adjacent/);
+});

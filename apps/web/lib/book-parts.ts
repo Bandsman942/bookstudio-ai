@@ -22,3 +22,16 @@ export function partBoundaryIndices(chapters:readonly PartChapter[]):number[]{
  return chapters.flatMap((chapter,index)=>chapter.partId&&
   (index===0||chapter.partId!==chapters[index-1].partId)?[index]:[]);
 }
+/** Display assigned parts in actual chapter order, not by creation timestamp.
+ * Empty parts follow, retaining the original deterministic database order. */
+export function orderPartsByChapters<T extends {id:string}>(parts:readonly T[],
+ chapters:readonly PartChapter[]):T[]{
+ const first=new Map<string,number>();
+ chapters.forEach((chapter,index)=>{
+  if(chapter.partId&&!first.has(chapter.partId))first.set(chapter.partId,index);
+ });
+ return parts.map((part,index)=>({part,index})).sort((a,b)=>
+  (first.get(a.part.id)??Number.POSITIVE_INFINITY)-
+  (first.get(b.part.id)??Number.POSITIVE_INFINITY)||a.index-b.index)
+  .map(({part})=>part);
+}

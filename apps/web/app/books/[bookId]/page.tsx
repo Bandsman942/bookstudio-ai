@@ -8,6 +8,7 @@ import ChapterActionsMenu from '@/components/ChapterActionsMenu';
 import {chapterOrderToken} from '@/lib/chapter-order';
 import {getBookProgress} from '@/lib/book-progress';
 import {prisma} from '@bookstudio/database';
+import {orderPartsByChapters} from '@/lib/book-parts';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -21,8 +22,9 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
   const editable=canWriteBook(book);
   const chapters=book.editions[0]?.manuscript?.chapters??[];
   const manuscriptId=book.editions[0]?.manuscript?.id;
-  const parts=manuscriptId?await prisma.manuscriptPart.findMany({where:{manuscriptId},
+  const loadedParts=manuscriptId?await prisma.manuscriptPart.findMany({where:{manuscriptId},
     orderBy:[{createdAt:'asc'},{id:'asc'}],select:{id:true,title:true,updatedAt:true}}):[];
+  const parts=orderPartsByChapters(loadedParts,chapters);
   const orderToken=chapterOrderToken(chapters);
   // Progress may fail independently: a transient analytics error must not
   // prevent an author from opening or editing a manuscript.
