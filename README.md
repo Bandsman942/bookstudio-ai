@@ -5,7 +5,7 @@ Application autonome de rédaction, de révision et d'édition intelligente de l
 ## Version et état réel
 
 - Version de production **à vérifier dynamiquement** par `GET /api/version` et `GET /api/health` sur `https://bookstudio-ai.dtsc-platform.com` ; ne jamais déduire le déploiement du fichier `release.json`.
-- Dernière production **v0.37.0-alpha vérifiée le 9 novembre 2026**, commit `aed4c3bed823`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.37](docs/deployments/2026-11-09-v0.37.0-alpha.md).
+- Dernière production **v0.38.0-alpha vérifiée le 9 novembre 2026**, commit `393ac0c76d13`, Vercel `READY`, `/api/health` et `/api/version` HTTP 200 ; voir [journal v0.38](docs/deployments/2026-11-09-v0.38.0-alpha.md).
 - Version **v0.22.0-alpha livrée** : réorganisation des chapitres (PR #134), validation propriétaire **E2E BON**, documentation prépublication contrôlée en CI #179 et main #180 SUCCESS. Prochain lot métier restant à développer : propriétés et pilotage des ouvrages.
 - Versionnement et politique : [VERSIONING](docs/ops/VERSIONING.md), [CHANGELOG](CHANGELOG.md), [fiche v0.22](docs/releases/v0.22.0.md).
 - **v0.23.0-alpha déployée en production privée le 5 novembre 2026**, propriétés du livre et statut éditorial (issue #136, PR #137), CI main #184 et Vercel READY au commit `531d21175d40`. Voir [fiche v0.23](docs/releases/v0.23.0.md) et [journal de production](docs/deployments/2026-11-05T18-51-19Z_v0.23.0.md).
@@ -99,8 +99,8 @@ Deux évolutions : **Recherche dans un seul livre** (issue #179) depuis la vue d
 
 [Release candidate](docs/releases/v0.37.0.md) · [Conception](docs/design/BOOK-SEARCH-MOBILE-0.37.0.md) · [E2E](docs/qa/E2E-BOOK-SEARCH-MOBILE-0.37.0.md). **Production actuelle v0.37.0-alpha**, propriétaire E2E BON, GitHub CI #261 SUCCESS au SHA final, snapshot Neon protégé avant fusion, Vercel READY. Preview OFF. ClamAV toujours reporté/OFF. ClamAV toujours reporté/OFF.
 
-## Candidate v0.38.0-alpha — NON DÉPLOYÉE
+## v0.38.0-alpha — livrée en production privée
 
 BS-005c issue #183, suite du cahier des charges §5.1 : **sommaire dynamique des sections H1–H3 dans le Studio**. Dans le menu gauche (hamburger sur mobile/tablette), basculez entre **Chapitres** et **Sections** ; les titres de section de votre chapitre courant apparaissent avec indentation, filtre Unicode, compteur réel et navigation directe sans modifier le texte ni la révision. Les listes dépassant 300 titres affichent une limite explicite et restent consultables via filtre. Les menus contextuels des chapitres restent dans l'onglet Chapitres, les brouillons sont protégés. Aucun endpoint, migration ou IA ajoutés. [Release](docs/releases/v0.38.0.md) · [QA](docs/qa/E2E-SECTION-OUTLINE-0.38.0.md).
 
-**Production reste v0.37.0-alpha** en attente de la CI finale et de la validation propriétaire `E2E v0.38.0-alpha BON`. Pas de Preview ; ClamAV toujours reporté/OFF.
+**Production v0.38.0-alpha vérifiée** : E2E propriétaire BON, GitHub CI #265 SUCCESS, snapshot Neon `snap-curly-recipe-bfml77am` avant fusion PR #184, main `393ac0c76d13`, Vercel `dpl_DNXRdpPCD6z1yHiWoBfknm3g6r3F` READY, santé/version 200. [Journal réel](docs/deployments/2026-11-09-v0.38.0-alpha.md). Preview OFF, ClamAV OFF. Correctif Android de la colonne persistante : candidate v0.39 sur PR #186.
