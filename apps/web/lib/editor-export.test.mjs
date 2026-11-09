@@ -42,9 +42,9 @@ test('DOCX exporter rejects executable URL marks',()=>{
 });
 
 test('v2 structured DOCX exports frozen part headings and linked chapter contents',()=>{
- const chapters=[{title:'Introduction',partTitle:'Partie I — Fondements',content:document},
-   {title:'Méthodologie',content:document},
-   {title:'Résultats',partTitle:'Partie II — Pratique',content:document}];
+ const chapters=[{title:'Introduction',partTitle:'Partie I — Fondements',withinPart:true,content:document},
+   {title:'Méthodologie',withinPart:true,content:document},
+   {title:'Résultats',partTitle:'Partie II — Pratique',withinPart:true,content:document}];
  const zip=unzipSync(renderDocx('Mon livre structuré',chapters));
  const xml=strFromU8(zip['word/document.xml']);
  assert.match(xml,/Table des matières/);
@@ -56,7 +56,15 @@ test('v2 structured DOCX exports frozen part headings and linked chapter content
  assert.match(md,/## Table des matières/);
  assert.match(md,/## Partie I — Fondements/);
  assert.match(md,/### Méthodologie/);
+ assert.match(md,/- \*\*Partie I — Fondements\*\*\n  - Introduction\n  - Méthodologie\n- \*\*Partie II — Pratique\*\*/);
  assert.ok(md.indexOf('Partie I — Fondements')<md.indexOf('Partie II — Pratique'));
+});
+
+test('unassigned chapters keep a top-level Markdown heading in a mixed snapshot',()=>{
+ const md=renderMarkdown('Essai',[{title:'Avant-propos',content:document},
+   {title:'Chapitre structuré',partTitle:'Partie I',withinPart:true,content:document}]);
+ assert.match(md,/\n\n## Avant-propos\n\n/);
+ assert.match(md,/\n\n### Chapitre structuré\n\n/);
 });
 
 test('legacy flat Markdown export keeps its original chapter headings',()=>{

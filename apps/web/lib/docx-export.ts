@@ -172,16 +172,16 @@ function markdownBlocks(node:Node):string[] {
 }
 export function renderMarkdown(title:string,chapters:ExportChapter[]):string {
   const structured=chapters.some(c=>c.partTitle);
-  const contents=structured?[
-    '## Table des matières',
-    ...chapters.flatMap(chapter=>[
-      ...(chapter.partTitle?['- **'+escapeMd(chapter.partTitle)+'**']:[]),
-      (chapter.withinPart?'  - ':'- ')+escapeMd(chapter.title)
-    ])
-  ]:[];
+  // Keep the contents list contiguous: blank lines between nested items turn
+  // the indented chapters into detached lists in several Markdown readers.
+  const contents=structured?['## Table des matières\n\n'+chapters.flatMap(chapter=>[
+    ...(chapter.partTitle?['- **'+escapeMd(chapter.partTitle)+'**']:[]),
+    (chapter.withinPart?'  - ':'- ')+escapeMd(chapter.title)
+  ]).join('\n')]:[];
   return ['# '+escapeMd(title),...contents,...chapters.flatMap(chapter=>{
     assertValidDocument(chapter.content);
     return [...(chapter.partTitle?['## '+escapeMd(chapter.partTitle)]:[]),
-      (structured?'### ':'## ')+escapeMd(chapter.title),...markdownBlocks(chapter.content as Node)];
+      (structured&&chapter.withinPart?'### ':'## ')+escapeMd(chapter.title),
+      ...markdownBlocks(chapter.content as Node)];
   })].join('\n\n')+'\n';
 }
