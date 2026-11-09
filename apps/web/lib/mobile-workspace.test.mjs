@@ -30,7 +30,8 @@ test('studio chapter drawer stays discoverable, safe and scrollable',()=>{
  for(const token of ['.studio.studio-focus.studio-mobile-navigation-open',
    '.mobile-workspace-open .workspace-drawer-host',
    '.mobile-workspace-open .workspace-drawer-host .nav-chapter-list',
-   'env(safe-area-inset-left','min(330px,calc(100vw - 34px))']){
+   'env(safe-area-inset-left','min(330px,calc(100vw - 34px))',
+   '@media (min-width:761px) and (max-width:900px)']){
    assert.ok(css.includes(token),'mobile styles: '+token);
  }
 });

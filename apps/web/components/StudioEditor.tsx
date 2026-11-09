@@ -79,7 +79,7 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  },[mobilePanel]);
 
  useEffect(()=>{
-   const mobile=window.matchMedia('(max-width: 760px)');
+   const mobile=window.matchMedia('(max-width: 900px)');
    const closeOnDesktop=()=>{if(!mobile.matches)setMobileNav(false);};
    closeOnDesktop();
    mobile.addEventListener('change',closeOnDesktop);

@@ -18,7 +18,7 @@ export default function WorkspaceShell({sidebar,children}:{
  const openRef=useRef(false);
  useEffect(()=>{setOpen(false);},[pathname]);
  useEffect(()=>{
-   const mobile=window.matchMedia('(max-width: 760px)');
+   const mobile=window.matchMedia('(max-width: 900px)');
    const closeOnDesktop=()=>{if(!mobile.matches)setOpen(false);};
    closeOnDesktop();
    mobile.addEventListener('change',closeOnDesktop);
