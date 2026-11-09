@@ -3,9 +3,9 @@ info:
   title: BookStudio AI API
   version: 0.1.0
   description: >-
-    API autonome, aucune connexion directe à DTSC Platform. v0.41.0-alpha
-    ajoute les parties persistantes d'un manuscrit et le rattachement strict
-    de chapitres contigus, avec ACL et vérification d'édition courante.
+    API autonome, aucune connexion directe à DTSC Platform. v0.42.0-alpha
+    ajoute le déplacement transactionnel d'une partie entière avec contrôle
+    optimiste de l'ordre, sans modifier les révisions de texte.
 servers:
   - url: /api/v1
 paths:
@@ -19,7 +19,7 @@ paths:
           required: true
           schema: {type: string, format: uuid}
       responses:
-        '200': {description: 'editionId, parts[]: id, title, updatedAt'}
+        '200': {description: 'editionId, orderToken SHA-256 ordre/affectations, parts[]: id, title, updatedAt'}
         '401': {description: Session requise}
         '404': {description: Livre inaccessible ou archivé}
         '503': {description: Parties temporairement indisponibles}
@@ -61,6 +61,47 @@ paths:
         '200': {description: Partie vide supprimée}
         '409': {description: Partie non vide ou précondition périmée}
         '404': {description: Partie ou permission absente}
+  /books/{bookId}/parts/{partId}/move:
+    patch:
+      summary: Déplacer une partie entière avec ses chapitres (v0.42)
+      description: >-
+        OWNER/EDITOR uniquement, Origin autorisé, livre actif et édition courante.
+        Échange atomiquement le bloc de chapitres d'une partie avec la plage
+        voisine (autre partie ou non affectés), sans changer partId ni la prose,
+        les révisions, commentaires ou snapshots. Le token SHA-256 protège
+        l'ordre actif ET les affectations de parties ; les positions sont réécrites en deux phases SQL dans
+        une transaction Serializable, sans collision avec les chapitres retirés.
+        Audit sans contenu, cache private no-store, maximum 2000 chapitres actifs.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: partId
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [direction, expectedEditionId, expectedOrderToken]
+              properties:
+                direction: {type: string, enum: [up, down]}
+                expectedEditionId: {type: string, format: uuid}
+                expectedOrderToken: {type: string, minLength: 64, maxLength: 64, pattern: '^[0-9a-f]{64}$'}
+      responses:
+        '200': {description: 'ok true, changedChapters, orderToken recalculé'}
+        '400': {description: Corps/paramètre invalide}
+        '401': {description: Authentification requise}
+        '403': {description: Origin rejeté}
+        '404': {description: Partie, livre ou droits insuffisants}
+        '409': {description: 'BOOK_PART_ORDER_CONFLICT ou BOOK_PART_MOVE_UNAVAILABLE'}
+        '422': {description: 'BOOK_PART_ORDER_TOO_LARGE, limite ou capacité int32'}
+        '503': {description: Mutation temporairement indisponible}
   /books/{bookId}/chapters/{chapterId}/part:
     patch:
       summary: Affecter ou détacher un chapitre d'une partie de l'édition courante

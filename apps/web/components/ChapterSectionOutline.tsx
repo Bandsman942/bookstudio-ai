@@ -2,13 +2,15 @@
 import {useEffect,useMemo,useState} from 'react';
 import type {useEditor} from '@tiptap/react';
 import {useAppPreferences} from './AppPreferences';
+import Link from 'next/link';
 import {extractChapterSectionOutline,MAX_SECTION_RESULTS,
  type SectionHeading} from '@/lib/section-outline';
 
 type Editor=NonNullable<ReturnType<typeof useEditor>>;
 
-export default function ChapterSectionOutline({editor,onJump}:{
- editor:Editor|null;onJump:(heading:SectionHeading)=>void
+export default function ChapterSectionOutline({editor,onJump,bookId,onNavigate}:{
+ editor:Editor|null;onJump:(heading:SectionHeading)=>void;
+ bookId:string;onNavigate:(event:React.MouseEvent)=>void
 }){
  const {locale}=useAppPreferences();
  const [filter,setFilter]=useState('');
@@ -51,6 +53,15 @@ export default function ChapterSectionOutline({editor,onJump}:{
    </div>
    <div className="chapter-outline-list" role="navigation"
      aria-label={locale==='fr'?'Sommaire des sections':'Section outline'}>
+     {editor&&outline.matches===0&&!filter&&<div className="section-outline-empty" role="note">
+       <strong>{locale==='fr'?'Aucune section structurée dans ce chapitre':'No structured sections in this chapter'}</strong>
+       <p>{locale==='fr'?
+         'Le sommaire utilise les vrais styles « Titre 1 », « Titre 2 » et « Titre 3 ». Les paragraphes au style « Normal » n’apparaissent pas ici. Sélectionnez un intitulé dans le manuscrit et appliquez un style de titre depuis le ruban.':
+         'The outline uses actual Heading 1, Heading 2 and Heading 3 styles. Normal paragraphs do not appear here. Select a heading in the manuscript and apply a heading style from the ribbon.'}</p>
+       <Link href={'/books/'+bookId+'#book-outline'} onClick={onNavigate}>
+         {locale==='fr'?'Consulter le sommaire global du livre':'Open the whole-book outline'}
+       </Link>
+     </div>}
      {outline.headings.map((heading,index)=>
        <button type="button" key={heading.position+'|'+heading.level}
          className={'chapter-outline-link'+(index===active?' selected':'')}

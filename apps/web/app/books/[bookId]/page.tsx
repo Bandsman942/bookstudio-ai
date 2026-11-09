@@ -9,6 +9,7 @@ import {chapterOrderToken} from '@/lib/chapter-order';
 import {getBookProgress} from '@/lib/book-progress';
 import {prisma} from '@bookstudio/database';
 import {orderPartsByChapters} from '@/lib/book-parts';
+import {partMoveToken} from '@/lib/part-move';
 import {cookies} from 'next/headers';
 import {LOCALE_COOKIE,parseLocale,translate} from '@/lib/i18n';
 export const dynamic='force-dynamic';
@@ -51,6 +52,6 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
     </aside>}>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">{t('common.library')}</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>
-    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} orderToken={orderToken} language={book.language} progress={progress} editionId={book.editions[0]?.id??''} parts={parts.map(part=>({id:part.id,title:part.title,updatedAt:part.updatedAt.toISOString()}))} chapters={chapters.map(c=>({id:c.id,title:c.title,partId:c.partId,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
+    <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} orderToken={orderToken} partOrderToken={partMoveToken(chapters)} language={book.language} progress={progress} editionId={book.editions[0]?.id??''} parts={parts.map(part=>({id:part.id,title:part.title,updatedAt:part.updatedAt.toISOString()}))} chapters={chapters.map(c=>({id:c.id,title:c.title,partId:c.partId,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
   </WorkspaceShell>;
 }

@@ -4,6 +4,7 @@ import {normalizeTitle} from '@bookstudio/domain';
 import {activeUser,accessToBook} from '@/lib/auth';
 import {errorResponse,isSameOrigin} from '@/lib/security';
 import {orderPartsByChapters} from '@/lib/book-parts';
+import {partMoveToken} from '@/lib/part-move';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -19,6 +20,7 @@ export async function GET(_req:Request,{params}:Ctx){
   const parts=await prisma.manuscriptPart.findMany({where:{manuscriptId},
    orderBy:[{createdAt:'asc'},{id:'asc'}],select:{id:true,title:true,updatedAt:true}});
   return Response.json({editionId:book.editions[0].id,
+   orderToken:partMoveToken(book.editions[0].manuscript?.chapters??[]),
    parts:orderPartsByChapters(parts,book.editions[0].manuscript?.chapters??[])},
    {headers:{'Cache-Control':'private, no-store'}});
  }catch{return errorResponse('BOOK_PARTS_UNAVAILABLE',503);}

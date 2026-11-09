@@ -1701,6 +1701,48 @@ assert.deepEqual(partGroupedAfter.data.chapters.map(c=>c.id),
  partGroupedChapters.data.chapters.map(c=>c.id),'refused reorder leaves IDs in order');
 assert.equal(partGroupedAfter.data.chapters[0].revision,initialChapterRevision,
  'part assignments never create prose revisions');
+// BS-005g v0.42: atomic movement of whole part blocks, including optimistic
+// conflicts, authorization, CSRF and immutable document revision counters.
+const movePartPath=partsPath+'/'+partBId+'/move';
+const partMoveBody={direction:'up',expectedEditionId:editionV41,
+ expectedOrderToken:(await request(partsPath,{cookie:author})).data.orderToken};
+assert.equal((await request(movePartPath,{method:'PATCH',body:partMoveBody})).status,401);
+assert.equal((await request(movePartPath,{method:'PATCH',cookie:outsider,
+ body:partMoveBody})).status,404);
+assert.equal((await request(movePartPath,{method:'PATCH',cookie:author,
+ body:partMoveBody,omitOrigin:true})).status,403);
+assert.equal((await request(movePartPath,{method:'PATCH',cookie:author,
+ body:{...partMoveBody,expectedEditionId:randomUUID()}})).status,409);
+assert.equal((await request(movePartPath,{method:'PATCH',cookie:author,
+ body:{...partMoveBody,direction:'sideways'}})).status,400);
+const partMovedUp=await request(movePartPath,{method:'PATCH',cookie:author,
+ body:partMoveBody});
+assert.equal(partMovedUp.status,200,'whole part moves atomically');
+assert.equal(partMovedUp.data.changedChapters,4);
+const partAfterUp=await request(partBase+'/chapters',{cookie:author});
+const partAfterUpToken=(await request(partsPath,{cookie:author})).data.orderToken;
+assert.deepEqual(partAfterUp.data.chapters.map(c=>c.id),
+ [partC.id,partD.id,partA.id,partB.id]);
+assert.deepEqual(partAfterUp.data.chapters.map(c=>c.partId),
+ [partBId,partBId,partAId,partAId]);
+assert.deepEqual(partAfterUp.data.chapters.map(c=>c.revision),
+ [partC.revision,partD.revision,partA.revision,partB.revision],
+ 'moving groups must not rewrite document revisions');
+const stalePartMove=await request(movePartPath,{method:'PATCH',cookie:author,
+ body:partMoveBody});
+assert.equal(stalePartMove.status,409,'stale token rejected');
+assert.equal(stalePartMove.data.error,'BOOK_PART_ORDER_CONFLICT');
+const noFurtherUp=await request(movePartPath,{method:'PATCH',cookie:author,
+ body:{...partMoveBody,expectedOrderToken:partAfterUpToken}});
+assert.equal(noFurtherUp.status,409,'no operation past manuscript boundary');
+assert.equal(noFurtherUp.data.error,'BOOK_PART_MOVE_UNAVAILABLE');
+const restoredPartOrder=await request(movePartPath,{method:'PATCH',cookie:author,
+ body:{...partMoveBody,direction:'down',expectedOrderToken:partAfterUpToken}});
+assert.equal(restoredPartOrder.status,200);
+const afterRestoredPartOrder=await request(partBase+'/chapters',{cookie:author});
+assert.deepEqual(afterRestoredPartOrder.data.chapters.map(c=>c.id),
+ partGroupedAfter.data.chapters.map(c=>c.id),
+ 'reverse block move restores chapter order exactly');
 const nonEmptyDelete=await request(partsPath+'/'+partAId,{method:'DELETE',cookie:author,
  body:{confirm:'DELETE_EMPTY_PART',expectedEditionId:editionV41,
  expectedUpdatedAt:partCreated1.data.part.updatedAt}});
