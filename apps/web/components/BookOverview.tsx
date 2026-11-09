@@ -66,11 +66,16 @@ export default function BookOverview({bookId,title,status,kind,language,chapters
     <span className="eyebrow">{t('book.projectOverview')}</span>
     <div className="book-title-actions">
       <div><h1>{title}<span className="dot">.</span></h1><p>{t('book.overviewSubtitle')}</p></div>
-      {editable&&<div className="book-header-actions">
-        <a className="button small" href="#book-source-files"><AppIcon name="upload"/>{t('book.importManuscript')}</a>
-        <BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt}
-          bookType={kind} language={language} status={status} editable onArchive="library"/>
-      </div>}
+      <div className="book-header-actions">
+        <Link className="button small secondary" href={'/search?bookId='+bookId}>
+          <AppIcon name="search"/>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}
+        </Link>
+        {editable&&<>
+          <a className="button small" href="#book-source-files"><AppIcon name="upload"/>{t('book.importManuscript')}</a>
+          <BookActionsMenu bookId={bookId} title={title} updatedAt={updatedAt}
+            bookType={kind} language={language} status={status} editable onArchive="library"/>
+        </>}
+      </div>
     </div>
     <BookSourceFiles bookId={bookId} editable={editable}/>
     <div className="overview-cards">

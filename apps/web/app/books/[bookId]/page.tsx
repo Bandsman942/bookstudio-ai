@@ -31,6 +31,7 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
       <a className="nav-link" href="#book-source-files"><AppIcon name="upload"/><span>{t('book.sourcesNav')}</span></a>
       <a className="nav-link" href="#book-structure"><AppIcon name="chapter"/><span>{t('book.structure')}</span></a>
       <a className="nav-link" href="#book-versions"><AppIcon name="history"/><span>{t('book.versions')}</span></a>
+      <Link className="nav-link" href={'/search?bookId='+bookId}><AppIcon name="search"/><span>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}</span></Link>
       <div className="nav-section">{t('editor.manuscript')}</div>
       <div className="nav-chapter-list">{chapters.map((c,i)=><div className="nav-chapter-row" key={c.id} data-context-surface>
         <Link className="nav-link" href={'/books/'+bookId+'/chapters/'+c.id}>
