@@ -4,7 +4,7 @@ Toutes les évolutions sont consignées selon [Keep a Changelog](https://keepach
 
 ## [Non publié]
 
-## [0.37.0] — alpha candidate (NON DÉPLOYÉE)
+## [0.37.0] — alpha privée livrée le 9 novembre 2026 (PR #181, CI #261)
 ### BS-005b #179 — Recherche plein texte dans un ouvrage, avec pagination
 - Depuis la fiche d'ouvrage ou le Studio, **Rechercher dans ce livre** affiche les résultats des seuls chapitres actifs et des dernières révisions **sauvegardées** de ce livre ; pas de brouillons, autres workspaces, éditions historiques, archives ni chapitres retirés. La recherche globale est conservée.
 - GET /api/v1/search étendu avec bookId facultatif et offset strict (multiples de 30, ≤30000). Requête ILIKE paramétrée à métacaractères littéraux, ordre déterministe, 30 résultats par page + hasMore/nextOffset et extraits courts, 401/404/400 contextuels, cache privé. UI FR/EN avec recherche ciblée, chargement des pages suivantes sans perdre les précédentes même si le réseau échoue.
