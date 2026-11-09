@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {activeUser,accessToBook,canWriteBook} from '@/lib/auth';
 import BookOverview from '@/components/BookOverview';
 import AppIcon from '@/components/AppIcon';
+import WorkspaceShell from '@/components/WorkspaceShell';
 import ChapterActionsMenu from '@/components/ChapterActionsMenu';
 import {chapterOrderToken} from '@/lib/chapter-order';
 import {getBookProgress} from '@/lib/book-progress';
@@ -22,8 +23,7 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
   // Progress may fail independently: a transient analytics error must not
   // prevent an author from opening or editing a manuscript.
   const progress=await getBookProgress(bookId,user.id).catch(()=>null);
-  return <div className="workspace">
-    <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
+  return <WorkspaceShell sidebar={<aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
       <div className="nav-section">{t('book.navigation')}</div>
       <Link className="nav-link" href="/library"><AppIcon name="arrowLeft"/><span>{t('library.myLibrary')}</span></Link>
       <div className="nav-section">{t('book.myBook')}</div>
@@ -31,6 +31,7 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
       <a className="nav-link" href="#book-source-files"><AppIcon name="upload"/><span>{t('book.sourcesNav')}</span></a>
       <a className="nav-link" href="#book-structure"><AppIcon name="chapter"/><span>{t('book.structure')}</span></a>
       <a className="nav-link" href="#book-versions"><AppIcon name="history"/><span>{t('book.versions')}</span></a>
+      <Link className="nav-link" href={'/search?bookId='+bookId}><AppIcon name="search"/><span>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}</span></Link>
       <div className="nav-section">{t('editor.manuscript')}</div>
       <div className="nav-chapter-list">{chapters.map((c,i)=><div className="nav-chapter-row" key={c.id} data-context-surface>
         <Link className="nav-link" href={'/books/'+bookId+'/chapters/'+c.id}>
@@ -40,8 +41,8 @@ export default async function BookPage({params}:{params:Promise<{bookId:string}>
           reorder={{token:orderToken,index:i,total:chapters.length}}/>
       </div>)}</div>
       <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{user.name.charAt(0)}</span>{user.name}</div>
-    </aside>
+    </aside>}>
     <main className="content"><header className="content-top"><span className="breadcrumb"><Link href="/library">{t('common.library')}</Link> / <strong>{book.title}</strong></span><span className="save-badge">● Espace privé</span></header>
     <BookOverview bookId={book.id} title={book.title} status={book.status} kind={book.bookType} updatedAt={book.updatedAt.toISOString()} editable={editable} orderToken={orderToken} language={book.language} progress={progress} chapters={chapters.map(c=>({id:c.id,title:c.title,revision:c.revisionSeq,updatedAt:c.updatedAt.toISOString()}))}/></main>
-  </div>;
+  </WorkspaceShell>;
 }

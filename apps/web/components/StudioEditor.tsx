@@ -61,6 +61,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  const draftKey='bookstudio:draft:'+chapterId;
  const drawerCloseRef=useRef<HTMLButtonElement>(null);
  const navCloseRef=useRef<HTMLButtonElement>(null),navListRef=useRef<HTMLDivElement>(null);
+ const navToggleRef=useRef<HTMLButtonElement>(null),navWasOpen=useRef(false);
+
  useEffect(()=>{
    const query=window.matchMedia('(max-width: 1150px)');
    const update=()=>{setCompact(query.matches);if(!query.matches){setMobilePanel(false);setMobileNav(false);}};
@@ -77,10 +79,39 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  },[mobilePanel]);
 
  useEffect(()=>{
-   if(!mobileNav)return;
+   const mobile=window.matchMedia('(max-width: 900px)');
+   const closeOnDesktop=()=>{if(!mobile.matches)setMobileNav(false);};
+   closeOnDesktop();
+   mobile.addEventListener('change',closeOnDesktop);
+   return ()=>mobile.removeEventListener('change',closeOnDesktop);
+ },[]);
+ useEffect(()=>{
+   if(!mobileNav){
+     if(navWasOpen.current)navToggleRef.current?.focus();
+     navWasOpen.current=false;
+     return;
+   }
+   navWasOpen.current=true;
    navCloseRef.current?.focus();
-   const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setMobileNav(false);};
-   document.addEventListener('keydown',key);return ()=>document.removeEventListener('keydown',key);
+   const key=(event:KeyboardEvent)=>{
+     if(document.querySelector('[role="dialog"][aria-modal="true"]:not(#studio-manuscript-nav)'))return;
+     if(event.key==='Escape'){event.preventDefault();setMobileNav(false);return;}
+     if(event.key!=='Tab')return;
+     const items=[...document.querySelectorAll<HTMLElement>(
+       '#studio-manuscript-nav a[href], #studio-manuscript-nav button:not([disabled])'
+     )].filter(item=>item.getClientRects().length>0);
+     const first=items[0],last=items[items.length-1];
+     if(!first||!last)return;
+     if(event.shiftKey&&document.activeElement===first){
+       event.preventDefault();last.focus();
+     }else if(!event.shiftKey&&document.activeElement===last){
+       event.preventDefault();first.focus();
+     }else if(!document.getElementById('studio-manuscript-nav')?.contains(document.activeElement)){
+       event.preventDefault();first.focus();
+     }
+   };
+   document.addEventListener('keydown',key);
+   return ()=>document.removeEventListener('keydown',key);
  },[mobileNav]);
  useEffect(()=>{
    const selected=navListRef.current?.querySelector<HTMLElement>('.chapter-nav-row.selected');
@@ -266,11 +297,15 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
  return <div className={'studio '+(focus?'studio-focus ':'')+(mobilePanel?'studio-mobile-insights-open ':'')+
      (mobileNav?'studio-mobile-navigation-open':'')}>
   {mobileNav&&<button type="button" className="studio-nav-backdrop" aria-label={locale==='fr'?'Fermer la navigation':'Close navigation'} onClick={()=>setMobileNav(false)}/>}
-  <aside className="studio-sidebar" aria-label={t('editor.manuscript')}>
+  <aside id="studio-manuscript-nav" className="studio-sidebar" aria-label={t('editor.manuscript')}
+    role={mobileNav?'dialog':undefined} aria-modal={mobileNav?true:undefined}>
     <button ref={navCloseRef} type="button" className="studio-nav-close" aria-label={locale==='fr'?'Fermer les chapitres':'Close chapters'} onClick={()=>setMobileNav(false)}>×</button>
     <Link href="/library" className="brand" onClick={protectNavigation}><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
     <Link href={'/books/'+bookId} className="back-link" onClick={protectNavigation}><AppIcon name="arrowLeft"/>{t('editor.bookOverview')}</Link>
     <div className="nav-section"><AppIcon name="manuscript"/>{t('editor.manuscript')}</div><div className="studio-book-title">{bookTitle}</div>
+    <Link href={'/search?bookId='+bookId} className="back-link" onClick={protectNavigation}>
+      <AppIcon name="search"/>{locale==='fr'?'Rechercher dans ce livre':'Search this book'}
+    </Link>
     <div ref={navListRef} className="chapter-navigation" aria-label={locale==='fr'?'Liste des chapitres':'Chapter list'}>{chapters.map((c,i)=>
       <div key={c.id} className={'chapter-nav-row'+(c.id===chapterId?' selected':'')} data-context-surface>
         <Link href={'/books/'+bookId+'/chapters/'+c.id} onClick={protectNavigation}
@@ -286,8 +321,10 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
   <main className="studio-center">
     <div className="studio-topbar">
       <div className="studio-quick-nav">
-        <button type="button" className="studio-nav-toggle" onClick={()=>setMobileNav(true)}
-          aria-label={locale==='fr'?'Afficher les chapitres':'Show chapters'} aria-expanded={mobileNav}>☰</button>
+        <button type="button" className="studio-nav-toggle" ref={navToggleRef}
+          aria-controls="studio-manuscript-nav" onClick={()=>setMobileNav(v=>!v)}
+          aria-label={locale==='fr'?'Afficher les options et les chapitres à gauche':'Show left options and chapters'}
+          aria-expanded={mobileNav}>☰</button>
         <Link className="studio-quick-overview" href={'/books/'+bookId} onClick={protectNavigation}>
           <AppIcon name="arrowLeft" size={15}/>{t('editor.bookOverview')}
         </Link>
@@ -308,6 +345,8 @@ export default function StudioEditor({bookId,bookTitle,chapterId,chapterTitle,re
             !conflictRef.current&&state==='saved'&&!recovery}
           onRestored={()=>router.refresh()}/>
         <ActionMenu label={t('editor.display')} actions={[
+          {label:locale==='fr'?'Rechercher dans tous les chapitres du livre':'Search across book chapters',
+            onSelect:()=>{if(canLeaveEditor())router.push('/search?bookId='+bookId);}},
           {label:t(focus?'editor.focusOff':'editor.focusOn'),
             onSelect:()=>setFocus(value=>!value)},
           {label:compact?t(mobilePanel?'editor.panelClose':'editor.panelOn'):t(rightPanel?'editor.panelOff':'editor.panelOn'),

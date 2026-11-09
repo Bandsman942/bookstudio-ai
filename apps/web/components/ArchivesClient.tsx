@@ -7,6 +7,7 @@ import {useAppPreferences} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
 import AppIcon from './AppIcon';
+import WorkspaceShell from './WorkspaceShell';
 
 type Archived={id:string;title:string;bookType:string;updatedAt:string;canRestore:boolean};
 export default function ArchivesClient({books,displayName}:{books:Archived[];displayName:string}){
@@ -34,14 +35,14 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
     notify({tone:'error',title:locale==='fr'?'Restauration interrompue':'Restore interrupted',detail:msg});}
   finally{setBusyId(null);}
  }
- return <div className="workspace">
-   <aside className="nav"><Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
+ return <WorkspaceShell sidebar={<aside className="nav">
+   <Link href="/library" className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></Link>
    <div className="nav-section">{t('library.mySpace')}</div>
    <Link className="nav-link" href="/library"><AppIcon name="library"/><span>{t('common.library')}</span></Link>
    <Link className="nav-link" href="/search"><AppIcon name="search"/><span>{t('common.search')}</span></Link>
    <Link className="nav-link active" href="/library/archives" aria-current="page"><AppIcon name="archive"/><span>{t('common.archives')}</span></Link>
    <div className="nav-spacer"/><div className="nav-user"><span className="avatar">{displayName.charAt(0).toUpperCase()}</span>{displayName}</div>
-   </aside>
+   </aside>}>
    <main className="content">
     <header className="content-top"><span className="breadcrumb"><Link href="/library" >{t('library.mySpace')}</Link> / <strong>{t('common.archives')}</strong></span><span className="save-badge">● {t('archives.private')}</span></header>
     <div className="content-inner"><div className="eyebrow">{t('archives.eyebrow')}</div><h1>{t('archives.title')}<span className="dot">.</span></h1>
@@ -59,5 +60,5 @@ export default function ArchivesClient({books,displayName}:{books:Archived[];dis
      </div>)}</div>}
     </div>
    </main>
- </div>;
+ </WorkspaceShell>;
 }

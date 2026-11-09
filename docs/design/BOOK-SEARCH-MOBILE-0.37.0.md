@@ -1,0 +1,39 @@
+# BS-005b / BS-UX-MOBILE — v0.37.0-alpha
+
+## Objectifs et périmètre
+
+Deux exigences combinées dans la même candidate :
+1. **Cahier des charges §5 / issue #179** : rechercher dans **tous les chapitres enregistrés d'un seul ouvrage** depuis son aperçu ou le Studio, avec résultat lisible et pagination ; conserver la recherche globale.
+2. **Correction UX mobile issue #180** : les menus verticaux de la gauche sont masqués sous 900 px dans le workspace plein écran, rendant les options et les chapitres inaccessibles. Un **hamburger ☰ fixe en haut à gauche** révèle le **même menu que sur desktop**, sous forme de drawer, sans perdre les actions ni changer les droits. Le Studio possédait déjà une bascule ; elle est renforcée (44 px, clavier, focus, mode concentration et longue liste).
+
+## API de recherche privée : aucun résultat silencieusement tronqué
+
+`GET /api/v1/search?q=<terme>&bookId=<uuid facultatif>&offset=<page facultatif>`.
+
+Le serveur exige une session active, contrôle **tous** les paramètres (q obligatoire, bookId facultatif, offset facultatif ; clés supplémentaires/doublées rejetées 400), terme Unicode littéral de 2–80 caractères, UUID strict, offset décimal sans signe et **multiple de 30, ≤30000**. Les caractères SQL `%`, `_` et `\\` sont échappés pour **ILIKE paramétré** ; pas de regex SQL fournie par l'utilisateur.
+
+Avec `bookId`, un contrôle séparé `book.findFirst` authentifie d'abord le droit de lecture **sur le workspace** (OWNER/EDITOR/REVIEWER/VIEWER), et rejette livres archivés/inaccessibles en **404** même si la recherche serait vide. Dans tous les cas, la requête SQL revalide `memberships.user_id`, `books.archived_at IS NULL`, chapitre non retiré `deleted_at IS NULL`, édition de numéro maximal et **exactement la dernière DocumentRevision** (`chapter.revision_seq = revision.sequence`). Aucune édition ancienne, chapitre supprimé, source de Storage, contenu d'un autre tenant ou brouillon non sauvegardé n'est retourné. Pas d'IA ni d'index public. Les résultats contiennent seulement `bookId`, `bookTitle`, `chapterId`, `chapterTitle`, `revision`, un court `snippet` de 220 caractères max et date de modification.
+
+Le tri total déterministe `book.updated_at DESC, book.id ASC, chapter.position ASC, chapter.id ASC` évite l'ambiguïté des offsets pour un état stable de l'ouvrage. La route récupère **31** lignes pour en renvoyer au plus **30**, avec `offset`, `nextOffset`, `hasMore`, `pageSize:30`, `bookTitle` en mode ciblé, `scope` et `Cache-Control: private,no-store`. L'API globale sans bookId conserve les champs antérieurs `hits`, `query`, `limitedTo:30`, `scope:saved-current-revisions` tout en ajoutant la pagination. Une modification concurrente de l'ordre ou du contenu d'un chapitre entre deux pages peut réordonner les résultats : relancer la recherche après une telle modification. Un offset au-delà de 30000 est refusé **400**, jamais silencieusement borné. 401 sans session, 404 livre inaccessible, 503 erreur DB.
+
+`/search?bookId=<uuid>` vérifie séparément les droits **avant de rendre le titre de l'ouvrage** au serveur. Le composant `SearchClient` porte ce périmètre fixé, affiche « Recherche dans ce livre », titre privé, retour à l'ouvrage et lien explicite vers la recherche globale. Un bouton **Charger 30 résultats suivants** n'apparaît que si `hasMore` est vrai et ne recharge pas les pages précédentes. Les doublons éventuels inter-pages sont ignorés côté UI. Les requêtes concurrentes sont annulées avec `AbortController` et numéro de séquence pour connexion mobile faible. Le nombre de résultats chargés et la présence d'autres résultats sont visibles en FR/EN. Les liens pointent vers les chapitres du livre autorisé, sans exposition d'anciennes éditions.
+
+Depuis `BookOverview` et la barre latérale de la fiche livre, la commande **« Rechercher dans ce livre »** est disponible aux lecteurs autorisés. Depuis le **Studio**, elle est accessible dans la colonne des chapitres et dans le menu d'affichage, où la navigation vérifie d'abord `canLeaveEditor` pour éviter de perdre un brouillon.
+
+## Menu hamburger — tous les workspaces centraux
+
+`WorkspaceShell` est un composant client partagé **qui contient exactement le menu latéral existant**, injecté via `sidebar:ReactNode` depuis la Bibliothèque, les Archives, la Recherche et la fiche d'ouvrage. Sur desktop, l'enveloppe CSS `display:contents` préserve le layout historique et toutes les options, y compris les menus contextuels ⋯ de chapitres. Sous 900 px, le bouton ☰ 44 × 44 est positionné **coin supérieur gauche, safe area iOS incluse**, sans recouvrir la breadcrumb (`content-top` a un décalage adapté). Une pression ouvre la colonne à gauche de largeur `min(330px,100vw - 34px)`, avec backdrop, croix de fermeture, défilement du sommaire complet, accès aux ancres (sources/chapitres/versions) et aux liens. Les options ne sont pas recréées ni retirées ; actions dépendantes du rôle identiques à desktop.
+
+Accessibilité : `aria-expanded`, `aria-controls`, `role=dialog`/`aria-modal` lorsque le drawer est ouvert, focus initial sur ×, cycle Tab/Shift+Tab dans la navigation, Escape pour fermer, clic backdrop ou clic sur un lien pour refermer, retour de focus au hamburger, fermeture au changement de route et blocage du scroll du fond pendant l'ouverture. Ne pas voler le clavier aux dialogues de confirmation portalisés. Menu contextuel ⋯ en portail `z-index:2000` reste au-dessus du drawer `z-index:1211`. Aucun changement de données ou droit d'accès.
+
+Studio : hamburger préexistant renforcé : 44 px même à 320 px, `aria-controls=studio-manuscript-nav`, `aria-expanded`, focus, Escape, piège clavier, scrollbar longue liste, safe area, et priorité d'affichage du tiroir même en **mode concentration**. Les liens de chapitre conservent `canLeaveEditor` et les états d'autosave : une modification non enregistrée doit empêcher une navigation risquée. La recherche globale livre reste elle aussi derrière ce contrôle. CSS respecte thèmes sombre/clair, 320/375/768/1150/1440 et `prefers-reduced-motion`.
+
+## Tests et limites
+
+`pnpm search-paging:check` vérifie le parseur strict (URI, offset, bookId, injection littérale). `pnpm mobile-workspace:check` vérifie que les 4 workspaces et Studio sont connectés à leur drawer et aux contraintes d'accessibilité ; **ce test statique ne remplace pas la QA visuelle sur un téléphone**. E2E HTTP PostgreSQL : **35 chapitres enregistrés**, page 30 puis page 5 sans doublon, portée privée, autre workspace 404, non connecté 401, offset/UUID/injection de paramètres 400, jokers SQL littéraux, archivage retirant toute visibilité du livre. CI documentaire, UI/perf, tests de modules, PostgreSQL, Prisma, typecheck et Next build.
+
+**Aucune migration, nouveau secret ou service externe**, ClamAV toujours non installé/OFF. Rechercher n'écrit jamais dans le manuscrit ; cette version n'apporte **pas encore le remplacement global à travers tous les chapitres**, qui restera une opération future sous confirmation et contrôles de version.
+
+### Cas exceptionnel : plafond des pages globales
+
+Si la limite défensive d'offset **30000** est atteinte alors qu'une 31ᵉ ligne indique encore des résultats, la réponse inclut `hasMore:true,limitReached:true,nextOffset:null`. L'interface affiche **une alerte explicite et une invitation à affiner la requête ou sélectionner un ouvrage**, au lieu d'un bouton inopérant ou d'une troncature silencieuse. Sur écran ≤390 px, le bouton Retour à l'ouvrage de l'en-tête Studio cède sa place (il reste disponible dans le tiroir hamburger) pour préserver les actions et l'indicateur d'enregistrement sans débordement.

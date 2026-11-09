@@ -6,6 +6,7 @@ import ActionMenu from './ActionMenu';
 import BookActionsMenu from './BookActionsMenu';
 import ManuscriptImportDialog from './ManuscriptImportDialog';
 import AppIcon from './AppIcon';
+import WorkspaceShell from './WorkspaceShell';
 import {useAppPreferences,usePreferenceActions} from './AppPreferences';
 import {useToast} from './ToastProvider';
 import {explainActionError} from '@/lib/notification-copy';
@@ -121,7 +122,7 @@ export default function LibraryClient({books,displayName,initialNextCursor,initi
     finally{setLoading(false);}
   }
 
-  return <div className="workspace"><aside className="nav">
+  return <WorkspaceShell sidebar={<aside className="nav">
     <div className="brand"><span className="brand-symbol">B✦</span><span>BookStudio <b>AI</b><small>by DTSC</small></span></div>
     <div className="nav-section">{t('library.mySpace')}</div>
     <Link className="nav-link active" href="/library" aria-current="page"><AppIcon name="library"/><span>{t('common.library')}</span></Link>
@@ -131,7 +132,7 @@ export default function LibraryClient({books,displayName,initialNextCursor,initi
     <div className="nav-spacer"/>
     <div className="nav-user"><span className="avatar">{displayName.charAt(0).toUpperCase()}</span>
       <span>{displayName}<small>{t('common.author')}</small></span></div>
-  </aside>
+  </aside>}>
   <main className="content">
     <header className="content-top"><span className="breadcrumb">{t('library.mySpace')} / <strong>{t('common.library')}</strong></span>
       <ActionMenu label={t('prefs.account')} actions={[
@@ -283,5 +284,5 @@ export default function LibraryClient({books,displayName,initialNextCursor,initi
       <button disabled={loading} className="button full">{t(loading?'library.creating':'library.create')}</button>
     </form>
   </div>}
-  </div>;
+  </WorkspaceShell>;
 }
