@@ -18,6 +18,14 @@ export default function WorkspaceShell({sidebar,children}:{
  const openRef=useRef(false);
  useEffect(()=>{setOpen(false);},[pathname]);
  useEffect(()=>{
+   const mobile=window.matchMedia('(max-width: 760px)');
+   const closeOnDesktop=()=>{if(!mobile.matches)setOpen(false);};
+   closeOnDesktop();
+   mobile.addEventListener('change',closeOnDesktop);
+   return ()=>mobile.removeEventListener('change',closeOnDesktop);
+ },[]);
+
+ useEffect(()=>{
    if(!open){
      if(openRef.current)triggerRef.current?.focus();
      openRef.current=false;return;
