@@ -3,9 +3,9 @@ info:
   title: BookStudio AI API
   version: 0.1.0
   description: >-
-    API autonome, aucune connexion directe à DTSC Platform. v0.42.0-alpha
-    ajoute le déplacement transactionnel d'une partie entière avec contrôle
-    optimiste de l'ordre, sans modifier les révisions de texte.
+    API autonome, aucune connexion directe à DTSC Platform. v0.43.0-alpha
+    conserve les parties et leurs affectations dans les manifests de snapshots
+    v2, les restaure en nouvelle édition et les exporte sans lire l'état actuel.
 servers:
   - url: /api/v1
 paths:
@@ -419,6 +419,62 @@ paths:
         '503': {description: Comparaison temporairement indisponible}
 
 
+  /books/{bookId}/snapshots:
+    post:
+      summary: Figer la structure et les révisions en un snapshot v2 (v0.43)
+      description: >-
+        Livre actif, OWNER/EDITOR, Origin obligatoire, nom 2 à 140 caractères.
+        Dans une transaction Serializable, capture les titres, positions, IDs,
+        révisionSeq et contentHash des 500 chapitres actifs maximum, plus les
+        IDs et titres d'au plus 500 parties et les partId de chaque chapitre.
+        Le manifeste JSON v2 entier est signé par SHA-256 canonique et
+        conservé de façon immuable. Aucune lecture IA ni modification des
+        anciennes révisions, snapshots, fichiers sources ou commentaires.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 2, maxLength: 140}
+      responses:
+        '201': {description: 'snapshot: id, name, createdAt, chapterCount'}
+        '400': {description: Nom invalide}
+        '401': {description: Session absente}
+        '403': {description: Origine non autorisée}
+        '404': {description: Livre absent, archivé ou rôle insuffisant}
+        '409': {description: Limite de versions ou révisions incohérentes}
+        '422': {description: Limite de parties ou taille non supportée}
+        '503': {description: Stockage momentanément indisponible}
+  /books/{bookId}/snapshots/{snapshotId}/export:
+    get:
+      summary: Export privé d'une version figée en DOCX, PDF ou Markdown
+      description: >-
+        Accès membre au livre et au snapshot, sans mutation. Vérifie le hash
+        canonique du manifeste v1 ou v2 et les empreintes des DocumentRevision
+        immuables. Avec v2, l'ordre, les noms de parties et les rattachements
+        proviennent exclusivement du snapshot et jamais de la structure en
+        cours. Sommaire parties/chapitres en DOCX (liens vers signets), PDF
+        et Markdown si parties affectées. Sans numéro de page PDF fictif.
+        UTF-8, caractères XML échappés ; 8 MiB de texte au maximum ; réponse
+        privée sans cache et attachment. Les v1 restent au format plat.
+      parameters:
+        - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: snapshotId, in: path, required: true, schema: {type: string, format: uuid}}
+        - {name: format, in: query, required: true, schema: {type: string, enum: [docx, pdf, md]}}
+      responses:
+        '200': {description: Fichier binaire privé de la version figée}
+        '400': {description: Format invalide}
+        '401': {description: Session absente}
+        '404': {description: Livre ou version inaccessible}
+        '409': {description: Snapshot corrompu ou édition historique absente}
+        '413': {description: Export dépassant les limites}
+        '422': {description: Caractères PDF non couverts sans perte}
+        '503': {description: Génération momentanément indisponible}
   /books/{bookId}/snapshots/{snapshotId}/restore-as-edition:
     post:
       summary: Recréer un snapshot nommé (même ancien) dans une édition indépendante
@@ -431,6 +487,9 @@ paths:
         historiques restent accessibles et exportables. Sans prose dans la réponse.
         Limites synchrones 500 chapitres et 20 MiB. L'ancienne restauration en
         place reste séparée et requiert les numéros de révision courants.
+        Depuis v0.43, un snapshot de schéma v2 recrée aussi ses parties avec
+        de nouveaux IDs et les affectations historiques. Un snapshot v1 reste
+        compatible mais ne contient aucune métadonnée de parties.
       parameters:
         - {name: bookId, in: path, required: true, schema: {type: string, format: uuid}}
         - {name: snapshotId, in: path, required: true, schema: {type: string, format: uuid}}

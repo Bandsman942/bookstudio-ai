@@ -1,6 +1,6 @@
 {
   "name": "bookstudio-ai",
-  "version": "0.42.0",
+  "version": "0.43.0",
   "private": true,
   "description": "BookStudio AI by DTSC — independent editorial workspace",
   "packageManager": "pnpm@10.20.0",
@@ -34,7 +34,7 @@
     "scan-queue:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/source-scan-queue.test.mjs",
     "source-scan:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/source-security-policy.test.mjs",
     "edition-diff:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/edition-diff.test.mjs",
-    "snapshot-fork:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/snapshot-fork.test.mjs",
+    "snapshot-fork:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/snapshot-fork.test.mjs lib/snapshots.test.mjs",
     "chapter-history:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/chapter-history.test.mjs",
     "chapter-diff:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/chapter-revision-diff.test.mjs",
     "book-progress:check": "pnpm --filter @bookstudio/web exec node --experimental-strip-types --test lib/book-progress-summary.test.mjs",

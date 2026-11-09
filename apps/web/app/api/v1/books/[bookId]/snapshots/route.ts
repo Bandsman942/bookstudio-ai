@@ -63,10 +63,15 @@ export async function POST(req: Request, {params}: Ctx) {
 
       const edition = await tx.edition.findFirst({
         where:{bookId},orderBy:{number:'desc'},
-        include:{manuscript:{include:{chapters:{where:{deletedAt:null},orderBy:{position:'asc'}}}}}
+        include:{manuscript:{include:{
+          parts:{orderBy:[{createdAt:'asc'},{id:'asc'}]},
+          chapters:{where:{deletedAt:null},orderBy:{position:'asc'}}
+        }}}
       });
       const chapters = edition?.manuscript?.chapters ?? [];
       if (!edition || !chapters.length || chapters.length > 500) throw new Error('CHAPTER_COUNT_INVALID');
+      const parts=edition.manuscript?.parts??[];
+      if(parts.length>500)throw new Error('SNAPSHOT_PART_LIMIT');
       const revisions = await tx.documentRevision.findMany({
         where:{OR:chapters.map(c=>({chapterId:c.id,sequence:c.revisionSeq}))},
         select:{chapterId:true,sequence:true,contentHash:true}
@@ -74,9 +79,11 @@ export async function POST(req: Request, {params}: Ctx) {
       if (revisions.length !== chapters.length) throw new Error('REVISION_MISSING');
       const hashes = new Map(revisions.map(r=>[r.chapterId+':'+r.sequence,r.contentHash]));
       const manifest: SnapshotManifest = {
-        schema:'bookstudio.snapshot.v1',editionId:edition.id,
+        schema:'bookstudio.snapshot.v2',editionId:edition.id,
+        parts:parts.map(part=>({id:part.id,title:part.title})),
         chapters: chapters.map(c=>({
-          chapterId:c.id,title:c.title,position:c.position,revisionSeq:c.revisionSeq,
+          chapterId:c.id,title:c.title,position:c.position,partId:c.partId,
+          revisionSeq:c.revisionSeq,
           contentHash:hashes.get(c.id+':'+c.revisionSeq) ?? ''
         }))
       };
@@ -96,6 +103,7 @@ export async function POST(req: Request, {params}: Ctx) {
     const reason=err instanceof Error?err.message:'SNAPSHOT_FAILED';
     if(reason==='NOT_FOUND') return errorResponse(reason,404);
     if(reason==='SNAPSHOT_LIMIT_REACHED' || reason==='REVISION_MISSING') return errorResponse(reason,409);
+    if(reason==='SNAPSHOT_PART_LIMIT')return errorResponse(reason,422);
     if((err as {code?:string})?.code==='P2034') return errorResponse('REVISION_CONFLICT',409);
     return errorResponse('SNAPSHOT_FAILED',503);
   }

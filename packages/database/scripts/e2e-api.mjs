@@ -1755,6 +1755,31 @@ assert.equal(renamedPart.status,200,'rename preserves part identity');
 const partCatalogue=await request(partsPath,{cookie:author});
 assert.equal(partCatalogue.data.parts.find(p=>p.id===partBId)?.title,
  'Partie B — Études');
+// BS-008f / BS-009c v0.43: snapshot v2 freezes both part membership and
+// part labels, and all export formats must use the frozen structure.
+const structuredSnapshot=await request(partBase+'/snapshots',{
+ method:'POST',cookie:author,body:{name:'Version figée structurée v43'}});
+assert.equal(structuredSnapshot.status,201,'v2 snapshot creation succeeds');
+const structuredSnapId=structuredSnapshot.data.snapshot.id;
+const structuredExport=partBase+'/snapshots/'+structuredSnapId+'/export';
+const structuredMd=await fetch(base+structuredExport+'?format=md',{
+ headers:{Cookie:author}});
+assert.equal(structuredMd.status,200,'part-aware historical Markdown exports');
+const structuredText=await structuredMd.text();
+assert.ok(structuredText.includes('## Table des matières'));
+assert.ok(structuredText.includes('Partie B — Études'));
+assert.ok(structuredText.indexOf('Partie A')<structuredText.lastIndexOf('Partie B — Études'));
+for(const format of ['docx','pdf']){
+ const exported=await fetch(base+structuredExport+'?format='+format,
+  {headers:{Cookie:author}});
+ assert.equal(exported.status,200,'structured '+format+' export succeeds');
+ const bytes=new Uint8Array(await exported.arrayBuffer());
+ assert.ok(bytes.byteLength>700,'structured '+format+' has content');
+ assert.equal(format==='pdf'?Buffer.from(bytes.subarray(0,5)).toString('ascii'):
+   Buffer.from(bytes.subarray(0,2)).toString('ascii'),format==='pdf'?'%PDF-':'PK');
+}
+assert.equal((await request(structuredExport+'?format=md',{
+ cookie:outsider})).status,404,'foreign workspace cannot export frozen structure');
 const v41EditionBefore=await request(partBase+'/editions',{cookie:author});
 const v41DuplicateBefore=await request(partBase+'/duplicate',{cookie:author});
 assert.equal(v41DuplicateBefore.status,405,'book duplication is POST-only');
@@ -1805,6 +1830,36 @@ assert.equal(removedEmpty.status,200,'explicit empty part deletion succeeds');
 assert.equal((await request(partsPath,{cookie:author})).data.parts.length,1);
 assert.equal((await request(partBase+'/chapters',{cookie:author})).data.chapters.length,4,
  'part removal never deletes chapters');
+const historicalMd=await fetch(base+structuredExport+'?format=md',{
+ headers:{Cookie:author}});
+assert.equal(historicalMd.status,200);
+assert.equal(await historicalMd.text(),structuredText,
+ 'historical part names and order remain frozen after editing editions');
+const beforePartFork=await request(partBase+'/editions',{cookie:author});
+const partForkBody={confirm:'RESTORE_SNAPSHOT_AS_NEW_EDITION',
+ expectedEditionId:beforePartFork.data.editions[0].id,
+ expectedUpdatedAt:beforePartFork.data.expectedUpdatedAt};
+const partForkUrl=partBase+'/snapshots/'+structuredSnapId+'/restore-as-edition';
+assert.equal((await request(partForkUrl,{method:'POST',cookie:author,
+ body:partForkBody,omitOrigin:true})).status,403,
+ 'structured snapshot fork enforces CSRF');
+assert.equal((await request(partForkUrl,{method:'POST',cookie:outsider,
+ body:partForkBody})).status,404,'foreign workspace cannot fork part snapshot');
+const structuredFork=await request(partForkUrl,{method:'POST',cookie:author,
+ body:partForkBody});
+assert.equal(structuredFork.status,201,'structured snapshot forks to new edition');
+const restoredParts=await request(partsPath,{cookie:author});
+assert.deepEqual(restoredParts.data.parts.map(p=>p.title),
+ ['Partie A','Partie B — Études'],'frozen part titles restored, not live labels');
+assert.ok(restoredParts.data.parts.every(p=>p.id!==partAId&&p.id!==partBId),
+ 'restored edition allocates independent part identifiers');
+const restoredChapters=await request(partBase+'/chapters',{cookie:author});
+assert.deepEqual(restoredChapters.data.chapters.map(c=>c.partId),
+ [restoredParts.data.parts[0].id,restoredParts.data.parts[0].id,
+ restoredParts.data.parts[1].id,restoredParts.data.parts[1].id],
+ 'restored chapters retain their historical grouping');
+assert.equal((await request(partForkUrl,{method:'POST',cookie:author,
+ body:partForkBody})).status,409,'stale v2 snapshot fork cannot duplicate editions');
 
 const noOrigin=await request('/api/v1/books',{method:'POST',cookie:author,body:{title:'Ne doit pas exister'},omitOrigin:true});
 assert.equal(noOrigin.status,403,'CSRF prevents cross-origin writes');

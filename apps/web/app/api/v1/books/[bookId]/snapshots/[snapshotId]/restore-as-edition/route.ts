@@ -88,10 +88,20 @@ export async function POST(req:Request,{params}:Ctx){
        data:{bookId,number:current.number+1,language:source.language}
      });
      const manuscript=await tx.manuscript.create({data:{editionId:edition.id}});
+     // Historical v2 structure is reconstructed with fresh IDs. v1 snapshots
+     // intentionally retain their legacy flat chapter structure.
+     const partIds=new Map<string,string>((manifest.schema==='bookstudio.snapshot.v2'?manifest.parts:[])
+       .map(item=>[item.id,randomUUID()] as const));
+     if(manifest.schema==='bookstudio.snapshot.v2'&&manifest.parts.length){
+       await tx.manuscriptPart.createMany({data:manifest.parts.map(part=>({
+         id:partIds.get(part.id)!,manuscriptId:manuscript.id,title:part.title
+       }))});
+     }
      const newIds=new Map(plan.map(item=>[item.sourceChapterId,randomUUID()]));
      await tx.chapter.createMany({data:plan.map(item=>({
        id:newIds.get(item.sourceChapterId)!,manuscriptId:manuscript.id,
-       title:item.title,position:item.position,revisionSeq:0
+       title:item.title,position:item.position,revisionSeq:0,
+       partId:item.partId?partIds.get(item.partId)??null:null
      }))});
      await tx.documentRevision.createMany({data:plan.map(item=>({
        chapterId:newIds.get(item.sourceChapterId)!,sequence:0,
@@ -103,7 +113,8 @@ export async function POST(req:Request,{params}:Ctx){
        action:'BOOK_SNAPSHOT_FORKED_TO_EDITION',
        metadata:{snapshotId,sourceEditionId:source.id,previousEditionId:current.id,
          createdEditionId:edition.id,createdEditionNumber:edition.number,
-         chapters:plan.length,mode:'IMMUTABLE_SNAPSHOT_COPY'}
+         chapters:plan.length,parts:partIds.size,
+         mode:'IMMUTABLE_SNAPSHOT_COPY'}
      }});
      return {kind:'OK',edition:{id:edition.id,number:edition.number,
        language:edition.language,chapterCount:plan.length},

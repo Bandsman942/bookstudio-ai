@@ -31,14 +31,24 @@ export async function GET(req:Request,{params}:Ctx) {
       where:{OR:manifest.chapters.map(c=>({chapterId:c.chapterId,sequence:c.revisionSeq}))}
     });
     const map=new Map(sources.map(r=>[r.chapterId+':'+r.sequence,r]));
+    const partTitles=new Map<string,string>(manifest.schema==='bookstudio.snapshot.v2'
+      ?manifest.parts.map(part=>[part.id,part.title] as const):[]);
+    const sorted=manifest.chapters.map(item=>({...item,
+      partId:'partId' in item&&typeof item.partId==='string'?item.partId:null}))
+      .sort((a,b)=>a.position-b.position);
+    let previousPart:string|null=null;
     let total=0;
     const chapters:ExportChapter[]=[];
-    for(const item of manifest.chapters){
+    for(const item of sorted){
       const source=map.get(item.chapterId+':'+item.revisionSeq);
       if(!source||source.contentHash!==item.contentHash)return errorResponse('SNAPSHOT_CORRUPT',409);
       total+=Buffer.byteLength(source.text,'utf8');
       if(total>8*1024*1024)return errorResponse('EXPORT_TOO_LARGE',413);
-      chapters.push({title:item.title,content:source.content});
+      const partId=item.partId;
+      chapters.push({title:item.title,content:source.content,
+        withinPart:Boolean(partId),
+        ...(partId&&partId!==previousPart?{partTitle:partTitles.get(partId)}:{})});
+      previousPart=partId;
     }
     const bytes = format==='pdf' ? await renderReadingPdf(book.title,chapters) : format==='docx' ? renderDocx(book.title,chapters) : new TextEncoder().encode(renderMarkdown(book.title,chapters));
     return new Response(new Uint8Array(bytes),{
